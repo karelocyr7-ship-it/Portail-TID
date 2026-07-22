@@ -236,3 +236,13 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       sont réussis.
     - Aucune unité systemd n’a été copiée ou activée; l’installation système
       reste soumise à validation explicite.
+
+14. Phase 10 — activation systemd — 22 juillet 2026
+    - Validation explicite reçue pour installer les unités dans
+      `/etc/systemd/system` et activer les cinq timers.
+    - Les timers de démarrage, suspension, arrêt propre, arrêt forcé et rapport
+      sont actifs dans `Africa/Abidjan`.
+    - Le smoke test sous l’utilisateur `tad-agents` ne trouve aucune tâche et
+      n’a lancé aucun agent.
+    - Les cinq services agents sont inactifs hors exécution planifiée; la stack
+      Docker du portail reste saine.

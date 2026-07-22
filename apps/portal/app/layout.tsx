@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getSession } from "@/lib/oidc";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -8,9 +9,10 @@ export const metadata: Metadata = {
   applicationName: "Portail TAD Groupe",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const session = await getSession();
   return (
     <html lang="fr">
       <body>
@@ -47,10 +49,10 @@ export default function RootLayout({
                 <p className="topbar-title">Espace de travail</p>
               </div>
               <div className="user-chip">
-                <span className="avatar">D</span>
+                <span className="avatar">{(session?.name ?? session?.username ?? "U").slice(0, 1).toUpperCase()}</span>
                 <span>
-                  <strong>Utilisateur</strong>
-                  <small>Session Keycloak</small>
+                  <strong>{session?.name ?? session?.username ?? "Visiteur"}</strong>
+                  <small>{session ? "Session Keycloak" : "Non connecté"}</small>
                 </span>
               </div>
             </header>

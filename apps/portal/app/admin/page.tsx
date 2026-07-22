@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { getDevelopmentRoles } from "@/lib/catalog";
+import { getRoles, getSession } from "@/lib/oidc";
 
-export default function AdminPage() {
-  const isAdmin = getDevelopmentRoles().includes("PORTAL_ADMIN");
+export default async function AdminPage() {
+  const isAdmin = getRoles(await getSession()).includes("PORTAL_ADMIN");
   if (!isAdmin) {
     return (
       <div className="page-container">

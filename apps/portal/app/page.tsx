@@ -1,9 +1,10 @@
 import { ApplicationCard } from "@/components/application-card";
 import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
-import { getDevelopmentRoles } from "@/lib/catalog";
+import { getRoles, getSession } from "@/lib/oidc";
 
 export default async function DashboardPage() {
-  const roles = getDevelopmentRoles();
+  const session = await getSession();
+  const roles = getRoles(session);
   const applications = await getVisibleApplicationsFromDatabase(roles);
 
   return (
@@ -11,7 +12,7 @@ export default async function DashboardPage() {
       <section className="hero-panel">
         <div>
           <p className="eyebrow light">Bienvenue sur votre portail</p>
-          <h1>Bonjour, utilisateur</h1>
+          <h1>Bonjour, {session?.name ?? session?.username ?? "utilisateur"}</h1>
           <p>
             Retrouvez rapidement les applications et outils autorisés pour votre
             activité.
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
         <div className="empty-state">
           <h2>Connexion requise</h2>
           <p>Le catalogue sera chargé après authentification Keycloak.</p>
-          <a className="button primary" href="/auth">
+          <a className="button primary" href="/api/auth/login">
             Se connecter
           </a>
         </div>

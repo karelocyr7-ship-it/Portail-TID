@@ -11,8 +11,9 @@ Portail centralisé des applications métiers de TID / TAD Groupe.
 
 ## État du projet
 
-Le dépôt est en phase d’initialisation. La V1 sera un monolithe modulaire
-Next.js/TypeScript avec PostgreSQL, Prisma, Keycloak, Caddy et Docker Compose.
+Le socle V1 est opérationnel : monolithe modulaire Next.js/TypeScript avec
+PostgreSQL, Prisma, Keycloak, Caddy et Docker Compose. Le flux OIDC du portail
+utilise les rôles realm Keycloak pour filtrer le catalogue côté serveur.
 Les URL des applications métiers restent configurables et ne sont pas
 inventées dans le dépôt.
 

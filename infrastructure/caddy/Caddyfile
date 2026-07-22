@@ -1,0 +1,22 @@
+{
+	 email {$ACME_EMAIL}
+}
+
+portail.tadgroupe.com {
+	 encode zstd gzip
+	 request_body {
+		 max_size 10MB
+	 }
+	 header {
+		 Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		 X-Content-Type-Options "nosniff"
+		 Referrer-Policy "strict-origin-when-cross-origin"
+		 Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		 X-Frame-Options "DENY"
+		 Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'"
+	}
+	 reverse_proxy /auth/* keycloak:8080
+	 reverse_proxy /api/* portal:3000
+	 reverse_proxy /health portal:3000
+	 reverse_proxy portal:3000
+}

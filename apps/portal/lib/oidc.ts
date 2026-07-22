@@ -1,4 +1,10 @@
-import { createHmac, createPublicKey, randomUUID, timingSafeEqual, verify } from "node:crypto";
+import {
+  createHmac,
+  createPublicKey,
+  randomUUID,
+  timingSafeEqual,
+  verify,
+} from "node:crypto";
 import { cookies } from "next/headers";
 
 const SESSION_COOKIE = "tad_portal_session";
@@ -32,7 +38,9 @@ function base64url(value: string | Buffer): string {
 }
 
 function sign(value: string): string {
-  return base64url(createHmac("sha256", required("SESSION_SECRET")).update(value).digest());
+  return base64url(
+    createHmac("sha256", required("SESSION_SECRET")).update(value).digest(),
+  );
 }
 
 function pack(value: string): string {
@@ -46,7 +54,8 @@ function unpack(value: string | undefined): string | undefined {
   const decoded = Buffer.from(encoded, "base64url").toString("utf8");
   const expected = sign(decoded);
   if (signature.length !== expected.length) return undefined;
-  if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return undefined;
+  if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected)))
+    return undefined;
   return decoded;
 }
 
@@ -59,7 +68,9 @@ function issuer(): string {
 }
 
 async function configuration(): Promise<OidcConfiguration> {
-  const response = await fetch(`${issuer()}/.well-known/openid-configuration`, { cache: "no-store" });
+  const response = await fetch(`${issuer()}/.well-known/openid-configuration`, {
+    cache: "no-store",
+  });
   if (!response.ok) throw new Error("OIDC discovery failed");
   return (await response.json()) as OidcConfiguration;
 }
@@ -68,7 +79,10 @@ export function callbackUrl(): string {
   return `${publicUrl()}/api/auth/callback`;
 }
 
-export async function authorizationUrl(): Promise<{ url: string; state: string }> {
+export async function authorizationUrl(): Promise<{
+  url: string;
+  state: string;
+}> {
   const oidc = await configuration();
   const state = base64url(`${randomUUID()}:${Date.now()}`);
   const url = new URL(oidc.authorization_endpoint);
@@ -97,19 +111,30 @@ export async function exchangeCode(code: string): Promise<PortalSession> {
   });
   if (!response.ok) throw new Error("OIDC token exchange failed");
   const token = (await response.json()) as { id_token?: string };
-  if (!token.id_token) throw new Error("OIDC response did not contain an ID token");
+  if (!token.id_token)
+    throw new Error("OIDC response did not contain an ID token");
   return verifyIdToken(token.id_token, oidc);
 }
 
-async function verifyIdToken(token: string, oidc: OidcConfiguration): Promise<PortalSession> {
+async function verifyIdToken(
+  token: string,
+  oidc: OidcConfiguration,
+): Promise<PortalSession> {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid ID token");
-  const header = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8")) as { alg?: string; kid?: string };
-  if (header.alg !== "RS256" || !header.kid) throw new Error("Unsupported ID token");
+  const header = JSON.parse(
+    Buffer.from(parts[0], "base64url").toString("utf8"),
+  ) as { alg?: string; kid?: string };
+  if (header.alg !== "RS256" || !header.kid)
+    throw new Error("Unsupported ID token");
   const jwksResponse = await fetch(oidc.jwks_uri, { cache: "no-store" });
   if (!jwksResponse.ok) throw new Error("OIDC JWKS request failed");
-  const jwks = (await jwksResponse.json()) as { keys: Array<Record<string, unknown>> };
-  const jwk = jwks.keys.find((key) => key.kid === header.kid && key.kty === "RSA");
+  const jwks = (await jwksResponse.json()) as {
+    keys: Array<Record<string, unknown>>;
+  };
+  const jwk = jwks.keys.find(
+    (key) => key.kid === header.kid && key.kty === "RSA",
+  );
   if (!jwk) throw new Error("OIDC signing key not found");
   const valid = verify(
     "RSA-SHA256",
@@ -118,23 +143,46 @@ async function verifyIdToken(token: string, oidc: OidcConfiguration): Promise<Po
     Buffer.from(parts[2], "base64url"),
   );
   if (!valid) throw new Error("Invalid ID token signature");
-  const claims = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")) as Record<string, unknown>;
-  if (claims.iss !== oidc.issuer || claims.aud !== required("KEYCLOAK_CLIENT_ID")) throw new Error("Invalid ID token issuer or audience");
+  const claims = JSON.parse(
+    Buffer.from(parts[1], "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
+  if (
+    claims.iss !== oidc.issuer ||
+    claims.aud !== required("KEYCLOAK_CLIENT_ID")
+  )
+    throw new Error("Invalid ID token issuer or audience");
   const expiresAt = typeof claims.exp === "number" ? claims.exp : 0;
-  if (expiresAt <= Math.floor(Date.now() / 1000)) throw new Error("Expired ID token");
-  const realmRoles = ((claims.realm_access as { roles?: unknown } | undefined)?.roles ?? []) as unknown[];
+  if (expiresAt <= Math.floor(Date.now() / 1000))
+    throw new Error("Expired ID token");
+  const realmRoles = ((claims.realm_access as { roles?: unknown } | undefined)
+    ?.roles ?? []) as unknown[];
   return {
     subject: String(claims.sub ?? ""),
     name: typeof claims.name === "string" ? claims.name : undefined,
-    username: typeof claims.preferred_username === "string" ? claims.preferred_username : undefined,
-    roles: realmRoles.filter((role): role is string => typeof role === "string"),
-    groups: Array.isArray(claims.groups) ? claims.groups.filter((group): group is string => typeof group === "string") : [],
+    username:
+      typeof claims.preferred_username === "string"
+        ? claims.preferred_username
+        : undefined,
+    roles: realmRoles.filter(
+      (role): role is string => typeof role === "string",
+    ),
+    groups: Array.isArray(claims.groups)
+      ? claims.groups.filter(
+          (group): group is string => typeof group === "string",
+        )
+      : [],
     expiresAt,
   };
 }
 
 export async function setStateCookie(state: string): Promise<void> {
-  (await cookies()).set(STATE_COOKIE, pack(state), { httpOnly: true, secure: true, sameSite: "lax", maxAge: 600, path: "/" });
+  (await cookies()).set(STATE_COOKIE, pack(state), {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
 }
 
 export async function consumeStateCookie(state: string): Promise<boolean> {
@@ -145,8 +193,20 @@ export async function consumeStateCookie(state: string): Promise<boolean> {
 }
 
 export async function setSession(session: PortalSession): Promise<void> {
-  const value = JSON.stringify({ ...session, expiresAt: Math.min(session.expiresAt, Math.floor(Date.now() / 1000) + SESSION_MAX_AGE) });
-  (await cookies()).set(SESSION_COOKIE, pack(value), { httpOnly: true, secure: true, sameSite: "lax", maxAge: SESSION_MAX_AGE, path: "/" });
+  const value = JSON.stringify({
+    ...session,
+    expiresAt: Math.min(
+      session.expiresAt,
+      Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
+    ),
+  });
+  (await cookies()).set(SESSION_COOKIE, pack(value), {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: SESSION_MAX_AGE,
+    path: "/",
+  });
 }
 
 export async function getSession(): Promise<PortalSession | undefined> {
@@ -154,7 +214,9 @@ export async function getSession(): Promise<PortalSession | undefined> {
   if (!raw) return undefined;
   try {
     const session = JSON.parse(raw) as PortalSession;
-    return session.expiresAt > Math.floor(Date.now() / 1000) && session.subject ? session : undefined;
+    return session.expiresAt > Math.floor(Date.now() / 1000) && session.subject
+      ? session
+      : undefined;
   } catch {
     return undefined;
   }
@@ -167,5 +229,8 @@ export async function clearSession(): Promise<void> {
 export function getRoles(session: PortalSession | undefined): string[] {
   if (session) return session.roles;
   if (process.env.NODE_ENV !== "development") return [];
-  return (process.env.PORTAL_DEMO_ROLES ?? "DIRECTION").split(",").map((role) => role.trim()).filter(Boolean);
+  return (process.env.PORTAL_DEMO_ROLES ?? "DIRECTION")
+    .split(",")
+    .map((role) => role.trim())
+    .filter(Boolean);
 }

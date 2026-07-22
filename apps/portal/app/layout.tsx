@@ -49,12 +49,21 @@ export default async function RootLayout({
                 <p className="topbar-title">Espace de travail</p>
               </div>
               <div className="user-chip">
-                <span className="avatar">{(session?.name ?? session?.username ?? "U").slice(0, 1).toUpperCase()}</span>
+                <span className="avatar">
+                  {(session?.name ?? session?.username ?? "U")
+                    .slice(0, 1)
+                    .toUpperCase()}
+                </span>
                 <span>
-                  <strong>{session?.name ?? session?.username ?? "Visiteur"}</strong>
+                  <strong>
+                    {session?.name ?? session?.username ?? "Visiteur"}
+                  </strong>
                   <small>{session ? "Session Keycloak" : "Non connecté"}</small>
                 </span>
-                <a className="auth-link" href={session ? "/api/auth/logout" : "/api/auth/login"}>
+                <a
+                  className="auth-link"
+                  href={session ? "/api/auth/logout" : "/api/auth/login"}
+                >
                   {session ? "Se déconnecter" : "Se connecter"}
                 </a>
               </div>

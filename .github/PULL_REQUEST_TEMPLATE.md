@@ -12,6 +12,8 @@
 - [ ] `make typecheck`
 - [ ] `make test`
 - [ ] `make build`
+- [ ] `pnpm format:check`
+- [ ] Les workflows GitHub sont verts
 
 ## Risques et rollback
 

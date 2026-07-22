@@ -1,0 +1,5 @@
+pnpm-lock.yaml
+# Fichiers historiques conservés dans leur format opérationnel actuel.
+compose.yml
+apps/portal/lib/catalog-db.ts
+docs/VERSIONS.md

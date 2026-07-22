@@ -246,3 +246,12 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       n’a lancé aucun agent.
     - Les cinq services agents sont inactifs hors exécution planifiée; la stack
       Docker du portail reste saine.
+
+15. Phase 11 — GitHub — préparation — 22 juillet 2026
+    - Les workflows Quality, Security et Build exécutent désormais les
+      contrôles pnpm, le formatage, l’audit, la détection de secrets et le build
+      Docker sans publication.
+    - La concurrence GitHub annule les anciens builds de la même branche.
+    - Les modèles et labels sont documentés.
+    - Aucun remote GitHub n’est configuré et `gh` n’est pas installé; aucune
+      création de dépôt, publication ou protection distante n’a été effectuée.

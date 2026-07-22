@@ -12,7 +12,9 @@ export default async function DashboardPage() {
       <section className="hero-panel">
         <div>
           <p className="eyebrow light">Bienvenue sur votre portail</p>
-          <h1>Bonjour, {session?.name ?? session?.username ?? "utilisateur"}</h1>
+          <h1>
+            Bonjour, {session?.name ?? session?.username ?? "utilisateur"}
+          </h1>
           <p>
             Retrouvez rapidement les applications et outils autorisés pour votre
             activité.

@@ -195,3 +195,16 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
      des services ne sont pas publiés.
    - La connexion complète et le filtrage avec un utilisateur nécessitent un
      compte Keycloak de test dédié; aucun compte réel n’a été créé.
+
+10. Phase 8 — sauvegarde et restauration — 22 juillet 2026
+    - Les scripts `scripts/backup.sh` et `scripts/restore.sh` sont désormais
+      opérationnels; ils n’affichent ni ne lisent le fichier `.env` réel.
+    - Une archive chiffrable avec dumps PostgreSQL de `portal`, `keycloak` et
+      `n8n`, données n8n/Uptime Kuma, configuration sans `.env`, manifeste et
+      sommes SHA-256 a été créée sous `/srv/tad/backups` avec permissions 0600.
+    - Le contrôle d’intégrité a réussi.
+    - Une restauration isolée des trois bases a réussi dans des bases
+      temporaires, ensuite supprimées par le script; aucune base de production
+      n’a été écrasée.
+    - La destination externe et la rotation 7 quotidiennes, 4 hebdomadaires
+      et 6 mensuelles restent à valider avant automatisation.

@@ -18,4 +18,4 @@ check:
 backup:
 	./scripts/backup.sh
 restore-check:
-	./scripts/restore.sh --check-only
+	./scripts/restore.sh --restore-check

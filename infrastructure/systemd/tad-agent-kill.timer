@@ -1,0 +1,10 @@
+[Unit]
+Description=Arrêt obligatoire des agents Codex TAD
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 Africa/Abidjan
+Persistent=true
+Unit=tad-agent-kill.service
+
+[Install]
+WantedBy=timers.target

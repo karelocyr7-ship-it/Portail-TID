@@ -1,0 +1,16 @@
+[Unit]
+Description=Démarrer un agent Codex TAD (un seul agent)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=tad-agents
+Group=tad-agents
+WorkingDirectory=/srv/tad/agents
+ExecStart=/srv/tad/portail/scripts/agents-start.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/tad/agents
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6

@@ -1,0 +1,12 @@
+[Unit]
+Description=Suspendre les nouvelles tâches Codex TAD
+
+[Service]
+Type=oneshot
+User=tad-agents
+Group=tad-agents
+ExecStart=/srv/tad/portail/scripts/agents-stop-new-tasks.sh
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/tad/agents

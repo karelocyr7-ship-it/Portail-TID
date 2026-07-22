@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-echo "Agents Codex non installés dans la PHASE 1."
+agent_root="${AGENT_ROOT:-/srv/tad/agents}"
+mkdir -p "$agent_root/state"
+touch "$agent_root/state/stop-new-tasks"
+echo "Prise de nouvelles tâches suspendue."

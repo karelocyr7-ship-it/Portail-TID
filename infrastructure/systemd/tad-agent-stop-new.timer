@@ -1,0 +1,10 @@
+[Unit]
+Description=Fin des nouvelles tâches Codex TAD
+
+[Timer]
+OnCalendar=*-*-* 05:30:00 Africa/Abidjan
+Persistent=true
+Unit=tad-agent-stop-new.service
+
+[Install]
+WantedBy=timers.target

@@ -226,3 +226,13 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       `0.0.0.0:3000` du conteneur Next.js.
     - Les routes callback et logout utilisent désormais exclusivement
       `PORTAL_PUBLIC_URL`; les redirections publiques ont été vérifiées.
+
+13. Phase 10 — n8n et agents Codex — préparation — 22 juillet 2026
+    - n8n est sain sur son réseau privé et son endpoint interne `/healthz`
+      répond correctement; aucun port n8n n’est publié sur Internet.
+    - Les scripts agents et les unités/timers systemd ont été préparés avec un
+      seul agent, sans secrets, sudo, base de production ni socket Docker.
+    - Les contrôles de syntaxe, le smoke test local et `systemd-analyze verify`
+      sont réussis.
+    - Aucune unité systemd n’a été copiée ou activée; l’installation système
+      reste soumise à validation explicite.

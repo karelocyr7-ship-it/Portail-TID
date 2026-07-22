@@ -1,0 +1,12 @@
+[Unit]
+Description=Arrêt propre de l’agent Codex TAD
+
+[Service]
+Type=oneshot
+User=tad-agents
+Group=tad-agents
+ExecStart=/srv/tad/portail/scripts/agents-stop.sh
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/tad/agents

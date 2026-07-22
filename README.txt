@@ -220,3 +220,9 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       certificat valide jusqu’au 20 octobre 2026.
     - Un conteneur Docker externe à la stack, `trusting_volhard`, a été observé
       mais n’a pas été modifié.
+
+12. Correctif post-login — 22 juillet 2026
+    - Une redirection après connexion pouvait utiliser l’adresse interne
+      `0.0.0.0:3000` du conteneur Next.js.
+    - Les routes callback et logout utilisent désormais exclusivement
+      `PORTAL_PUBLIC_URL`; les redirections publiques ont été vérifiées.

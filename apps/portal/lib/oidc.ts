@@ -50,7 +50,7 @@ function unpack(value: string | undefined): string | undefined {
   return decoded;
 }
 
-function publicUrl(): string {
+export function publicUrl(): string {
   return required("PORTAL_PUBLIC_URL").replace(/\/$/, "");
 }
 

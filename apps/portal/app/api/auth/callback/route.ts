@@ -1,4 +1,4 @@
-import { consumeStateCookie, exchangeCode, setSession } from "@/lib/oidc";
+import { consumeStateCookie, exchangeCode, publicUrl, setSession } from "@/lib/oidc";
 
 export const runtime = "nodejs";
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (!code || !state || !(await consumeStateCookie(state))) return Response.json({ error: "Échec de la validation OIDC" }, { status: 400 });
   try {
     await setSession(await exchangeCode(code));
-    return Response.redirect(new URL("/", request.url));
+    return Response.redirect(new URL("/", publicUrl()));
   } catch {
     return Response.json({ error: "La connexion au portail a échoué" }, { status: 502 });
   }

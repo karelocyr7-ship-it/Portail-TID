@@ -1,9 +1,10 @@
 import { ApplicationCard } from "@/components/application-card";
-import { getDevelopmentRoles, getVisibleApplications } from "@/lib/catalog";
+import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
+import { getDevelopmentRoles } from "@/lib/catalog";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   const roles = getDevelopmentRoles();
-  const applications = getVisibleApplications(roles);
+  const applications = await getVisibleApplicationsFromDatabase(roles);
 
   return (
     <div className="page-container">

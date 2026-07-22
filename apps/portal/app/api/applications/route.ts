@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { getVisibleApplications } from "@/lib/catalog";
+import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
 
 export async function GET() {
   const requestHeaders = await headers();
@@ -15,7 +15,7 @@ export async function GET() {
           .filter(Boolean)
       : [];
   return Response.json(
-    { data: getVisibleApplications(roles) },
+    { data: await getVisibleApplicationsFromDatabase(roles) },
     { headers: { "cache-control": "no-store" } },
   );
 }

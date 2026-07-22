@@ -142,3 +142,24 @@ le dépôt sans validation explicite.
 L'infrastructure Docker de la phase 3/5 est démarrée et saine. Les étapes
 restantes sont la validation fonctionnelle Keycloak/OIDC et la poursuite de
 la phase applicative, selon la prochaine consigne du responsable.
+
+7. Phase 4 — application et persistance — 22 juillet 2026
+   - Migration Prisma initiale appliquée dans PostgreSQL via le réseau privé
+     `tad-data`.
+   - Catalogue de démonstration non sensible chargé dans les tables de
+     catégories, applications et rôles.
+   - Client Prisma 7 configuré avec l'adaptateur PostgreSQL officiel; le
+     catalogue serveur lit désormais PostgreSQL et filtre selon les rôles.
+   - Génération Prisma ajoutée à l'étape de build Docker du portail.
+   - Contrôles réussis : lint, typecheck, 4 tests Vitest, build, healthcheck
+     HTTPS et routes `/health` et `/api/applications`.
+   - En production, `/api/applications` renvoie un catalogue vide tant que les
+     claims Keycloak ne sont pas branchés; ce comportement est attendu pour la
+     transition vers la phase 5.
+
+Prochaine phase
+---------------
+
+Phase 5 : créer et configurer le realm Keycloak `tad-groupe`, le client
+`tad-portal`, les rôles et les groupes, puis brancher les claims OIDC au
+filtrage serveur. Aucun compte de démonstration réel ne devra être ajouté.

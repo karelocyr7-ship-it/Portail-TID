@@ -13,6 +13,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/portal/node_modules ./apps/portal/node_modules
 COPY . .
+RUN pnpm --filter portal exec prisma generate
 RUN pnpm --filter portal build
 
 FROM node:24.18.0-bookworm-slim AS runner
@@ -25,4 +26,4 @@ COPY --from=builder --chown=portal:portal /app/apps/portal/.next/static ./apps/p
 COPY --from=builder --chown=portal:portal /app/apps/portal/public ./apps/portal/public
 USER portal
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["node", "apps/portal/server.js"]

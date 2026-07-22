@@ -45,15 +45,31 @@ adresse e-mail d’administration et stratégie de sauvegarde externe.
 
 Docker Engine, Compose Plugin et Buildx sont installés depuis le dépôt APT
 officiel Docker pour Debian Trixie. Les versions installées sont documentées
-dans `docs/VERSIONS.md`. Le service Docker est activé au démarrage et actif.
+dans `docs/VERSIONS.md`.
 
-Les réseaux `tad-edge`, `tad-app`, `tad-identity`, `tad-agents`, `tad-data` et
-`tad-monitoring` sont séparés. Les volumes nommés de base sont créés sans
-conteneur ni donnée applicative : Caddy, PostgreSQL, n8n et Uptime Kuma.
+Le fichier `compose.yml` décrit les six services et leurs réseaux/volumes,
+avec des images versionnées, des healthchecks, des limites de ressources et
+aucun port public autre que 80/443. La création des ressources et le démarrage
+restent à exécuter avec un compte autorisé à accéder au socket Docker.
+
+Ne jamais utiliser `.env.example` en production : il ne contient que des
+valeurs indicatives. Créer un `.env` réel avec des secrets aléatoires, le
+protéger en `0600`, puis contrôler la configuration sans afficher ses valeurs :
+
+```sh
+chmod 600 .env
+docker compose config --quiet
+docker compose up -d
+```
+
+Le contrôle de cette reprise a confirmé la syntaxe Compose, mais l’utilisateur
+de session ne dispose pas de l’accès à `/var/run/docker.sock`; aucun réseau,
+volume ou conteneur n’a donc été créé par l’agent.
 
 ## Phase 4 — application
 
 Node.js, pnpm et les dépendances du workspace sont installés. Le portail peut
 être contrôlé avec `pnpm --filter portal test`, `typecheck`, `lint` et `build`.
-La migration Prisma initiale est versionnée mais n’est pas appliquée : aucune
-base PostgreSQL n’est encore démarrée.
+La migration Prisma initiale est versionnée et appliquée dans la base locale
+`portal`. PostgreSQL reste privé ; les commandes Prisma d’exploitation doivent
+être exécutées depuis un conteneur attaché au réseau Docker `tad-data`.

@@ -163,3 +163,19 @@ Prochaine phase
 Phase 5 : créer et configurer le realm Keycloak `tad-groupe`, le client
 `tad-portal`, les rôles et les groupes, puis brancher les claims OIDC au
 filtrage serveur. Aucun compte de démonstration réel ne devra être ajouté.
+
+8. Phase 5 — Keycloak/OIDC — 22 juillet 2026
+   - Realm `tad-groupe` créé et activé avec le thème `keycloak.v2`.
+   - Client confidentiel `tad-portal` configuré avec Authorization Code,
+     redirection HTTPS limitée au portail et secret conservé dans `.env`.
+   - Les neuf rôles métier et neuf groupes correspondants sont créés.
+   - L’accès administrateur Keycloak a été récupéré puis sécurisé avec la
+     valeur actuelle de `.env`; le compte de récupération temporaire a été
+     supprimé après usage.
+   - Découverte OIDC vérifiée via HTTPS; aucun compte utilisateur réel créé.
+
+Prochaine action
+----------------
+
+Brancher les claims OIDC au portail et remplacer les rôles de développement
+par les rôles Keycloak côté serveur, dans la phase applicative d’intégration.

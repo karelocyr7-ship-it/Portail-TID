@@ -1,7 +1,42 @@
 # Installation
 
-L’installation de la VM n’a pas encore commencé. Cette procédure sera
-complétée après validation des phases Linux et Docker.
+## Phase 2 — préparation Linux
 
-Prérequis connus : accès administrateur système, DNS pointant vers la VM,
+### Réalisé
+
+- Fuseau configuré sur `Africa/Abidjan`.
+- Utilisateur système `tad-agents` créé avec le shell `/usr/sbin/nologin`.
+- Répertoire `/srv/tad/agents/` créé en `0750`, propriétaire `tad-agents`.
+- Sous-répertoires créés : `queue`, `repositories`, `workspaces`, `results`,
+  `logs` et `scripts`, tous en `0750`.
+- Utilitaires installés : `gnupg`, `jq`, `rsync`, `unzip`, `acl`.
+- `ca-certificates` et `curl` étaient déjà installés.
+
+### Non réalisé volontairement
+
+- aucune modification SSH ;
+- aucun pare-feu activé ou configuré ;
+- aucun changement DNS ;
+- aucun Docker, Node.js, Keycloak ou service applicatif ;
+- aucune base, volume ou donnée supprimée.
+
+### Contrôle
+
+```sh
+getent passwd tad-agents
+sudo stat -c '%A %a %U:%G %n' /srv/tad/agents
+timedatectl
+```
+
+Résultat attendu : compte avec `/usr/sbin/nologin`, répertoire `750` détenu
+par `tad-agents`, fuseau `Africa/Abidjan`.
+
+### Retour arrière
+
+Un retour arrière éventuel doit être préparé et validé avant exécution :
+restauration du fuseau précédent, puis neutralisation ou suppression contrôlée
+du compte et des répertoires agents. Les paquets ne doivent pas être retirés
+automatiquement, car certains pourront être requis par Docker ou les sauvegardes.
+
+Prérequis restants : accès administrateur système, DNS pointant vers la VM,
 adresse e-mail d’administration et stratégie de sauvegarde externe.

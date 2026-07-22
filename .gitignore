@@ -1,0 +1,31 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Node.js
+node_modules/
+.next/
+dist/
+coverage/
+*.log
+
+# Docker et données locales
+data/
+backups/
+tmp/
+
+# IDE
+.vscode/
+.idea/
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Codex
+.codex/

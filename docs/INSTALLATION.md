@@ -50,3 +50,10 @@ dans `docs/VERSIONS.md`. Le service Docker est activé au démarrage et actif.
 Les réseaux `tad-edge`, `tad-app`, `tad-identity`, `tad-agents`, `tad-data` et
 `tad-monitoring` sont séparés. Les volumes nommés de base sont créés sans
 conteneur ni donnée applicative : Caddy, PostgreSQL, n8n et Uptime Kuma.
+
+## Phase 4 — application
+
+Node.js, pnpm et les dépendances du workspace sont installés. Le portail peut
+être contrôlé avec `pnpm --filter portal test`, `typecheck`, `lint` et `build`.
+La migration Prisma initiale est versionnée mais n’est pas appliquée : aucune
+base PostgreSQL n’est encore démarrée.

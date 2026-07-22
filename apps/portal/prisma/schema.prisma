@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Application {
+  id                 String                 @id @default(cuid())
+  code               String                 @unique
+  name               String
+  description        String
+  categoryId         String
+  url                String?
+  icon               String
+  integrationLevel   Int                    @default(1)
+  active             Boolean                @default(false)
+  maintenance        Boolean                @default(false)
+  maintenanceMessage String?
+  displayOrder       Int                    @default(0)
+  healthcheckUrl     String?
+  category           Category               @relation(fields: [categoryId], references: [id])
+  roles              ApplicationRole[]
+  favorites          Favorite[]
+  accessLogs         ApplicationAccessLog[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([categoryId, active, displayOrder])
+}
+
+model Category {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  description  String
+  displayOrder Int           @default(0)
+  active       Boolean       @default(true)
+  applications Application[]
+}
+
+model ApplicationRole {
+  applicationId String
+  keycloakRole  String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@id([applicationId, keycloakRole])
+}
+
+model Favorite {
+  userId        String
+  applicationId String
+  createdAt     DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, applicationId])
+}
+
+model ApplicationAccessLog {
+  id            String      @id @default(cuid())
+  userId        String
+  applicationId String
+  action        String
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  eventType  String
+  entityType String
+  entityId   String?
+  beforeData Json?
+  afterData  Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([eventType, createdAt])
+}
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  startAt     DateTime
+  endAt       DateTime?
+  targetRoles String[]
+  active      Boolean   @default(true)
+}
+
+model PortalSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

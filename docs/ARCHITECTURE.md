@@ -10,3 +10,8 @@ resteront non publics.
 Les applications métiers seront d’abord des liens externes (niveau 1). Les
 niveaux OIDC et API seront ajoutés progressivement, sans stocker de credentials
 personnels d’anciennes applications.
+
+Le socle applicatif actuel expose un catalogue statique de développement dont
+le filtrage est effectué côté serveur. Il ne constitue pas encore une
+authentification : les rôles de démonstration sont actifs uniquement avec
+`NODE_ENV=development` et seront remplacés par les claims Keycloak en phase 5.

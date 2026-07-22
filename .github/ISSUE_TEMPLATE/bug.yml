@@ -1,0 +1,11 @@
+name: Anomalie
+description: Signaler une anomalie reproductible
+title: "[Bug] "
+body:
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Décrire les étapes, le résultat attendu et le résultat observé.
+    validations:
+      required: true

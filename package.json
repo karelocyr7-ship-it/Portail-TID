@@ -1,0 +1,16 @@
+{
+  "name": "portail-tad-groupe",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "dev": "pnpm --filter portal dev",
+    "build": "pnpm --filter portal build",
+    "lint": "pnpm --filter portal lint",
+    "typecheck": "pnpm --filter portal typecheck",
+    "test": "pnpm --filter portal test",
+    "format:check": "prettier --check .",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": { "prettier": "3.5.3" }
+}

@@ -1,0 +1,15 @@
+name: Security
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  repository-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuser les fichiers de secrets suivis
+        run: '! git ls-files | grep -E "(^|/)(\\.env($|\\.)|.*\\.(pem|key|p12|pfx)$)"'

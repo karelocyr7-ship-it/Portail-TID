@@ -1,0 +1,5 @@
+name: tad-portail
+
+# PHASE 1 : squelette documentaire. Les services et images versionnées
+# seront ajoutés après validation de la préparation Docker.
+services: {}

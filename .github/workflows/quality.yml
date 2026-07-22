@@ -1,0 +1,15 @@
+name: Quality
+on:
+  pull_request:
+  push:
+    branches: [main]
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vérifier la structure initiale
+        run: test -f AGENTS.md && test -f SECURITY.md && test -f .env.example

@@ -1,0 +1,12 @@
+{
+  "name": "portal",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "echo 'Application Next.js à créer en phase 4'",
+    "build": "echo 'Build Next.js à créer en phase 4'",
+    "lint": "echo 'Lint à créer en phase 4'",
+    "typecheck": "echo 'Typecheck à créer en phase 4'",
+    "test": "echo 'Tests à créer en phase 4'"
+  }
+}

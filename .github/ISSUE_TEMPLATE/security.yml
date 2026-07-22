@@ -1,0 +1,15 @@
+name: Sécurité
+description: Signaler un problème de sécurité sans publier de secret
+title: "[Security] "
+labels:
+  - type:security
+body:
+  - type: markdown
+    attributes:
+      value: Ne joignez jamais de mot de passe, token, clé privée ou donnée personnelle.
+  - type: textarea
+    id: signalement
+    attributes:
+      label: Signalement
+    validations:
+      required: true

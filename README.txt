@@ -253,5 +253,23 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       Docker sans publication.
     - La concurrence GitHub annule les anciens builds de la même branche.
     - Les modèles et labels sont documentés.
-    - Aucun remote GitHub n’est configuré et `gh` n’est pas installé; aucune
-      création de dépôt, publication ou protection distante n’a été effectuée.
+    - Aucun remote GitHub n'est configuré et `gh` n'est pas installé; aucune
+      création de dépôt, publication ou protection distante n'a été effectuée.
+
+16. Phase 12 — recette complète — 22 juillet 2026
+    - La stack, HTTPS, OIDC, les routes publiques, l'exposition réseau, la
+      persistance PostgreSQL, la sauvegarde/restauration isolée, les agents et
+      l'espace disque ont été contrôlés avec succès.
+    - `pnpm format:check`, lint, typecheck, tests (4) et build sont réussis;
+      `make` reste indisponible sur la VM.
+    - `pnpm audit --prod` signale une vulnérabilité haute dans `sharp` et une
+      modérée dans `postcss`; elles sont documentées dans
+      `docs/RECETTE_PHASE_12.md`.
+    - La validation du filtrage par rôle avec un compte Keycloak de test et la
+      configuration distante GitHub restent à faire avant la livraison finale.
+
+Prochaine phase
+---------------
+
+Phase 13 : livraison et rapport final, après décision sur les alertes de
+dépendances et validation d'un compte de test non personnel.

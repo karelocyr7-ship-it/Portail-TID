@@ -17,6 +17,11 @@ export default async function DashboardPage() {
             Retrouvez rapidement les applications et outils autorisés pour votre
             activité.
           </p>
+          {!session && (
+            <a className="button primary hero-action" href="/api/auth/login">
+              Accéder avec Keycloak
+            </a>
+          )}
         </div>
         <div className="hero-orbit" aria-hidden="true">
           <span>✦</span>

@@ -133,6 +133,19 @@ nav {
   gap: 10px;
   font-size: 12px;
 }
+.auth-link {
+  margin-left: 8px;
+  padding: 8px 11px;
+  border: 1px solid #d7e0f0;
+  border-radius: 8px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.auth-link:hover {
+  background: #e8effb;
+}
 .avatar {
   display: grid;
   place-items: center;
@@ -176,6 +189,9 @@ p {
   margin-bottom: 0;
   color: #d6e2f8;
   line-height: 1.6;
+}
+.hero-action {
+  margin-top: 18px;
 }
 .hero-orbit {
   display: grid;
@@ -374,6 +390,11 @@ p {
   }
   .user-chip small {
     display: none;
+  }
+  .auth-link {
+    margin-left: 0;
+    padding: 7px 8px;
+    font-size: 10px;
   }
   .page-container {
     padding-top: 25px;

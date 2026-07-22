@@ -208,3 +208,15 @@ par les rôles Keycloak côté serveur, dans la phase applicative d’intégrati
       n’a été écrasée.
     - La destination externe et la rotation 7 quotidiennes, 4 hebdomadaires
       et 6 mensuelles restent à valider avant automatisation.
+
+11. Phase 9 — monitoring et interface de connexion — 22 juillet 2026
+    - L’interface affiche désormais un bouton permanent `Se connecter` pour
+      les visiteurs et `Se déconnecter` pour les sessions Keycloak.
+    - Le bandeau d’accueil propose également l’accès direct à Keycloak.
+    - Le portail a été reconstruit et redémarré; le conteneur est sain.
+    - Le script `scripts/healthcheck.sh` contrôle les conteneurs, ressources,
+      espace disque, endpoint public, certificat HTTPS et sauvegardes récentes.
+    - Contrôles réussis : UI publique, redirection OIDC, healthcheck et
+      certificat valide jusqu’au 20 octobre 2026.
+    - Un conteneur Docker externe à la stack, `trusting_volhard`, a été observé
+      mais n’a pas été modifié.

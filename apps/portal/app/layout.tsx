@@ -54,6 +54,9 @@ export default async function RootLayout({
                   <strong>{session?.name ?? session?.username ?? "Visiteur"}</strong>
                   <small>{session ? "Session Keycloak" : "Non connecté"}</small>
                 </span>
+                <a className="auth-link" href={session ? "/api/auth/logout" : "/api/auth/login"}>
+                  {session ? "Se déconnecter" : "Se connecter"}
+                </a>
               </div>
             </header>
             {children}

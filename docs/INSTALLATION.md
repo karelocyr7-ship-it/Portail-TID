@@ -40,3 +40,13 @@ automatiquement, car certains pourront être requis par Docker ou les sauvegarde
 
 Prérequis restants : accès administrateur système, DNS pointant vers la VM,
 adresse e-mail d’administration et stratégie de sauvegarde externe.
+
+## Phase 3 — Docker
+
+Docker Engine, Compose Plugin et Buildx sont installés depuis le dépôt APT
+officiel Docker pour Debian Trixie. Les versions installées sont documentées
+dans `docs/VERSIONS.md`. Le service Docker est activé au démarrage et actif.
+
+Les réseaux `tad-edge`, `tad-app`, `tad-identity`, `tad-agents`, `tad-data` et
+`tad-monitoring` sont séparés. Les volumes nommés de base sont créés sans
+conteneur ni donnée applicative : Caddy, PostgreSQL, n8n et Uptime Kuma.

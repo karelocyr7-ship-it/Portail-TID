@@ -6,8 +6,9 @@
 | Linux | 6.12.86+deb13-amd64 | VM auditée |
 | Git | 2.47.3 | présent |
 | Codex CLI | 0.145.0 | présent |
-| Docker Engine | — | à installer |
-| Docker Compose | — | à installer |
+| Docker Engine | 29.6.2 | installé depuis le dépôt officiel Docker |
+| Docker Compose | 5.3.1 | plugin officiel installé |
+| Docker Buildx | 0.35.0 | plugin officiel installé |
 | Node.js | — | à installer |
 | Next.js | — | à retenir après vérification |
 | PostgreSQL | — | à retenir après vérification |

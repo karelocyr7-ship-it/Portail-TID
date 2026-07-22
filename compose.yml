@@ -1,5 +1,42 @@
 name: tad-portail
 
-# PHASE 1 : squelette documentaire. Les services et images versionnées
-# seront ajoutés après validation de la préparation Docker.
+# PHASE 3 : ressources Docker de base. Les services et images versionnées
+# seront ajoutés pendant les phases applicatives.
 services: {}
+
+networks:
+  tad-edge:
+    name: tad-edge
+    external: true
+  tad-app:
+    name: tad-app
+    external: true
+  tad-identity:
+    name: tad-identity
+    external: true
+  tad-agents:
+    name: tad-agents
+    external: true
+  tad-data:
+    name: tad-data
+    external: true
+  tad-monitoring:
+    name: tad-monitoring
+    external: true
+
+volumes:
+  tad-caddy-data:
+    name: tad-caddy-data
+    external: true
+  tad-caddy-config:
+    name: tad-caddy-config
+    external: true
+  tad-postgres-data:
+    name: tad-postgres-data
+    external: true
+  tad-n8n-data:
+    name: tad-n8n-data
+    external: true
+  tad-uptime-data:
+    name: tad-uptime-data
+    external: true

@@ -273,3 +273,62 @@ Prochaine phase
 
 Phase 13 : livraison et rapport final, après décision sur les alertes de
 dépendances et validation d'un compte de test non personnel.
+
+17. Reprise GitHub — 22 juillet 2026
+    - Le dépôt GitHub existe : `karelocyr7-ship-it/Portail-TID`.
+    - L'authentification `gh` est active sur le compte
+      `karelocyr7-ship-it`; aucun token n'est écrit dans le dépôt.
+    - Le remote local est configuré en SSH :
+      `git@github.com:karelocyr7-ship-it/Portail-TID.git`.
+    - Les changements locaux liés au socle, à la documentation, à la CI, à
+      l'infrastructure PostgreSQL et au logo ont été commités dans
+      `d9d08d5` (`chore: publier le socle du portail`). Le rapport de recette
+      est dans le commit précédent `c0b2e0c`.
+    - Aucun fichier `.env` réel n'a été ajouté ou publié.
+    - Le premier push SSH a échoué car aucune clé SSH utilisable n'est
+      configurée sur la VM. Le remote HTTPS a ensuite été essayé.
+    - Le push HTTPS a été refusé par GitHub car le jeton OAuth ne possède pas
+      le scope `workflow`, nécessaire pour publier `.github/workflows/*.yml`.
+    - Une actualisation de scope a été lancée avec `gh auth refresh -h
+      github.com -s workflow`. GitHub a fourni le code temporaire
+      `F688-E30B`; l'URL à utiliser est
+      `https://github.com/login/device`. La validation dans le navigateur est
+      encore attendue. Le code est temporaire et ne doit pas être réutilisé.
+    - La branche locale est `codex/phase-1-repository-init`; elle n'a pas
+      encore été poussée et aucune Pull Request n'a été créée.
+
+Reprise demain — commandes
+--------------------------
+
+Après validation du code GitHub dans le navigateur, vérifier puis exécuter :
+
+```sh
+cd /srv/tad/portail
+gh auth status
+gh auth setup-git
+git remote set-url origin https://github.com/karelocyr7-ship-it/Portail-TID.git
+git push -u origin codex/phase-1-repository-init
+```
+
+Le dépôt GitHub étant vide, créer ensuite la branche de base `main` à partir
+du commit initial sans pousser directement sur `main` :
+
+```sh
+git rev-parse main
+gh api repos/karelocyr7-ship-it/Portail-TID/git/refs \
+  -f ref=refs/heads/main -f sha="$(git rev-parse main)"
+gh repo edit karelocyr7-ship-it/Portail-TID --default-branch main
+```
+
+Enfin créer la Pull Request brouillon :
+
+```sh
+gh pr create --draft --base main \
+  --head codex/phase-1-repository-init \
+  --title "Phase 12 : recette complète" \
+  --body-file /tmp/portail-pr.md
+```
+
+Le fichier `/tmp/portail-pr.md` devra résumer la recette et référencer
+`docs/RECETTE_PHASE_12.md`. Vérifier les workflows et la protection de `main`
+sur GitHub avant toute fusion. Ne jamais publier `.env`, de token ou de secret.

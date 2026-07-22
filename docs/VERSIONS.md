@@ -19,8 +19,11 @@
 | Prisma         |               7.9.0 | version retenue                          |
 | Vitest         |              4.1.10 | version retenue                          |
 | Playwright     |              1.61.1 | version retenue pour la recette          |
-| PostgreSQL     |                   — | à retenir après vérification             |
-| Keycloak       |                   — | à retenir après vérification             |
-| Caddy          |                   — | à retenir après vérification             |
+| PostgreSQL     |               16.10 | image épinglée dans Compose              |
+| Keycloak       |              26.6.2 | image épinglée dans Compose              |
+| Caddy          |              2.11.3 | image épinglée dans Compose              |
+| n8n            |              2.30.5 | image épinglée dans Compose              |
+| Uptime Kuma    |               2.3.2 | image épinglée dans Compose              |
 
-Les versions d’images et dépendances seront épinglées avant installation.
+Les versions ont été vérifiées dans les releases officielles le 22 juillet
+2026. Elles doivent être revalidées avant une future mise à jour.

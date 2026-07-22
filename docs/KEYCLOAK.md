@@ -28,3 +28,9 @@ renvoyés au navigateur ni écrits dans les logs.
 La déconnexion locale utilise `/api/auth/logout`. Le client Keycloak doit
 autoriser exactement `${PORTAL_PUBLIC_URL}/api/auth/callback` et le portail doit
 être lancé derrière HTTPS.
+
+Le scope client par défaut `roles` doit inclure le mapper realm roles dans
+l’ID token et UserInfo (`realm_access.roles`). Sans ce réglage, le rôle
+`PORTAL_ADMIN` peut être visible dans l’access token mais absent de la session
+du portail, ce qui provoque un refus d’accès à l’administration. Après toute
+modification de mapper, l’utilisateur doit se déconnecter puis se reconnecter.

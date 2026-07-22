@@ -179,3 +179,19 @@ Prochaine action
 
 Brancher les claims OIDC au portail et remplacer les rôles de développement
 par les rôles Keycloak côté serveur, dans la phase applicative d’intégration.
+
+9. Recette fonctionnelle OIDC — 22 juillet 2026
+   - Le portail a été reconstruit avec l’intégration OIDC et le service `portal`
+     redémarré sans toucher aux bases ni aux volumes.
+   - Les six services Docker sont actifs; PostgreSQL, Keycloak, n8n, Uptime
+     Kuma et le portail sont sains.
+   - `/health` répond en HTTPS avec HTTP 200.
+   - La découverte OIDC Keycloak répond en HTTP 200.
+   - `/api/auth/login` redirige vers Keycloak avec un callback HTTPS et un état
+     anti-CSRF conservé dans un cookie HttpOnly.
+   - Un callback invalide est rejeté en HTTP 400 et l’API sans session renvoie
+     un catalogue vide.
+   - La VM n’expose publiquement que les ports 80 et 443; les ports internes
+     des services ne sont pas publiés.
+   - La connexion complète et le filtrage avec un utilisateur nécessitent un
+     compte Keycloak de test dédié; aucun compte réel n’a été créé.

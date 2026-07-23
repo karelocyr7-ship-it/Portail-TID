@@ -92,11 +92,12 @@ export const catalogApplications: CatalogApplication[] = [
   {
     code: "MDM",
     name: "MDM",
-    description: "Référentiel des données",
+    description: "Gestion des appareils mobiles",
     category: "Informatique",
     icon: "⌘",
     integrationLevel: 1,
     active: true,
+    url: "https://mdm.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
   },
   {

@@ -87,6 +87,10 @@ const applications = [
 
 export { applications, categories };
 
+const initialApplicationUrls: Record<string, string> = {
+  MDM: "https://mdm.tadgroupe.com",
+};
+
 const profileNames: Record<string, string> = {
   PORTAL_ADMIN: "Administrateur portail",
   DIRECTION: "Direction",
@@ -207,6 +211,7 @@ async function main() {
         description,
         categoryId: categoryIds.get(categoryName)!,
         icon: code.slice(0, 1),
+        url: initialApplicationUrls[code],
         active: true,
         displayOrder: categoryIds.size,
       },

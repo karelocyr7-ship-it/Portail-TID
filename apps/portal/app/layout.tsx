@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { getSession } from "@/lib/oidc";
+import { getRoles, getSession } from "@/lib/oidc";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +17,7 @@ export default async function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSession();
   if (!session) redirect("/api/auth/login");
+  const isPortalAdmin = getRoles(session).includes("PORTAL_ADMIN");
 
   return (
     <html lang="fr">
@@ -42,12 +43,16 @@ export default async function RootLayout({
               <Link className="nav-link active" href="/#applications">
                 ▦ <span>Applications</span>
               </Link>
-              <Link className="nav-link" href="/admin#comptes">
-                ♙ <span>Utilisateurs</span>
-              </Link>
-              <Link className="nav-link" href="/admin#catalogue">
-                ⚙ <span>Administration</span>
-              </Link>
+              {isPortalAdmin && (
+                <>
+                  <Link className="nav-link" href="/admin#comptes">
+                    ♙ <span>Utilisateurs</span>
+                  </Link>
+                  <Link className="nav-link" href="/admin#catalogue">
+                    ⚙ <span>Administration</span>
+                  </Link>
+                </>
+              )}
             </nav>
             <div className="sidebar-footer">
               <span className="status-dot" /> Services opérationnels

@@ -5,6 +5,7 @@ import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
 import { UserDirectory } from "@/components/user-directory";
+import { redirect } from "next/navigation";
 import {
   savePortalUser,
   updateApplicationStatus,
@@ -14,22 +15,7 @@ import {
 export default async function AdminPage() {
   const session = await getSession();
   const isAdmin = getRoles(session).includes("PORTAL_ADMIN");
-  if (!isAdmin) {
-    return (
-      <div className="page-container admin-page">
-        <div className="empty-state">
-          <p className="eyebrow">Accès contrôlé</p>
-          <h1>Accès refusé</h1>
-          <p>
-            Votre session ne possède pas le rôle d’administration du portail.
-          </p>
-          <Link className="button secondary" href="/">
-            Retour au tableau de bord
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  if (!isAdmin) redirect("/");
 
   const applications = await getAdminApplications();
   const profiles = await getAdminProfiles();

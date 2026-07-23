@@ -198,8 +198,8 @@ export default async function AdminPage() {
           <span className="count-badge">{profiles.length} profils</span>
         </div>
         <p className="section-intro">
-          Associez une identité Keycloak aux applications et profils autorisés.
-          Aucun mot de passe n’est enregistré dans le portail.
+          Associez une identité Keycloak aux profils réels déclarés par chaque
+          application. Aucun mot de passe n’est enregistré dans le portail.
         </p>
 
         <UserDirectory
@@ -373,7 +373,8 @@ function ProfilePicker({
     <fieldset className="profile-picker">
       <legend>Applications et profils autorisés</legend>
       <p className="field-help">
-        Les profils disponibles sont ceux déclarés dans le catalogue du portail.
+        Profils récupérés depuis les dépôts applicatifs ; le portail ne copie
+        jamais les comptes ni les mots de passe des applications.
       </p>
       <div className="profile-groups">
         {[...groups.values()].map((applicationProfiles) => (
@@ -382,6 +383,14 @@ function ProfilePicker({
             key={applicationProfiles[0].applicationId}
           >
             <strong>{applicationProfiles[0].application.name}</strong>
+            <small className="profile-source">
+              Source : {applicationProfiles[0].sourceSystem} · synchronisé le{" "}
+              {applicationProfiles[0].syncedAt
+                ? new Intl.DateTimeFormat("fr-FR", {
+                    dateStyle: "medium",
+                  }).format(applicationProfiles[0].syncedAt)
+                : "non synchronisé"}
+            </small>
             <div className="profile-options">
               {applicationProfiles.map((profile) => (
                 <label className="profile-option" key={profile.id}>

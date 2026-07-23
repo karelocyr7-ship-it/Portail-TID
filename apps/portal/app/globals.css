@@ -1189,6 +1189,14 @@ body {
   font-size: 12px;
   overflow-wrap: anywhere;
 }
+.profile-source {
+  display: block;
+  margin: -3px 0 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
 .profile-options {
   display: grid;
   gap: 5px;

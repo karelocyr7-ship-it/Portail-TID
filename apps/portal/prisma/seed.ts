@@ -104,6 +104,68 @@ const profileNames: Record<string, string> = {
   INFORMATIQUE: "Informatique",
 };
 
+type ProfileDefinition = {
+  key: string;
+  name: string;
+  description: string;
+  sourceSystem: string;
+  sourceReference: string;
+};
+
+const profileDefinitions: Record<string, ProfileDefinition[]> = {
+  TDB: [
+    ["ADMIN", "Administrateur TDB", "Administration des comptes et données"],
+    ["MANAGER", "Manager", "Pilotage des indicateurs et équipes"],
+    ["SUPERVISOR", "Superviseur", "Suivi opérationnel et supervision"],
+    ["DIRECTION", "Direction", "Consultation direction"],
+    ["VIEWER", "Consultation", "Accès en lecture seule"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "TDB",
+    sourceReference: "backend/src/routes/users.js:roles",
+  })),
+  "REVUE-PDV": [
+    ["super_admin", "Super administrateur", "Administration globale"],
+    ["admin", "Administrateur", "Administration de Revue-PDV"],
+    ["ro", "Responsable Orange", "Pilotage de la branche Orange"],
+    ["rc", "Responsable Canal", "Pilotage de la branche Canal+"],
+    ["sup_orange", "Superviseur Orange", "Suivi terrain Orange"],
+    ["rz", "Responsable de zone", "Suivi terrain Canal+"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "REVUE-PDV",
+    sourceReference: ["ro", "rc", "sup_orange", "rz"].includes(key)
+      ? "api/src/lib/branches.js:DEFAULT_BRANCHES"
+      : "db/init.sql:users.role",
+  })),
+  "CASH-RECON": [
+    [
+      "ADMIN",
+      "Administrateur CASH-RECON",
+      "Administration des comptes et référentiels",
+    ],
+    ["DAF", "Direction financière", "Pilotage financier et arbitrages"],
+    ["DG", "Direction générale", "Consultation et validation direction"],
+    ["TRESORIER", "Trésorier", "Gestion de la trésorerie"],
+    [
+      "CASH_MANAGER",
+      "Cash Manager",
+      "Gestion opérationnelle des encaissements",
+    ],
+    ["VIEWER", "Consultation", "Accès en lecture seule"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "CASH-RECON",
+    sourceReference: "api/src/routes/users.routes.js:USER_ROLES",
+  })),
+};
+
 async function main() {
   const categoryIds = new Map<string, string>();
 
@@ -148,22 +210,40 @@ async function main() {
       skipDuplicates: true,
     });
 
-    for (const [displayOrder, key] of roles.entries()) {
+    const definitions =
+      profileDefinitions[code] ??
+      roles.map((key) => ({
+        key,
+        name: profileNames[key] ?? key,
+        description: "Profil déclaré dans le catalogue du portail",
+        sourceSystem: "portal-catalog",
+        sourceReference: "apps/portal/prisma/seed.ts",
+      }));
+    for (const [displayOrder, profile] of definitions.entries()) {
       await prisma.applicationProfile.upsert({
         where: {
-          applicationId_key: { applicationId: application.id, key },
+          applicationId_key: {
+            applicationId: application.id,
+            key: profile.key,
+          },
         },
         update: {
-          name: profileNames[key] ?? key,
-          description: "Profil déclaré dans le catalogue du portail",
+          name: profile.name,
+          description: profile.description,
+          sourceSystem: profile.sourceSystem,
+          sourceReference: profile.sourceReference,
+          syncedAt: new Date(),
           active: true,
           displayOrder,
         },
         create: {
           applicationId: application.id,
-          key,
-          name: profileNames[key] ?? key,
-          description: "Profil déclaré dans le catalogue du portail",
+          key: profile.key,
+          name: profile.name,
+          description: profile.description,
+          sourceSystem: profile.sourceSystem,
+          sourceReference: profile.sourceReference,
+          syncedAt: new Date(),
           displayOrder,
         },
       });

@@ -54,6 +54,9 @@ model ApplicationProfile {
   key           String
   name          String
   description   String?
+  sourceSystem  String                    @default("portal-catalog")
+  sourceReference String?
+  syncedAt      DateTime?
   active        Boolean                   @default(true)
   displayOrder  Int                       @default(0)
   application   Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)

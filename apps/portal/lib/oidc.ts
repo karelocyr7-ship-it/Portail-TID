@@ -176,7 +176,21 @@ async function verifyIdToken(
 }
 
 export async function setStateCookie(state: string): Promise<void> {
-  (await cookies()).set(STATE_COOKIE, pack(state), {
+  const store = await cookies();
+  const previous = unpack(store.get(STATE_COOKIE)?.value);
+  let states: string[] = [];
+  if (previous) {
+    try {
+      const parsed = JSON.parse(previous) as unknown;
+      states = Array.isArray(parsed)
+        ? parsed.filter((value): value is string => typeof value === "string")
+        : [previous];
+    } catch {
+      states = [previous];
+    }
+  }
+  states = [...states.filter((value) => value !== state), state].slice(-4);
+  store.set(STATE_COOKIE, pack(JSON.stringify(states)), {
     httpOnly: true,
     secure: true,
     sameSite: "lax",
@@ -187,9 +201,31 @@ export async function setStateCookie(state: string): Promise<void> {
 
 export async function consumeStateCookie(state: string): Promise<boolean> {
   const store = await cookies();
-  const expected = unpack(store.get(STATE_COOKIE)?.value);
-  store.delete(STATE_COOKIE);
-  return Boolean(expected && expected === state);
+  const raw = unpack(store.get(STATE_COOKIE)?.value);
+  if (!raw) return false;
+
+  let states: string[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    states = Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [raw];
+  } catch {
+    states = [raw];
+  }
+
+  if (!states.includes(state)) return false;
+  const remaining = states.filter((value) => value !== state);
+  if (remaining.length === 0) store.delete(STATE_COOKIE);
+  else
+    store.set(STATE_COOKIE, pack(JSON.stringify(remaining)), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 600,
+      path: "/",
+    });
+  return true;
 }
 
 export async function setSession(session: PortalSession): Promise<void> {

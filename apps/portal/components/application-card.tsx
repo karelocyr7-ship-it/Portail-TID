@@ -26,14 +26,15 @@ export function ApplicationCard({
             {application.maintenanceMessage ?? "Maintenance en cours"}
           </p>
         )}
-        <a
-          className="button secondary"
-          href={application.url ?? "#"}
-          aria-disabled={!application.url}
-          onClick={(event) => !application.url && event.preventDefault()}
-        >
-          {application.url ? "Ouvrir l’application" : "URL à configurer"}
-        </a>
+        {application.url ? (
+          <a className="button secondary" href={application.url}>
+            Ouvrir l’application
+          </a>
+        ) : (
+          <span className="button secondary" aria-disabled="true">
+            URL à configurer
+          </span>
+        )}
       </div>
     </article>
   );

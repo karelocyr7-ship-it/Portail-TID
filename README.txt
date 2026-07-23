@@ -501,3 +501,13 @@ Reste à faire après l'intégration SSO
       et les deux applications répondent HTTP 200 sur la page principale.
     - `/api/auth/oidc/start` répond HTTP 302 vers Keycloak pour TDB et
       Revue-PDV. Aucun correctif ni redéploiement supplémentaire n'est requis.
+
+25. Vérification HTTPS des trois applications — 23 juillet 2026
+    - `https://tdb.tadgroupe.com`, `https://pdv.tadgroupe.com` et
+      `https://cash.tadgroupe.com` répondent HTTP 200 sur la page principale.
+    - Les trois routes HTTPS `/api/auth/oidc/start` répondent HTTP 302 vers
+      Keycloak. Les certificats TLS sont valides jusqu'au 21 octobre 2026.
+    - Réserve à traiter séparément : les URLs HTTP ne sont pas uniformément
+      redirigées vers HTTPS (TDB et CASH-RECON renvoient 404, Revue-PDV répond
+      encore en HTTP). Le portail et les callbacks OIDC utilisent exclusivement
+      HTTPS ; aucun impact constaté sur le SSO actuel.

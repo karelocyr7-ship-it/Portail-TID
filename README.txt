@@ -522,3 +522,15 @@ Reste à faire après l'intégration SSO
       conteneurs web opérationnels.
     - Changements versionnés sur les branches dédiées : TDB `a3c8564`,
       Revue-PDV `aeb1f30`, CASH-RECON `3723e0c`.
+
+27. Correctif boucle de connexion Revue-PDV — 23 juillet 2026
+    - Le frontend appelait `GET /api/auth/me` pour restaurer la session SSO,
+      mais cette route manquait dans l'API et renvoyait HTTP 404, provoquant
+      le retour répété vers l'écran de connexion.
+    - La route protégée a été ajoutée avec le format de réponse attendu par le
+      frontend. Sans cookie elle renvoie désormais HTTP 401, et l'OIDC reste
+      activé avec HTTP 200 sur `/api/auth/oidc/config`.
+    - L'API et le frontend Revue-PDV ont été reconstruits et redémarrés. Le
+      meta-tag mobile moderne a aussi été ajouté pour supprimer l'avertissement
+      navigateur non bloquant.
+    - Correctif versionné sur `codex/oidc-nonce-revue-pdv`, commit `383e07c`.

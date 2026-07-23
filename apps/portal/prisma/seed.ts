@@ -93,6 +93,17 @@ const applications = [
 
 export { applications, categories };
 
+const profileNames: Record<string, string> = {
+  PORTAL_ADMIN: "Administrateur portail",
+  DIRECTION: "Direction",
+  FINANCE: "Finance",
+  SUPERVISEUR: "Superviseur",
+  AGENT_TERRAIN: "Agent terrain",
+  GESTIONNAIRE_PARC: "Gestionnaire parc",
+  RH: "Ressources humaines",
+  INFORMATIQUE: "Informatique",
+};
+
 async function main() {
   const categoryIds = new Map<string, string>();
 
@@ -136,6 +147,27 @@ async function main() {
       })),
       skipDuplicates: true,
     });
+
+    for (const [displayOrder, key] of roles.entries()) {
+      await prisma.applicationProfile.upsert({
+        where: {
+          applicationId_key: { applicationId: application.id, key },
+        },
+        update: {
+          name: profileNames[key] ?? key,
+          description: "Profil déclaré dans le catalogue du portail",
+          active: true,
+          displayOrder,
+        },
+        create: {
+          applicationId: application.id,
+          key,
+          name: profileNames[key] ?? key,
+          description: "Profil déclaré dans le catalogue du portail",
+          displayOrder,
+        },
+      });
+    }
   }
 }
 

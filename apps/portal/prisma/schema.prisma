@@ -22,6 +22,7 @@ model Application {
   healthcheckUrl     String?
   category           Category               @relation(fields: [categoryId], references: [id])
   roles              ApplicationRole[]
+  profiles           ApplicationProfile[]
   favorites          Favorite[]
   accessLogs         ApplicationAccessLog[]
   createdAt          DateTime               @default(now())
@@ -45,6 +46,48 @@ model ApplicationRole {
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@id([applicationId, keycloakRole])
+}
+
+model ApplicationProfile {
+  id            String                    @id @default(cuid())
+  applicationId String
+  key           String
+  name          String
+  description   String?
+  active        Boolean                   @default(true)
+  displayOrder  Int                       @default(0)
+  application   Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  assignments   UserApplicationProfile[]
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@unique([applicationId, key])
+  @@index([applicationId, active, displayOrder])
+}
+
+model PortalUser {
+  id              String                    @id @default(cuid())
+  keycloakSubject String                    @unique
+  email           String?
+  displayName     String
+  active          Boolean                   @default(true)
+  assignments     UserApplicationProfile[]
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+
+  @@index([email])
+}
+
+model UserApplicationProfile {
+  userId      String
+  profileId   String
+  assignedAt  DateTime           @default(now())
+  assignedBy  String?
+  user        PortalUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile     ApplicationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@id([userId, profileId])
+  @@index([profileId])
 }
 
 model Favorite {

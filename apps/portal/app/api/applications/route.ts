@@ -2,9 +2,12 @@ import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
 
 export async function GET() {
-  const roles = getRoles(await getSession());
+  const session = await getSession();
+  const roles = getRoles(session);
   return Response.json(
-    { data: await getVisibleApplicationsFromDatabase(roles) },
+    {
+      data: await getVisibleApplicationsFromDatabase(roles, session?.subject),
+    },
     { headers: { "cache-control": "no-store" } },
   );
 }

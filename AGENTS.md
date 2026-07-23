@@ -11,14 +11,18 @@
 
 - Ne jamais lire, afficher, copier ou versionner un fichier `.env` réel.
 - Ne jamais publier un mot de passe, token, clé privée ou secret.
-- Ne jamais modifier directement la production.
+- Ne jamais modifier directement les fichiers de production ; tout déploiement
+  doit passer par la procédure de livraison prévue.
 - Ne jamais supprimer une base, un volume ou des fichiers sans validation explicite.
 - Ne jamais monter `/var/run/docker.sock` dans un conteneur agent.
 - Ne jamais utiliser `danger-full-access`.
 - Ne jamais utiliser de données personnelles réelles dans les tests.
 - Ne jamais donner aux agents nocturnes un accès aux secrets ou bases de production.
 - Ne jamais ajouter une dépendance sans justification et contrôle de maintenance.
-- Ne pas déployer automatiquement.
+- Un déploiement est autorisé uniquement après fusion dans `main`, validation
+  des contrôles disponibles et confirmation explicite de l’utilisateur. Il
+  doit être réalisé via la procédure documentée, avec vérification de santé et
+  possibilité de retour arrière.
 
 ## Validation du travail
 

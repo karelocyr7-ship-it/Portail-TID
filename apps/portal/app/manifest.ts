@@ -7,9 +7,15 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Portail des applications métiers TAD Groupe",
     start_url: "/",
     display: "standalone",
-    background_color: "#f5f7fa",
-    theme_color: "#0b316e",
+    background_color: "#f5f8fc",
+    theme_color: "#062f70",
     lang: "fr",
-    icons: [],
+    icons: [
+      {
+        src: "/branding/tad-logo.png",
+        sizes: "1080x545",
+        type: "image/png",
+      },
+    ],
   };
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { getSession } from "@/lib/oidc";
 import "./globals.css";
@@ -22,12 +23,18 @@ export default async function RootLayout({
         <div className="shell">
           <aside className="sidebar">
             <Link className="brand" href="/">
-              <span className="brand-mark" aria-hidden="true">
-                T
+              <span className="brand-logo">
+                <Image
+                  src="/branding/tad-logo.png"
+                  alt="TAD Groupe"
+                  width={1080}
+                  height={545}
+                  priority
+                />
               </span>
-              <span>
+              <span className="brand-caption">
                 <strong>Portail</strong>
-                <small>TAD Groupe</small>
+                <small>Espace métier</small>
               </span>
             </Link>
             <nav aria-label="Navigation principale">

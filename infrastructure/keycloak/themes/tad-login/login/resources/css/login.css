@@ -1,4 +1,25 @@
 /* TAD Groupe identity on the Keycloak login screen. */
+.pf-v5-c-login__container {
+  display: flex;
+  width: min(34rem, 92vw);
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#kc-header {
+  display: flex;
+  justify-content: center;
+  padding: 0 0 18px;
+}
+
+#kc-header-wrapper {
+  flex: 0 0 auto;
+}
+
+.pf-v5-c-login__main {
+  width: 100%;
+}
+
 #kc-header-wrapper {
   width: min(320px, 82vw);
   height: 150px;

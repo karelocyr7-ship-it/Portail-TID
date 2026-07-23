@@ -1,6 +1,7 @@
 import {
   consumeStateCookie,
   exchangeCode,
+  consumeNonceCookie,
   publicUrl,
   setSession,
 } from "@/lib/oidc";
@@ -16,8 +17,14 @@ export async function GET(request: Request) {
       { error: "Échec de la validation OIDC" },
       { status: 400 },
     );
+  const nonce = await consumeNonceCookie();
+  if (!nonce)
+    return Response.json(
+      { error: "Échec de la validation OIDC" },
+      { status: 400 },
+    );
   try {
-    await setSession(await exchangeCode(code));
+    await setSession(await exchangeCode(code, nonce));
     return Response.redirect(new URL("/", publicUrl()));
   } catch {
     return Response.json(

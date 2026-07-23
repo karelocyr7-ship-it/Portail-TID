@@ -23,6 +23,21 @@ export type CatalogApplication = {
   roles: PortalRole[];
 };
 
+export type PortalCatalogAccess = {
+  managed: boolean;
+  active: boolean;
+  applicationIds: string[];
+};
+
+export function canReadCatalog(
+  roles: readonly string[],
+  access: PortalCatalogAccess,
+): boolean {
+  if (roles.includes("PORTAL_ADMIN")) return true;
+  if (access.managed) return access.active && access.applicationIds.length > 0;
+  return roles.length > 0;
+}
+
 export const catalogApplications: CatalogApplication[] = [
   {
     code: "CASH-RECON",

@@ -6,9 +6,10 @@ import { getSession } from "@/lib/oidc";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Portail TAD Groupe",
-  description: "Portail centralisé des applications métiers de TAD Groupe",
-  applicationName: "Portail TAD Groupe",
+  title: "Portail TID",
+  description:
+    "Portail centralisé des applications métiers de TID / TAD Groupe",
+  applicationName: "Portail TID",
 };
 
 export default async function RootLayout({
@@ -25,10 +26,10 @@ export default async function RootLayout({
             <Link className="brand" href="/">
               <span className="brand-logo">
                 <Image
-                  src="/branding/tad-logo.png"
-                  alt="TAD Groupe"
-                  width={1080}
-                  height={545}
+                  src="/branding/tid-logo.png"
+                  alt="TID – Tropical Ivoire Distribution"
+                  width={216}
+                  height={87}
                   priority
                 />
               </span>
@@ -55,8 +56,8 @@ export default async function RootLayout({
           <main className="main-content">
             <header className="topbar">
               <div>
-                <p className="eyebrow">TID / TAD Groupe</p>
-                <p className="topbar-title">Espace de travail</p>
+                <p className="eyebrow">Tropical Ivoire Distribution</p>
+                <p className="topbar-title">Portail métier unifié</p>
               </div>
               <div className="user-chip">
                 <span className="avatar">

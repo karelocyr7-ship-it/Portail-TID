@@ -1,19 +1,25 @@
 import { getPrisma } from "@/lib/prisma";
-import type { CatalogApplication } from "@/lib/catalog";
+import { canReadCatalog, type CatalogApplication } from "@/lib/catalog";
+import { getPortalUserAccess } from "@/lib/portal-users";
 
 export async function getVisibleApplicationsFromDatabase(
   roles: readonly string[],
+  subject?: string,
 ): Promise<CatalogApplication[]> {
-  if (roles.length === 0) return [];
-
   const prisma = getPrisma();
   const isAdmin = roles.includes("PORTAL_ADMIN");
+  const portalUserAccess = subject
+    ? await getPortalUserAccess(subject)
+    : { managed: false, active: false, applicationIds: [] };
+  if (!canReadCatalog(roles, portalUserAccess)) return [];
   const applications = await prisma.application.findMany({
     where: {
       active: true,
       ...(isAdmin
         ? {}
-        : { roles: { some: { keycloakRole: { in: [...roles] } } } }),
+        : portalUserAccess.managed
+          ? { id: { in: portalUserAccess.applicationIds } }
+          : { roles: { some: { keycloakRole: { in: [...roles] } } } }),
     },
     include: { category: true, roles: true },
     orderBy: [{ category: { displayOrder: "asc" } }, { displayOrder: "asc" }],

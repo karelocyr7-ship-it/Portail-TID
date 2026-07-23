@@ -1,9 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getAdminApplications } from "@/lib/catalog-db";
+import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
-import { updateApplicationStatus, updateApplicationUrl } from "./actions";
+import {
+  savePortalUser,
+  updateApplicationStatus,
+  updateApplicationUrl,
+} from "./actions";
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -26,6 +31,8 @@ export default async function AdminPage() {
   }
 
   const applications = await getAdminApplications();
+  const profiles = await getAdminProfiles();
+  const users = await getAdminUsers();
   const categories = new Set(
     applications.map((application) => application.category),
   );
@@ -69,6 +76,13 @@ export default async function AdminPage() {
           <span>
             <strong>{roles.size}</strong>
             <small>Rôles configurés</small>
+          </span>
+        </div>
+        <div className="admin-stat-card">
+          <span className="admin-stat-icon orange">♙</span>
+          <span>
+            <strong>{users.length}</strong>
+            <small>Comptes portail</small>
           </span>
         </div>
       </section>
@@ -168,6 +182,138 @@ export default async function AdminPage() {
         ))}
       </section>
 
+      <section className="admin-users-section" id="comptes">
+        <div className="section-header admin-section-heading">
+          <div>
+            <p className="eyebrow">Habilitations</p>
+            <h2>Comptes et profils applicatifs</h2>
+          </div>
+          <span className="count-badge">{profiles.length} profils</span>
+        </div>
+        <p className="section-intro">
+          Associez une identité Keycloak aux applications et profils autorisés.
+          Aucun mot de passe n’est enregistré dans le portail.
+        </p>
+
+        <form className="user-editor" action={savePortalUser}>
+          <div className="user-editor-heading">
+            <div>
+              <p className="eyebrow">Nouveau compte</p>
+              <h3>Ajouter une habilitation</h3>
+            </div>
+            <span className="source-note">Source : identité Keycloak</span>
+          </div>
+          <div className="user-fields">
+            <label>
+              Nom affiché
+              <input name="displayName" required maxLength={160} />
+            </label>
+            <label>
+              E-mail de référence
+              <input name="email" type="email" maxLength={320} />
+            </label>
+            <label className="field-wide">
+              Identifiant Keycloak (sub)
+              <input name="keycloakSubject" required maxLength={200} />
+            </label>
+          </div>
+          <ProfilePicker profiles={profiles} />
+          <div className="user-editor-footer">
+            <label className="check-label">
+              <input type="checkbox" name="active" defaultChecked /> Compte
+              actif
+            </label>
+            <button className="button primary" type="submit">
+              Enregistrer le compte
+            </button>
+          </div>
+        </form>
+
+        <div className="user-list" aria-label="Comptes portail">
+          {users.length === 0 ? (
+            <div className="empty-state compact-empty">
+              <h3>Aucun compte administré</h3>
+              <p>Ajoutez une identité Keycloak pour gérer ses accès.</p>
+            </div>
+          ) : (
+            users.map((user) => (
+              <form
+                className="user-editor user-editor-existing"
+                action={savePortalUser}
+                key={user.id}
+              >
+                <input type="hidden" name="userId" value={user.id} />
+                <div className="user-editor-heading">
+                  <div>
+                    <p className="eyebrow">Compte portail</p>
+                    <h3>{user.displayName}</h3>
+                    <p className="user-meta">
+                      {user.email ?? "E-mail non renseigné"} ·{" "}
+                      {user.keycloakSubject}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      user.active ? "status-pill" : "status-pill inactive"
+                    }
+                  >
+                    {user.active ? "Actif" : "Désactivé"}
+                  </span>
+                </div>
+                <div className="user-fields">
+                  <label>
+                    Nom affiché
+                    <input
+                      name="displayName"
+                      required
+                      maxLength={160}
+                      defaultValue={user.displayName}
+                    />
+                  </label>
+                  <label>
+                    E-mail de référence
+                    <input
+                      name="email"
+                      type="email"
+                      maxLength={320}
+                      defaultValue={user.email ?? ""}
+                    />
+                  </label>
+                  <label className="field-wide">
+                    Identifiant Keycloak (sub)
+                    <input
+                      name="keycloakSubject"
+                      required
+                      maxLength={200}
+                      defaultValue={user.keycloakSubject}
+                    />
+                  </label>
+                </div>
+                <ProfilePicker
+                  profiles={profiles}
+                  selected={
+                    new Set(user.assignments.map(({ profileId }) => profileId))
+                  }
+                />
+                <div className="user-editor-footer">
+                  <label className="check-label">
+                    <input
+                      type="checkbox"
+                      name="active"
+                      defaultChecked={user.active}
+                    />{" "}
+                    Compte actif
+                  </label>
+                  <button className="button primary" type="submit">
+                    Enregistrer les accès
+                  </button>
+                </div>
+              </form>
+            ))
+          )}
+        </div>
+      </section>
+
       <section
         className="admin-tool-strip"
         aria-label="Fonctions d’administration"
@@ -185,5 +331,58 @@ export default async function AdminPage() {
         </Link>
       </section>
     </div>
+  );
+}
+
+function ProfilePicker({
+  profiles,
+  selected = new Set<string>(),
+}: {
+  profiles: Awaited<ReturnType<typeof getAdminProfiles>>;
+  selected?: Set<string>;
+}) {
+  const groups = profiles.reduce<Map<string, typeof profiles>>(
+    (map, profile) => {
+      const current = map.get(profile.applicationId) ?? [];
+      current.push(profile);
+      map.set(profile.applicationId, current);
+      return map;
+    },
+    new Map(),
+  );
+
+  return (
+    <fieldset className="profile-picker">
+      <legend>Applications et profils autorisés</legend>
+      <p className="field-help">
+        Les profils disponibles sont ceux déclarés dans le catalogue du portail.
+      </p>
+      <div className="profile-groups">
+        {[...groups.values()].map((applicationProfiles) => (
+          <div
+            className="profile-group"
+            key={applicationProfiles[0].applicationId}
+          >
+            <strong>{applicationProfiles[0].application.name}</strong>
+            <div className="profile-options">
+              {applicationProfiles.map((profile) => (
+                <label className="profile-option" key={profile.id}>
+                  <input
+                    type="checkbox"
+                    name="profileIds"
+                    value={profile.id}
+                    defaultChecked={selected.has(profile.id)}
+                  />
+                  <span>
+                    <b>{profile.name}</b>
+                    <small>{profile.key}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </fieldset>
   );
 }

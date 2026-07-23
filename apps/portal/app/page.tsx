@@ -8,7 +8,10 @@ export default async function DashboardPage() {
   if (!session) redirect("/api/auth/login");
 
   const roles = getRoles(session);
-  const applications = await getVisibleApplicationsFromDatabase(roles);
+  const applications = await getVisibleApplicationsFromDatabase(
+    roles,
+    session.subject,
+  );
 
   return (
     <div className="page-container">

@@ -17,7 +17,8 @@ réutilisable par le portail web et la future application Android.
 
 ## Règles d’usage
 
-- utiliser le logo TAD fourni sans le recolorer ni le déformer ;
+- utiliser le logo TID fourni sans le recolorer ni le déformer ; le portail
+  référence `tid-logo.png` et conserve les proportions natives de l’asset ;
 - privilégier les surfaces blanches, les cartes arrondies et les accents
   orange sur une base bleu marine ;
 - conserver un contraste lisible et des zones tactiles d’au moins 44 px pour
@@ -26,6 +27,6 @@ réutilisable par le portail web et la future application Android.
   conserver une interface légère sur Android ;
 - ne pas ajouter de texte ou d’URL métier inventés dans les supports visuels.
 
-L’asset web est `apps/portal/public/branding/tad-logo.png`. Android devra
-reprendre ces tokens dans ses propres ressources natives plutôt que charger
-la feuille CSS du portail.
+L’asset web principal est `apps/portal/public/branding/tid-logo.png`. Android
+devra reprendre ces tokens dans ses propres ressources natives plutôt que
+charger la feuille CSS du portail.

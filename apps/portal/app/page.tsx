@@ -1,9 +1,12 @@
 import { ApplicationCard } from "@/components/application-card";
 import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const session = await getSession();
+  if (!session) redirect("/api/auth/login");
+
   const roles = getRoles(session);
   const applications = await getVisibleApplicationsFromDatabase(roles);
 
@@ -19,11 +22,6 @@ export default async function DashboardPage() {
             Retrouvez rapidement les applications et outils autorisés pour votre
             activité.
           </p>
-          {!session && (
-            <a className="button primary hero-action" href="/api/auth/login">
-              Accéder avec Keycloak
-            </a>
-          )}
         </div>
         <div className="hero-orbit" aria-hidden="true">
           <span>✦</span>
@@ -42,11 +40,8 @@ export default async function DashboardPage() {
 
       {applications.length === 0 ? (
         <div className="empty-state">
-          <h2>Connexion requise</h2>
-          <p>Le catalogue sera chargé après authentification Keycloak.</p>
-          <a className="button primary" href="/api/auth/login">
-            Se connecter
-          </a>
+          <h2>Aucune application disponible</h2>
+          <p>Votre compte ne possède pas encore de rôle applicatif.</p>
         </div>
       ) : (
         <div className="application-grid">

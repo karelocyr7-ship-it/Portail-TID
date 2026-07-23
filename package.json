@@ -12,6 +12,11 @@
     "format:check": "prettier --check .",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
+  "pnpm": {
+    "overrides": {
+      "sharp": "0.35.3"
+    }
+  },
   "devDependencies": {
     "prettier": "3.9.6"
   }

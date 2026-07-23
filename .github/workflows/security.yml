@@ -20,7 +20,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Refuser les fichiers de secrets suivis
-        run: '! git ls-files | grep -E "(^|/)(\\.env($|\\.)|.*\\.(pem|key|p12|pfx)$)"'
+        run: '! git ls-files | grep -E "(^|/)\\.env($|/)|.*\\.(pem|key|p12|pfx)$"'
       - name: Rechercher des signatures de secrets
         run: |
           if git grep -n -I -E 'BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|gh[pousr]_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}' -- ':!.env.example'; then

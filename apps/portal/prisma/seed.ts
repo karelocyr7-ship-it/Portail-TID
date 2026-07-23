@@ -83,13 +83,6 @@ const applications = [
     "Recrutement OCI",
     ["PORTAL_ADMIN", "RH", "DIRECTION"],
   ],
-  [
-    "CA",
-    "Suivi du chiffre d’affaires",
-    "Suivi du chiffre d’affaires",
-    "Finance",
-    ["PORTAL_ADMIN", "DIRECTION", "FINANCE"],
-  ],
 ] as const;
 
 export { applications, categories };
@@ -250,6 +243,15 @@ async function main() {
       });
     }
   }
+
+  await prisma.application.updateMany({
+    where: { code: "CA" },
+    data: {
+      active: false,
+      maintenance: true,
+      maintenanceMessage: "Application future TID+ / Canal+",
+    },
+  });
 }
 
 main()

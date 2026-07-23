@@ -129,16 +129,6 @@ export const catalogApplications: CatalogApplication[] = [
     active: true,
     roles: ["PORTAL_ADMIN", "RH", "DIRECTION"],
   },
-  {
-    code: "CA",
-    name: "Suivi du chiffre d’affaires",
-    description: "Indicateurs de chiffre d’affaires",
-    category: "Finance",
-    icon: "↗",
-    integrationLevel: 1,
-    active: true,
-    roles: ["PORTAL_ADMIN", "DIRECTION", "FINANCE"],
-  },
 ];
 
 export function hasRoleAccess(

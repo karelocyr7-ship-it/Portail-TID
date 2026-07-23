@@ -1,5 +1,8 @@
 {
 	 email {$ACME_EMAIL}
+	 # Renouveler automatiquement dans le dernier tiers de la durée du certificat
+	 # (environ 30 jours pour un certificat ACME de 90 jours).
+	 renewal_window_ratio 0.3333
 }
 
 portail.tadgroupe.com {

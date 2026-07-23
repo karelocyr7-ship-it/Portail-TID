@@ -33,3 +33,24 @@ export async function getVisibleApplicationsFromDatabase(
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }
+
+export async function getAdminApplications(): Promise<CatalogApplication[]> {
+  const applications = await getPrisma().application.findMany({
+    include: { category: true, roles: true },
+    orderBy: [{ category: { displayOrder: "asc" } }, { displayOrder: "asc" }],
+  });
+
+  return applications.map((application) => ({
+    code: application.code,
+    name: application.name,
+    description: application.description,
+    category: application.category.name,
+    icon: application.icon,
+    integrationLevel: application.integrationLevel as 1 | 2 | 3,
+    active: application.active,
+    maintenance: application.maintenance,
+    maintenanceMessage: application.maintenanceMessage ?? undefined,
+    url: application.url ?? undefined,
+    roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
+  }));
+}

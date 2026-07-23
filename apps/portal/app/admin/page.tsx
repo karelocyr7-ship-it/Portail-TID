@@ -136,7 +136,9 @@ export default async function AdminPage() {
             </div>
             <form className="admin-url-form" action={updateApplicationUrl}>
               <input type="hidden" name="code" value={application.code} />
-              <label htmlFor={`url-${application.code}`}>URL de l’application</label>
+              <label htmlFor={`url-${application.code}`}>
+                URL de l’application
+              </label>
               <div className="admin-url-row">
                 <input
                   id={`url-${application.code}`}

@@ -15,7 +15,11 @@ export async function updateApplicationStatus(formData: FormData) {
 
   const code = formData.get("code");
   const action = formData.get("action");
-  if (typeof code !== "string" || !code || !allowedActions.includes(action as AdminAction)) {
+  if (
+    typeof code !== "string" ||
+    !code ||
+    !allowedActions.includes(action as AdminAction)
+  ) {
     throw new Error("Demande d’administration invalide");
   }
 
@@ -28,14 +32,20 @@ export async function updateApplicationStatus(formData: FormData) {
       ? { active: !application.active }
       : { maintenance: !application.maintenance };
   await prisma.$transaction(async (transaction) => {
-    const result = await transaction.application.update({ where: { code }, data });
+    const result = await transaction.application.update({
+      where: { code },
+      data,
+    });
     await transaction.auditLog.create({
       data: {
         userId: session!.subject,
         eventType: "APPLICATION_STATUS_UPDATED",
         entityType: "Application",
         entityId: application.id,
-        beforeData: { active: application.active, maintenance: application.maintenance },
+        beforeData: {
+          active: application.active,
+          maintenance: application.maintenance,
+        },
         afterData: { active: result.active, maintenance: result.maintenance },
       },
     });
@@ -66,7 +76,11 @@ export async function updateApplicationUrl(formData: FormData) {
     } catch {
       throw new Error("URL invalide");
     }
-    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) {
+    if (
+      !["http:", "https:"].includes(parsed.protocol) ||
+      parsed.username ||
+      parsed.password
+    ) {
       throw new Error("L’URL doit utiliser HTTP(S), sans identifiants");
     }
   }

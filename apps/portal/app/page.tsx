@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="page-container">
+    <div className="page-container dashboard-page">
       <section className="hero-panel">
         <div>
           <p className="eyebrow light">Bienvenue sur votre portail</p>

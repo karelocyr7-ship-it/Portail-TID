@@ -16,7 +16,7 @@ export default async function AdminPage() {
   const isAdmin = getRoles(session).includes("PORTAL_ADMIN");
   if (!isAdmin) {
     return (
-      <div className="page-container">
+      <div className="page-container admin-page">
         <div className="empty-state">
           <p className="eyebrow">Accès contrôlé</p>
           <h1>Accès refusé</h1>
@@ -43,7 +43,7 @@ export default async function AdminPage() {
   const activeUsers = users.filter((user) => user.active).length;
 
   return (
-    <div className="page-container">
+    <div className="page-container admin-page">
       <section className="admin-hero">
         <div>
           <p className="eyebrow light">Espace administrateur</p>

@@ -420,3 +420,37 @@ Le portail est donc prêt côté Keycloak, mais le SSO complet reste bloqué par
 l'absence du code et des backends des trois applications. Après une coupure
 réseau, reprendre à ce diagnostic plutôt que modifier les liens ou transmettre
 des identifiants.
+
+20. Intégration SSO des applications distantes — 23 juillet 2026
+    - Connexion SSH réussie vers `135.125.132.51` (`Revue-PDV`) avec la clé
+      locale dédiée ; aucun fichier `.env` n'a été affiché ou copié vers le
+      dépôt du portail.
+    - Les dépôts TDB-TID, Revue-PDV-PROD et CASH-RECON ont reçu chacun une
+      branche et une PR dédiées, puis les changements ont été fusionnés dans
+      leurs branches `main` respectives.
+    - Trois clients Keycloak confidentiels ont été créés dans `tad-groupe` :
+      `tad-tdb`, `tad-revue-pdv` et `tad-cash-recon`. Les callback et retours
+      post-déconnexion sont limités aux domaines correspondants.
+    - Chaque backend échange désormais le code Authorization Code côté serveur,
+      valide la signature JWKS, l'issuer, l'audience, le nonce et l'état CSRF,
+      associe l'email Keycloak à un compte applicatif actif et crée une session
+      HttpOnly. Les mots de passe locaux ne sont pas transmis par le portail.
+    - Les frontends envoient les cookies de session, redirigent les visiteurs
+      non authentifiés vers Keycloak et conservent le login local comme secours.
+    - Les trois stacks ont été reconstruites et redémarrées sans suppression de
+      base ou de volume. Les routes OIDC publiques renvoient HTTP 302 vers le
+      même realm ; TDB, Revue-PDV et CASH-RECON renvoient HTTP 200.
+    - Tests réussis : TDB 2 tests backend et build frontend ; Revue-PDV 6 tests
+      API réussis, 6 ignorés faute de base de test, 3 tests frontend et build ;
+      CASH-RECON 22 tests API et build frontend.
+
+Reste à faire après l'intégration SSO
+-------------------------------------
+
+- réaliser un parcours navigateur complet avec un compte Keycloak de test non
+  personnel dont l'email existe dans les trois bases, puis vérifier l'accès
+  par rôle et la déconnexion globale ;
+- vérifier les correspondances de rôles métier entre les trois applications,
+  car le SSO authentifie l'identité mais conserve les autorisations locales ;
+- traiter séparément les alertes npm d'audit et formaliser le rollback par
+  reconstruction du commit `main` précédent.

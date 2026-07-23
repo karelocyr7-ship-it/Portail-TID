@@ -120,4 +120,3 @@ Prérequis techniques à préparer, après validation de la phase suivante :
 Après validation, proposer la PHASE 1 : créer la structure du dépôt, les règles agents, la documentation de base, les modèles GitHub locaux, `.env.example`, les fichiers Compose de préparation et le premier commit.
 
 Cette phase ne nécessitera pas d’installation de paquet ni de modification système. Les installations Docker, Node.js, le fuseau horaire, le pare-feu et les utilisateurs techniques resteront dans des phases ultérieures avec validation préalable des opérations risquées.
-

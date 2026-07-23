@@ -1,0 +1,11 @@
+name: Fonctionnalité
+description: Proposer une évolution du portail
+title: "[Feature] "
+body:
+  - type: textarea
+    id: besoin
+    attributes:
+      label: Besoin
+      description: Décrire le besoin métier et le résultat attendu.
+    validations:
+      required: true

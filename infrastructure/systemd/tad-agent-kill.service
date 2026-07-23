@@ -1,0 +1,11 @@
+[Unit]
+Description=Arrêt obligatoire de l’agent Codex TAD
+
+[Service]
+Type=oneshot
+User=tad-agents
+Group=tad-agents
+ExecStart=/usr/bin/pkill -KILL -u tad-agents
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true

@@ -1,0 +1,12 @@
+[Unit]
+Description=Rapport matinal des agents Codex TAD
+
+[Service]
+Type=oneshot
+User=tad-agents
+Group=tad-agents
+ExecStart=/srv/tad/portail/scripts/daily-report.sh
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/tad/agents

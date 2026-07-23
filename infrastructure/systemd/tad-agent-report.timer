@@ -1,0 +1,10 @@
+[Unit]
+Description=Rapport matinal des agents Codex TAD
+
+[Timer]
+OnCalendar=*-*-* 06:05:00 Africa/Abidjan
+Persistent=true
+Unit=tad-agent-report.service
+
+[Install]
+WantedBy=timers.target

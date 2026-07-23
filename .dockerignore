@@ -1,0 +1,10 @@
+.git
+.next
+node_modules
+apps/portal/node_modules
+coverage
+*.log
+.env
+.env.*
+README.txt
+TAD LOGO.png

@@ -1,4 +1,5 @@
 import { ApplicationCard } from "@/components/application-card";
+import Image from "next/image";
 import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
 import { redirect } from "next/navigation";
@@ -27,9 +28,13 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="hero-orbit" aria-hidden="true">
-          <span>✦</span>
-          <span>+</span>
-          <span>⌁</span>
+          <Image
+            src="/branding/tid-logo.png"
+            alt="TID"
+            width={216}
+            height={87}
+          />
+          <span>Portail métier unifié</span>
         </div>
       </section>
 

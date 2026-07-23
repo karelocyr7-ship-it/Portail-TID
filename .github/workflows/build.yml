@@ -18,6 +18,7 @@ jobs:
           node-version: 24.18.0
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter portal exec prisma generate
       - run: pnpm build
       - name: Construire l’image sans publication
         run: docker build --file apps/portal/Dockerfile --tag tad-portal:ci .

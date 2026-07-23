@@ -468,3 +468,16 @@ Reste à faire après l'intégration SSO
       le realm Keycloak.
     - En cas d'ancien bundle conservé par le navigateur ou la PWA, effectuer
       un rechargement forcé ou vider le cache du site avant de retester.
+
+22. Vérification SSO TDB et Revue-PDV — 23 juillet 2026
+    - Les bundles réellement servis par `tdb.tadgroupe.com` et
+      `pdv.tadgroupe.com` contiennent le correctif de redirection automatique
+      depuis la page de login vers `/api/auth/oidc/start` ; les deux applications
+      sont donc alignées avec CASH-RECON.
+    - `GET /api/auth/oidc/start` renvoie HTTP 302 vers Keycloak pour TDB et
+      Revue-PDV. La configuration OIDC publique de Revue-PDV renvoie
+      `oidcEnabled: true` ; le endpoint équivalent de TDB est protégé par la
+      session et renvoie HTTP 401 sans cookie, sans empêcher le démarrage OIDC.
+    - Aucun redéploiement supplémentaire n'est nécessaire pour ces deux
+      applications. Pour le test navigateur, effectuer un rechargement forcé
+      afin d'écarter un ancien bundle mis en cache.

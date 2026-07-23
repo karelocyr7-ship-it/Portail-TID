@@ -481,3 +481,14 @@ Reste à faire après l'intégration SSO
     - Aucun redéploiement supplémentaire n'est nécessaire pour ces deux
       applications. Pour le test navigateur, effectuer un rechargement forcé
       afin d'écarter un ancien bundle mis en cache.
+
+23. Correctif Supervision CASH-RECON — 23 juillet 2026
+    - La page restait sur `Chargement...` car elle exigeait un jeton local
+      `localStorage` alors que le SSO utilise la session HttpOnly du cookie.
+    - La condition a été corrigée pour se baser sur l'utilisateur authentifié,
+      puis le frontend CASH-RECON a été reconstruit et redéployé avec succès.
+    - Vérifications : bundle actif renouvelé, page publique HTTP 200 et
+      conteneur `cash-recon-web` relancé correctement.
+    - Le correctif est enregistré sur la branche distante
+      `codex/oidc-nonce-cash-recon` (commit `ac420cc`). Le fichier généré
+      `web/public/build-version.json` reste hors du commit.

@@ -332,3 +332,57 @@ gh pr create --draft --base main \
 Le fichier `/tmp/portail-pr.md` devra résumer la recette et référencer
 `docs/RECETTE_PHASE_12.md`. Vérifier les workflows et la protection de `main`
 sur GitHub avant toute fusion. Ne jamais publier `.env`, de token ou de secret.
+
+18. Reprise VM — agents, Git et compatibilité Keycloak — 23 juillet 2026
+    - Reprise effectuée sur la VM `vps-f97dd485`, branche de travail
+      `codex/deploy-main-20260723`; aucun fichier `.env` réel n'a été lu ou
+      affiché.
+    - Les cinq timers systemd des agents sont installés, activés et planifiés
+      dans `Africa/Abidjan` : démarrage 19 h 30, arrêt des nouvelles tâches
+      5 h 30, arrêt propre 5 h 45, arrêt forcé 6 h et rapport 6 h 05.
+    - Les unités systemd et les scripts agents passent les contrôles de
+      syntaxe. Les espaces `/srv/tad/agents` restent détenus par
+      `tad-agents` en permissions 0750 ; aucun secret ni accès Docker n'est
+      fourni aux agents.
+    - Git 2.47.3 est disponible, le remote GitHub est joignable et
+      l'authentification `gh` dispose des scopes nécessaires `repo` et
+      `workflow`. La branche active n'est pas `main`.
+    - Le portail, Keycloak et PostgreSQL sont sains. La découverte OIDC du
+      realm `tad-groupe` publie un issuer HTTPS et des endpoints cohérents
+      sous `/auth`; le flux `/api/auth/login` redirige vers Keycloak avec un
+      état anti-CSRF HttpOnly. Aucun token n'a été journalisé.
+    - Le client Keycloak `tad-portal` est confirmé confidentiel, avec le flux
+      Authorization Code activé, les octrois directs désactivés, l'origine web
+      limitée au portail, le callback exact
+      `/api/auth/callback` et le retour post-déconnexion exact
+      `/api/auth/logout/complete`.
+    - Les trois applications du portail sont actives en base et joignables :
+      TDB (`https://tdb.tadgroupe.com`), Revue-PDV
+      (`https://pdv.tadgroupe.com`) et CASH-RECON
+      (`https://cash.tadgroupe.com`). Le service portail a été reconstruit et
+      redémarré sans modifier les bases ni les volumes.
+
+Reste à faire après cette reprise
+----------------------------------
+
+- réaliser un parcours SSO complet avec un compte Keycloak de test dédié et
+  non personnel, puis vérifier le filtrage des trois applications par rôle ;
+- confirmer les rôles effectivement attribués à ce compte de test et le
+  parcours de déconnexion SSO ; la configuration des URI du client
+  `tad-portal` est désormais contrôlée ;
+- traiter séparément l'avertissement OpenSSL/Prisma du build et les alertes
+  d'audit de dépendances ;
+- corriger les trois fichiers signalés par `pnpm format:check` dans une tâche
+  dédiée (`apps/portal/app/admin/actions.ts`, `apps/portal/app/admin/page.tsx`
+  et `apps/portal/public/logout.css`) ;
+- préparer le rapport final et confirmer la stratégie de sauvegarde externe,
+  la rotation et le rollback applicatif.
+
+Reprise après coupure réseau Codex
+----------------------------------
+
+Depuis `/srv/tad/portail`, vérifier `git status --short --branch`,
+`gh auth status`, `docker compose ps` et les cinq timers `tad-agent-*`.
+Relire cette section et reprendre au premier point marqué « Reste à faire ».
+Ne jamais recréer les secrets, supprimer les volumes ou relancer une migration
+sans validation explicite.

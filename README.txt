@@ -454,3 +454,17 @@ Reste à faire après l'intégration SSO
   car le SSO authentifie l'identité mais conserve les autorisations locales ;
 - traiter séparément les alertes npm d'audit et formaliser le rollback par
   reconstruction du commit `main` précédent.
+
+21. Correctif CASH-RECON — 23 juillet 2026
+    - Le diagnostic a montré que le bundle CASH-RECON redirigeait bien vers
+      `/api/auth/me`, mais conservait volontairement l'écran `/login` lorsque
+      la session était absente. Le flux OIDC ne pouvait donc pas démarrer
+      depuis le clic du portail.
+    - Le frontend redirige désormais automatiquement vers Keycloak lorsqu'il
+      n'existe pas de session ; le formulaire local reste accessible
+      explicitement avec `?local=1`.
+    - Le bundle a été reconstruit avec un nouveau fingerprint et le service
+      web CASH-RECON redémarré. L'endpoint OIDC renvoie toujours HTTP 302 vers
+      le realm Keycloak.
+    - En cas d'ancien bundle conservé par le navigateur ou la PWA, effectuer
+      un rechargement forcé ou vider le cache du site avant de retester.

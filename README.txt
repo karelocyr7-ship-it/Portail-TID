@@ -386,3 +386,37 @@ Depuis `/srv/tad/portail`, vérifier `git status --short --branch`,
 Relire cette section et reprendre au premier point marqué « Reste à faire ».
 Ne jamais recréer les secrets, supprimer les volumes ou relancer une migration
 sans validation explicite.
+
+19. Diagnostic SSO des trois applications — 23 juillet 2026
+    - Le clic depuis le portail ouvre bien les trois applications, mais
+      chacune affiche encore sa propre connexion locale.
+    - Les bundles publics montrent des mécanismes distincts et indépendants :
+      `tdb_perf_token` pour TDB, `pdv_token` pour Revue-PDV et
+      `cashReconToken` pour CASH-RECON. Aucune des trois applications ne
+      redirige actuellement vers le realm Keycloak `tad-groupe`.
+    - Aucun dépôt ni backend TDB, Revue-PDV ou CASH-RECON n'est présent dans
+      `/srv` sur cette VM ; seul le dépôt du portail est disponible. Le
+      portail ne peut donc pas modifier leurs routes d'authentification,
+      leurs APIs ou leurs bases utilisateurs depuis ce checkout.
+    - Aucun mot de passe, jeton local ou cookie d'une application n'a été
+      transmis par le portail. Un tel relais serait une faille de sécurité et
+      ne fournirait pas un SSO valide.
+
+Reste à faire pour supprimer le second login
+---------------------------------------------
+
+- fournir les dépôts/backend et le responsable technique de chaque
+  application ;
+- enregistrer trois clients OIDC Keycloak dédiés, ou un client par application
+  selon leur architecture, avec callback et logout propres ;
+- remplacer leur authentification locale par Authorization Code côté serveur,
+  valider les claims `realm_access.roles` et mapper les rôles existants ;
+- décider et tester la correspondance des comptes locaux avec les identités
+  Keycloak, sans importer de mots de passe ;
+- déployer chaque application via sa procédure, puis tester : portail → TDB,
+  portail → Revue-PDV, portail → CASH-RECON, déconnexion et refus par rôle.
+
+Le portail est donc prêt côté Keycloak, mais le SSO complet reste bloqué par
+l'absence du code et des backends des trois applications. Après une coupure
+réseau, reprendre à ce diagnostic plutôt que modifier les liens ou transmettre
+des identifiants.

@@ -1,4 +1,6 @@
+import Image from "next/image";
 import type { CatalogApplication } from "@/lib/catalog";
+import { getApplicationIconPath } from "@/lib/application-icons";
 
 export function ApplicationCard({
   application,
@@ -7,8 +9,18 @@ export function ApplicationCard({
 }) {
   return (
     <article className="application-card">
-      <div className="application-icon" aria-hidden="true">
-        {application.icon}
+      <div className="application-icon">
+        {getApplicationIconPath(application.code) ? (
+          <Image
+            className="application-icon-image"
+            src={getApplicationIconPath(application.code)!}
+            alt={`${application.name} logo`}
+            width={64}
+            height={64}
+          />
+        ) : (
+          <span aria-hidden="true">{application.icon}</span>
+        )}
       </div>
       <div className="application-card-content">
         <div className="card-heading">

@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { getAdminApplications } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
+import { getApplicationIconPath } from "@/lib/application-icons";
 import { updateApplicationStatus, updateApplicationUrl } from "./actions";
 
 export default async function AdminPage() {
@@ -84,7 +86,16 @@ export default async function AdminPage() {
           <article className="admin-app-card" key={application.code}>
             <div className="admin-app-card-top">
               <span className="admin-app-icon" aria-hidden="true">
-                {application.icon}
+                {getApplicationIconPath(application.code) ? (
+                  <Image
+                    src={getApplicationIconPath(application.code)!}
+                    alt=""
+                    width={56}
+                    height={56}
+                  />
+                ) : (
+                  application.icon
+                )}
               </span>
               <span className="status-pill">
                 {!application.active

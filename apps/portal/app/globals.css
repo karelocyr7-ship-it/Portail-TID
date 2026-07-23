@@ -1402,9 +1402,36 @@ body {
 
 /* Shared compact rhythm for every authenticated page. */
 @media (min-width: 761px) {
+  .sidebar {
+    width: 220px;
+    padding: 16px 12px;
+  }
+  .brand {
+    gap: 9px;
+    padding-bottom: 22px;
+  }
+  .brand-logo {
+    width: 88px;
+    height: 52px;
+    border-radius: 9px;
+  }
+  .brand-logo img {
+    width: 83px;
+  }
+  nav {
+    gap: 5px;
+  }
+  .nav-link {
+    gap: 9px;
+    min-height: 38px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
   .topbar {
-    height: 72px;
-    padding-block: 12px;
+    height: 60px;
+    padding-block: 8px;
+    border-top-width: 3px;
   }
   .page-container {
     padding-top: 20px;

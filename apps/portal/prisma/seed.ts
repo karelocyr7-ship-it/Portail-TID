@@ -16,6 +16,7 @@ const categories = [
   ["Parc automobile", "Gestion du parc automobile", 5],
   ["Administration", "Documents et fonctions administratives", 6],
   ["Informatique", "Outils techniques et référentiels", 7],
+  ["Recrutement OCI", "Recrutement Telco et OM pour OCI", 8],
 ] as const;
 
 const applications = [
@@ -77,9 +78,9 @@ const applications = [
   ],
   [
     "RECRUTEMENT",
-    "Recrutement",
-    "Suivi des recrutements",
-    "Ressources humaines",
+    "Recrutement Telco & OM",
+    "Recrutement Telco et OM pour Orange Côte d’Ivoire",
+    "Recrutement OCI",
     ["PORTAL_ADMIN", "RH", "DIRECTION"],
   ],
   [

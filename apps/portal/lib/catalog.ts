@@ -121,9 +121,9 @@ export const catalogApplications: CatalogApplication[] = [
   },
   {
     code: "RECRUTEMENT",
-    name: "Recrutement",
-    description: "Suivi des recrutements",
-    category: "Ressources humaines",
+    name: "Recrutement Telco & OM",
+    description: "Recrutement Telco et OM pour Orange Côte d’Ivoire",
+    category: "Recrutement OCI",
     icon: "✦",
     integrationLevel: 1,
     active: true,

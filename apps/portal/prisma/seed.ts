@@ -158,6 +158,25 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     sourceSystem: "CASH-RECON",
     sourceReference: "api/src/routes/users.routes.js:USER_ROLES",
   })),
+  MDM: [
+    [
+      "ADMIN",
+      "Administrateur HMDM",
+      "Administration complète de la plateforme et des utilisateurs",
+    ],
+    ["USER", "Utilisateur HMDM", "Gestion des appareils et des applications"],
+    [
+      "OBSERVER",
+      "Observateur HMDM",
+      "Consultation de l’état et des informations des appareils",
+    ],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "HMDM",
+    sourceReference: "Headwind MDM Community: user roles",
+  })),
 };
 
 async function main() {

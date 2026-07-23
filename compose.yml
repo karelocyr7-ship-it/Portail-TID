@@ -103,6 +103,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?KEYCLOAK_ADMIN_USERNAME is required}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?KEYCLOAK_ADMIN_PASSWORD is required}
     expose: ["8080"]
+    volumes:
+      - ./infrastructure/keycloak/themes:/opt/keycloak/themes:ro
     networks: [tad-identity, tad-data]
     depends_on:
       postgres:

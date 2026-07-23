@@ -1,0 +1,17 @@
+/* TAD Groupe identity on the Keycloak login screen. */
+#kc-header-wrapper {
+  width: min(320px, 82vw);
+  height: 150px;
+  margin: 0 auto;
+  overflow: hidden;
+  color: transparent;
+  font-size: 0;
+  background: url("../img/tad-logo.png") center / contain no-repeat;
+}
+
+@media (max-width: 480px) {
+  #kc-header-wrapper {
+    width: min(270px, 80vw);
+    height: 130px;
+  }
+}

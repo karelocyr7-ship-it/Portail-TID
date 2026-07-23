@@ -39,10 +39,7 @@ export default async function RootLayout({
               </span>
             </Link>
             <nav aria-label="Navigation principale">
-              <Link className="nav-link active" href="/">
-                ⌂ <span>Tableau de bord</span>
-              </Link>
-              <Link className="nav-link" href="/#applications">
+              <Link className="nav-link active" href="/#applications">
                 ▦ <span>Applications</span>
               </Link>
               <Link className="nav-link" href="/admin#comptes">

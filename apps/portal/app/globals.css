@@ -1587,3 +1587,61 @@ body {
     margin-top: 10px;
   }
 }
+
+/* Applications is the portal landing page; keep its catalogue compact and
+   make every card's content shrink or wrap inside its bounds. */
+.applications-page .application-card-content,
+.applications-page .card-heading,
+.applications-page .card-heading > div {
+  min-width: 0;
+}
+.applications-page .application-card-content {
+  overflow: hidden;
+}
+.applications-page .card-heading > div {
+  flex: 1 1 auto;
+}
+.applications-page .card-heading h3,
+.applications-page .card-heading .eyebrow,
+.applications-page .integration-badge,
+.applications-page .muted,
+.applications-page .maintenance,
+.applications-page .button {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.applications-page .integration-badge {
+  max-width: 42%;
+  white-space: normal;
+  text-align: right;
+}
+
+@media (min-width: 761px) {
+  .applications-page .section-header {
+    margin: 20px 0 10px;
+  }
+  .applications-page .section-header h2 {
+    font-size: 21px;
+  }
+  .applications-page .application-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .applications-page .application-card {
+    min-height: 118px;
+    padding: 13px;
+    gap: 10px;
+    border-radius: 11px;
+  }
+  .applications-page .application-card .muted {
+    margin-bottom: 0;
+    font-size: 11px;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+  }
+  .applications-page .application-card .button {
+    margin-top: 7px;
+    padding: 7px 9px;
+    font-size: 10px;
+  }
+}

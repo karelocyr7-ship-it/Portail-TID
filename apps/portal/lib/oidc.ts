@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 
 const SESSION_COOKIE = "tad_portal_session";
 const STATE_COOKIE = "tad_oidc_state";
+const NONCE_COOKIE = "tad_oidc_nonce";
 const SESSION_MAX_AGE = 8 * 60 * 60;
 
 type OidcConfiguration = {
@@ -83,19 +84,25 @@ export function callbackUrl(): string {
 export async function authorizationUrl(): Promise<{
   url: string;
   state: string;
+  nonce: string;
 }> {
   const oidc = await configuration();
   const state = base64url(`${randomUUID()}:${Date.now()}`);
+  const nonce = base64url(randomUUID());
   const url = new URL(oidc.authorization_endpoint);
   url.searchParams.set("client_id", required("KEYCLOAK_CLIENT_ID"));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", "openid profile email");
   url.searchParams.set("redirect_uri", callbackUrl());
   url.searchParams.set("state", state);
-  return { url: url.toString(), state };
+  url.searchParams.set("nonce", nonce);
+  return { url: url.toString(), state, nonce };
 }
 
-export async function exchangeCode(code: string): Promise<PortalSession> {
+export async function exchangeCode(
+  code: string,
+  expectedNonce: string,
+): Promise<PortalSession> {
   const oidc = await configuration();
   const body = new URLSearchParams({
     grant_type: "authorization_code",
@@ -114,12 +121,13 @@ export async function exchangeCode(code: string): Promise<PortalSession> {
   const token = (await response.json()) as { id_token?: string };
   if (!token.id_token)
     throw new Error("OIDC response did not contain an ID token");
-  return verifyIdToken(token.id_token, oidc);
+  return verifyIdToken(token.id_token, oidc, expectedNonce);
 }
 
 async function verifyIdToken(
   token: string,
   oidc: OidcConfiguration,
+  expectedNonce: string,
 ): Promise<PortalSession> {
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid ID token");
@@ -147,9 +155,17 @@ async function verifyIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
+  const clientId = required("KEYCLOAK_CLIENT_ID");
+  const audiences = Array.isArray(claims.aud)
+    ? claims.aud.filter((aud): aud is string => typeof aud === "string")
+    : typeof claims.aud === "string"
+      ? [claims.aud]
+      : [];
   if (
     claims.iss !== oidc.issuer ||
-    claims.aud !== required("KEYCLOAK_CLIENT_ID")
+    !audiences.includes(clientId) ||
+    (audiences.length > 1 && claims.azp !== clientId) ||
+    claims.nonce !== expectedNonce
   )
     throw new Error("Invalid ID token issuer or audience");
   const expiresAt = typeof claims.exp === "number" ? claims.exp : 0;
@@ -198,6 +214,27 @@ export async function setStateCookie(state: string): Promise<void> {
     maxAge: 600,
     path: "/",
   });
+}
+
+export async function setOidcCookies(
+  state: string,
+  nonce: string,
+): Promise<void> {
+  await setStateCookie(state);
+  (await cookies()).set(NONCE_COOKIE, pack(nonce), {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 600,
+    path: "/",
+  });
+}
+
+export async function consumeNonceCookie(): Promise<string | undefined> {
+  const store = await cookies();
+  const nonce = unpack(store.get(NONCE_COOKIE)?.value);
+  store.delete(NONCE_COOKIE);
+  return nonce;
 }
 
 export async function consumeStateCookie(state: string): Promise<boolean> {

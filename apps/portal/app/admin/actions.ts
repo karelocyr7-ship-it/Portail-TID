@@ -136,7 +136,11 @@ export async function savePortalUser(formData: FormData) {
 
   const prisma = getPrisma();
   const profiles = await prisma.applicationProfile.findMany({
-    where: { id: { in: [...new Set(profileIds)] }, active: true },
+    where: {
+      id: { in: [...new Set(profileIds)] },
+      active: true,
+      application: { active: true },
+    },
     select: { id: true },
   });
   if (profiles.length !== new Set(profileIds).size) {

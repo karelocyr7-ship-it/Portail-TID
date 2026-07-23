@@ -646,6 +646,34 @@ p {
   padding: 10px 14px;
   cursor: pointer;
 }
+.admin-url-form {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+}
+.admin-url-form label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.admin-url-row {
+  display: flex;
+  gap: 8px;
+}
+.admin-url-row input {
+  min-width: 0;
+  flex: 1;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d8e2f0;
+  border-radius: 9px;
+  color: var(--navy);
+  font: inherit;
+}
+.admin-url-row input:focus {
+  outline: 3px solid #f5821633;
+  border-color: var(--orange);
+}
 .admin-tool-strip {
   display: flex;
   align-items: center;

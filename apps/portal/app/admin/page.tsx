@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getAdminApplications } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
-import { updateApplicationStatus } from "./actions";
+import { updateApplicationStatus, updateApplicationUrl } from "./actions";
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -123,6 +123,24 @@ export default async function AdminPage() {
                 </button>
               </form>
             </div>
+            <form className="admin-url-form" action={updateApplicationUrl}>
+              <input type="hidden" name="code" value={application.code} />
+              <label htmlFor={`url-${application.code}`}>URL de l’application</label>
+              <div className="admin-url-row">
+                <input
+                  id={`url-${application.code}`}
+                  name="url"
+                  type="url"
+                  inputMode="url"
+                  placeholder="https://..."
+                  defaultValue={application.url ?? ""}
+                  maxLength={2048}
+                />
+                <button className="button primary" type="submit">
+                  Enregistrer
+                </button>
+              </div>
+            </form>
             {application.url ? (
               <a
                 className="button secondary admin-app-link"

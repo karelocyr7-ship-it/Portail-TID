@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
+import { getAdminApplications } from "@/lib/catalog-db";
 import { getRoles, getSession } from "@/lib/oidc";
+import { updateApplicationStatus } from "./actions";
 
 export default async function AdminPage() {
   const session = await getSession();
@@ -22,9 +23,7 @@ export default async function AdminPage() {
     );
   }
 
-  const applications = await getVisibleApplicationsFromDatabase([
-    "PORTAL_ADMIN",
-  ]);
+  const applications = await getAdminApplications();
   const categories = new Set(
     applications.map((application) => application.category),
   );
@@ -53,7 +52,7 @@ export default async function AdminPage() {
           <span className="admin-stat-icon">▦</span>
           <span>
             <strong>{applications.length}</strong>
-            <small>Applications actives</small>
+            <small>Applications référencées</small>
           </span>
         </div>
         <div className="admin-stat-card">
@@ -88,7 +87,11 @@ export default async function AdminPage() {
                 {application.icon}
               </span>
               <span className="status-pill">
-                {application.maintenance ? "Maintenance" : "Active"}
+                {!application.active
+                  ? "Désactivée"
+                  : application.maintenance
+                    ? "Maintenance"
+                    : "Active"}
               </span>
             </div>
             <p className="eyebrow">{application.category}</p>
@@ -103,6 +106,22 @@ export default async function AdminPage() {
                   {role}
                 </span>
               ))}
+            </div>
+            <div className="admin-actions">
+              <form action={updateApplicationStatus}>
+                <input type="hidden" name="code" value={application.code} />
+                <input type="hidden" name="action" value="toggle-active" />
+                <button className="button secondary" type="submit">
+                  {application.active ? "Désactiver" : "Activer"}
+                </button>
+              </form>
+              <form action={updateApplicationStatus}>
+                <input type="hidden" name="code" value={application.code} />
+                <input type="hidden" name="action" value="toggle-maintenance" />
+                <button className="button secondary" type="submit">
+                  {application.maintenance ? "Fin maintenance" : "Maintenance"}
+                </button>
+              </form>
             </div>
             {application.url ? (
               <a
@@ -123,10 +142,11 @@ export default async function AdminPage() {
         aria-label="Fonctions d’administration"
       >
         <div>
-          <p className="eyebrow">Prochaines fonctions</p>
-          <h2>Rôles, accès et audit</h2>
+          <p className="eyebrow">Actions disponibles</p>
+          <h2>Pilotage du catalogue</h2>
           <p className="muted">
-            Les contrôles détaillés seront ajoutés dans les prochaines étapes.
+            Activez une application ou signalez sa mise en maintenance. Chaque
+            action est enregistrée dans l’audit du portail.
           </p>
         </div>
         <Link className="button secondary" href="/">

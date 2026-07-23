@@ -16,6 +16,7 @@ type OidcConfiguration = {
   token_endpoint: string;
   jwks_uri: string;
   issuer: string;
+  end_session_endpoint?: string;
 };
 
 export type PortalSession = {
@@ -260,6 +261,18 @@ export async function getSession(): Promise<PortalSession | undefined> {
 
 export async function clearSession(): Promise<void> {
   (await cookies()).delete(SESSION_COOKIE);
+}
+
+export async function logoutUrl(): Promise<string | undefined> {
+  const oidc = await configuration();
+  if (!oidc.end_session_endpoint) return undefined;
+  const url = new URL(oidc.end_session_endpoint);
+  url.searchParams.set("client_id", required("KEYCLOAK_CLIENT_ID"));
+  url.searchParams.set(
+    "post_logout_redirect_uri",
+    `${publicUrl()}/api/auth/logout/complete`,
+  );
+  return url.toString();
 }
 
 export function getRoles(session: PortalSession | undefined): string[] {

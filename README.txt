@@ -511,3 +511,14 @@ Reste à faire après l'intégration SSO
       redirigées vers HTTPS (TDB et CASH-RECON renvoient 404, Revue-PDV répond
       encore en HTTP). Le portail et les callbacks OIDC utilisent exclusivement
       HTTPS ; aucun impact constaté sur le SSO actuel.
+
+26. Retour vers le portail depuis les applications — 23 juillet 2026
+    - Un bouton `Portail` a été ajouté dans le bandeau supérieur de TDB,
+      Revue-PDV et CASH-RECON, avec retour vers `https://portail.tadgroupe.com/`.
+    - Pour Revue-PDV, le bouton est présent dans les bandeaux administrateur
+      et terrain afin de couvrir les deux interfaces.
+    - Les trois frontends ont été reconstruits et redémarrés. Vérifications
+      live : lien portail présent dans chaque bundle, page HTTPS HTTP 200 et
+      conteneurs web opérationnels.
+    - Changements versionnés sur les branches dédiées : TDB `a3c8564`,
+      Revue-PDV `aeb1f30`, CASH-RECON `3723e0c`.

@@ -267,12 +267,30 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   color: #ffd18a;
-  font-size: 34px;
+  padding: 17px;
   transform: rotate(12deg);
 }
-.hero-orbit span:nth-child(2) {
-  font-size: 26px;
-  color: #fff;
+.hero-orbit img {
+  width: 100%;
+  height: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
+  transform: rotate(-12deg);
+}
+.hero-orbit span {
+  position: absolute;
+  right: -22px;
+  bottom: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--orange);
+  color: var(--navy);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transform: rotate(-12deg);
 }
 .section-header {
   display: flex;
@@ -487,8 +505,14 @@ p {
   height: 112px;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 50%;
-  color: #ffd28f;
-  font-size: 52px;
+  padding: 10px;
+}
+.admin-hero-mark img {
+  width: 100%;
+  height: auto;
+  padding: 8px;
+  border-radius: 12px;
+  background: #fff;
 }
 .admin-stat-grid {
   display: grid;
@@ -743,7 +767,7 @@ p {
     width: 88px;
   }
   nav {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
   .nav-link {
     justify-content: center;
@@ -904,6 +928,159 @@ body {
 }
 .admin-users-section {
   margin-top: 28px;
+}
+.user-directory {
+  margin: 20px 0 16px;
+  padding: 16px;
+  border: 1px solid #f2d8b7;
+  border-radius: 15px;
+  background: linear-gradient(120deg, #fff8ed, #fff);
+}
+.directory-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 15px;
+}
+.directory-search {
+  display: grid;
+  flex: 1;
+  gap: 6px;
+  max-width: 390px;
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 800;
+}
+.directory-search input {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #e3c9aa;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--navy);
+  font: inherit;
+}
+.directory-search input:focus {
+  outline: 3px solid #f5821633;
+  border-color: var(--orange);
+}
+.directory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filter-button {
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid #ead7c0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--muted);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.filter-button.selected,
+.filter-button:hover {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.directory-summary {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.directory-summary strong {
+  color: var(--navy);
+  font-size: 17px;
+}
+.directory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.directory-card {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #eadfce;
+  border-radius: 11px;
+  background: #fff;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+.directory-card:hover {
+  border-color: var(--orange);
+  transform: translateY(-1px);
+}
+.directory-avatar {
+  display: grid;
+  flex: 0 0 34px;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.directory-avatar.inactive {
+  background: #d9dee7;
+  color: var(--muted);
+}
+.directory-card-copy {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
+}
+.directory-card-copy strong,
+.directory-card-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.directory-card-copy strong {
+  color: var(--navy);
+  font-size: 12px;
+}
+.directory-card-copy small {
+  color: var(--muted);
+  font-size: 9px;
+}
+.directory-card-meta {
+  display: grid;
+  justify-items: end;
+  color: var(--muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+.directory-card-meta b {
+  color: var(--blue);
+  font-size: 12px;
+}
+.directory-card-meta small {
+  color: #187044;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.directory-arrow {
+  color: var(--orange);
+  font-size: 16px;
+  font-weight: 800;
+}
+.directory-empty {
+  margin: 12px 0 2px;
+  color: var(--muted);
+  font-size: 12px;
 }
 .section-intro {
   max-width: 720px;
@@ -1085,6 +1262,13 @@ body {
   .hero-orbit,
   .admin-hero-mark {
     display: none;
+  }
+  .directory-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .directory-search {
+    max-width: none;
   }
   .application-card {
     display: block;

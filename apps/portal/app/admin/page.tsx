@@ -4,6 +4,7 @@ import { getAdminApplications } from "@/lib/catalog-db";
 import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
+import { UserDirectory } from "@/components/user-directory";
 import {
   savePortalUser,
   updateApplicationStatus,
@@ -39,20 +40,26 @@ export default async function AdminPage() {
   const roles = new Set(
     applications.flatMap((application) => application.roles),
   );
+  const activeUsers = users.filter((user) => user.active).length;
 
   return (
     <div className="page-container">
       <section className="admin-hero">
         <div>
           <p className="eyebrow light">Espace administrateur</p>
-          <h1>Le portail, en un coup d’œil.</h1>
+          <h1>Utilisateurs, accès et applications.</h1>
           <p>
-            Pilotez les applications disponibles, leurs accès et leur état
-            depuis un espace centralisé.
+            Gérez les comptes Keycloak, les profils autorisés et le catalogue
+            métier depuis un espace centralisé.
           </p>
         </div>
         <div className="admin-hero-mark" aria-hidden="true">
-          ✦
+          <Image
+            src="/branding/tid-logo.png"
+            alt="TID"
+            width={216}
+            height={87}
+          />
         </div>
       </section>
 
@@ -81,13 +88,13 @@ export default async function AdminPage() {
         <div className="admin-stat-card">
           <span className="admin-stat-icon orange">♙</span>
           <span>
-            <strong>{users.length}</strong>
-            <small>Comptes portail</small>
+            <strong>{activeUsers}</strong>
+            <small>Comptes actifs</small>
           </span>
         </div>
       </section>
 
-      <div className="section-header admin-section-heading">
+      <div className="section-header admin-section-heading" id="catalogue">
         <div>
           <p className="eyebrow">Catalogue central</p>
           <h2>Applications et accès</h2>
@@ -195,6 +202,16 @@ export default async function AdminPage() {
           Aucun mot de passe n’est enregistré dans le portail.
         </p>
 
+        <UserDirectory
+          users={users.map((user) => ({
+            id: user.id,
+            displayName: user.displayName,
+            email: user.email,
+            active: user.active,
+            profileCount: user.assignments.length,
+          }))}
+        />
+
         <form className="user-editor" action={savePortalUser}>
           <div className="user-editor-heading">
             <div>
@@ -241,6 +258,7 @@ export default async function AdminPage() {
                 className="user-editor user-editor-existing"
                 action={savePortalUser}
                 key={user.id}
+                id={`user-${user.id}`}
               >
                 <input type="hidden" name="userId" value={user.id} />
                 <div className="user-editor-heading">

@@ -45,7 +45,10 @@ export default async function RootLayout({
               <Link className="nav-link" href="/#applications">
                 ▦ <span>Applications</span>
               </Link>
-              <Link className="nav-link" href="/admin">
+              <Link className="nav-link" href="/admin#comptes">
+                ♙ <span>Utilisateurs</span>
+              </Link>
+              <Link className="nav-link" href="/admin#catalogue">
                 ⚙ <span>Administration</span>
               </Link>
             </nav>

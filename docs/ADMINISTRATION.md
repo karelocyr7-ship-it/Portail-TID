@@ -9,6 +9,12 @@ L’espace `/admin` permet aux utilisateurs portant le rôle Keycloak
   catalogue ;
 - consulter et modifier les habilitations enregistrées.
 
+La section **Comptes et profils applicatifs** affiche un répertoire filtrable
+par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un
+clic sur une fiche ouvre directement son formulaire d’édition et affiche le
+nombre de profils qui lui sont affectés. La navigation latérale expose aussi
+un accès direct à cette section via `/admin#comptes`.
+
 Les profils persistés dans `ApplicationProfile` constituent le catalogue de
 profils connu du portail. Ils ne sont pas une découverte automatique des bases
 des applications externes : une API ou un contrat d’intégration devra être

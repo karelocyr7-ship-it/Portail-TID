@@ -492,3 +492,12 @@ Reste à faire après l'intégration SSO
     - Le correctif est enregistré sur la branche distante
       `codex/oidc-nonce-cash-recon` (commit `ac420cc`). Le fichier généré
       `web/public/build-version.json` reste hors du commit.
+
+24. Vérification session SSO TDB et Revue-PDV — 23 juillet 2026
+    - TDB et Revue-PDV ne présentent pas le défaut CASH-RECON : leur code
+      d'initialisation n'exige pas la présence d'un jeton local pour utiliser
+      la session HttpOnly issuee par le callback OIDC.
+    - Les bundles actuellement servis contiennent les appels avec cookies,
+      et les deux applications répondent HTTP 200 sur la page principale.
+    - `/api/auth/oidc/start` répond HTTP 302 vers Keycloak pour TDB et
+      Revue-PDV. Aucun correctif ni redéploiement supplémentaire n'est requis.

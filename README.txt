@@ -332,3 +332,205 @@ gh pr create --draft --base main \
 Le fichier `/tmp/portail-pr.md` devra résumer la recette et référencer
 `docs/RECETTE_PHASE_12.md`. Vérifier les workflows et la protection de `main`
 sur GitHub avant toute fusion. Ne jamais publier `.env`, de token ou de secret.
+
+18. Reprise VM — agents, Git et compatibilité Keycloak — 23 juillet 2026
+    - Reprise effectuée sur la VM `vps-f97dd485`, branche de travail
+      `codex/deploy-main-20260723`; aucun fichier `.env` réel n'a été lu ou
+      affiché.
+    - Les cinq timers systemd des agents sont installés, activés et planifiés
+      dans `Africa/Abidjan` : démarrage 19 h 30, arrêt des nouvelles tâches
+      5 h 30, arrêt propre 5 h 45, arrêt forcé 6 h et rapport 6 h 05.
+    - Les unités systemd et les scripts agents passent les contrôles de
+      syntaxe. Les espaces `/srv/tad/agents` restent détenus par
+      `tad-agents` en permissions 0750 ; aucun secret ni accès Docker n'est
+      fourni aux agents.
+    - Git 2.47.3 est disponible, le remote GitHub est joignable et
+      l'authentification `gh` dispose des scopes nécessaires `repo` et
+      `workflow`. La branche active n'est pas `main`.
+    - Le portail, Keycloak et PostgreSQL sont sains. La découverte OIDC du
+      realm `tad-groupe` publie un issuer HTTPS et des endpoints cohérents
+      sous `/auth`; le flux `/api/auth/login` redirige vers Keycloak avec un
+      état anti-CSRF HttpOnly. Aucun token n'a été journalisé.
+    - Le client Keycloak `tad-portal` est confirmé confidentiel, avec le flux
+      Authorization Code activé, les octrois directs désactivés, l'origine web
+      limitée au portail, le callback exact
+      `/api/auth/callback` et le retour post-déconnexion exact
+      `/api/auth/logout/complete`.
+    - Les trois applications du portail sont actives en base et joignables :
+      TDB (`https://tdb.tadgroupe.com`), Revue-PDV
+      (`https://pdv.tadgroupe.com`) et CASH-RECON
+      (`https://cash.tadgroupe.com`). Le service portail a été reconstruit et
+      redémarré sans modifier les bases ni les volumes.
+
+Reste à faire après cette reprise
+----------------------------------
+
+- réaliser un parcours SSO complet avec un compte Keycloak de test dédié et
+  non personnel, puis vérifier le filtrage des trois applications par rôle ;
+- confirmer les rôles effectivement attribués à ce compte de test et le
+  parcours de déconnexion SSO ; la configuration des URI du client
+  `tad-portal` est désormais contrôlée ;
+- traiter séparément l'avertissement OpenSSL/Prisma du build et les alertes
+  d'audit de dépendances ;
+- corriger les trois fichiers signalés par `pnpm format:check` dans une tâche
+  dédiée (`apps/portal/app/admin/actions.ts`, `apps/portal/app/admin/page.tsx`
+  et `apps/portal/public/logout.css`) ;
+- préparer le rapport final et confirmer la stratégie de sauvegarde externe,
+  la rotation et le rollback applicatif.
+
+Reprise après coupure réseau Codex
+----------------------------------
+
+Depuis `/srv/tad/portail`, vérifier `git status --short --branch`,
+`gh auth status`, `docker compose ps` et les cinq timers `tad-agent-*`.
+Relire cette section et reprendre au premier point marqué « Reste à faire ».
+Ne jamais recréer les secrets, supprimer les volumes ou relancer une migration
+sans validation explicite.
+
+19. Diagnostic SSO des trois applications — 23 juillet 2026
+    - Le clic depuis le portail ouvre bien les trois applications, mais
+      chacune affiche encore sa propre connexion locale.
+    - Les bundles publics montrent des mécanismes distincts et indépendants :
+      `tdb_perf_token` pour TDB, `pdv_token` pour Revue-PDV et
+      `cashReconToken` pour CASH-RECON. Aucune des trois applications ne
+      redirige actuellement vers le realm Keycloak `tad-groupe`.
+    - Aucun dépôt ni backend TDB, Revue-PDV ou CASH-RECON n'est présent dans
+      `/srv` sur cette VM ; seul le dépôt du portail est disponible. Le
+      portail ne peut donc pas modifier leurs routes d'authentification,
+      leurs APIs ou leurs bases utilisateurs depuis ce checkout.
+    - Aucun mot de passe, jeton local ou cookie d'une application n'a été
+      transmis par le portail. Un tel relais serait une faille de sécurité et
+      ne fournirait pas un SSO valide.
+
+Reste à faire pour supprimer le second login
+---------------------------------------------
+
+- fournir les dépôts/backend et le responsable technique de chaque
+  application ;
+- enregistrer trois clients OIDC Keycloak dédiés, ou un client par application
+  selon leur architecture, avec callback et logout propres ;
+- remplacer leur authentification locale par Authorization Code côté serveur,
+  valider les claims `realm_access.roles` et mapper les rôles existants ;
+- décider et tester la correspondance des comptes locaux avec les identités
+  Keycloak, sans importer de mots de passe ;
+- déployer chaque application via sa procédure, puis tester : portail → TDB,
+  portail → Revue-PDV, portail → CASH-RECON, déconnexion et refus par rôle.
+
+Le portail est donc prêt côté Keycloak, mais le SSO complet reste bloqué par
+l'absence du code et des backends des trois applications. Après une coupure
+réseau, reprendre à ce diagnostic plutôt que modifier les liens ou transmettre
+des identifiants.
+
+20. Intégration SSO des applications distantes — 23 juillet 2026
+    - Connexion SSH réussie vers `135.125.132.51` (`Revue-PDV`) avec la clé
+      locale dédiée ; aucun fichier `.env` n'a été affiché ou copié vers le
+      dépôt du portail.
+    - Les dépôts TDB-TID, Revue-PDV-PROD et CASH-RECON ont reçu chacun une
+      branche et une PR dédiées, puis les changements ont été fusionnés dans
+      leurs branches `main` respectives.
+    - Trois clients Keycloak confidentiels ont été créés dans `tad-groupe` :
+      `tad-tdb`, `tad-revue-pdv` et `tad-cash-recon`. Les callback et retours
+      post-déconnexion sont limités aux domaines correspondants.
+    - Chaque backend échange désormais le code Authorization Code côté serveur,
+      valide la signature JWKS, l'issuer, l'audience, le nonce et l'état CSRF,
+      associe l'email Keycloak à un compte applicatif actif et crée une session
+      HttpOnly. Les mots de passe locaux ne sont pas transmis par le portail.
+    - Les frontends envoient les cookies de session, redirigent les visiteurs
+      non authentifiés vers Keycloak et conservent le login local comme secours.
+    - Les trois stacks ont été reconstruites et redémarrées sans suppression de
+      base ou de volume. Les routes OIDC publiques renvoient HTTP 302 vers le
+      même realm ; TDB, Revue-PDV et CASH-RECON renvoient HTTP 200.
+    - Tests réussis : TDB 2 tests backend et build frontend ; Revue-PDV 6 tests
+      API réussis, 6 ignorés faute de base de test, 3 tests frontend et build ;
+      CASH-RECON 22 tests API et build frontend.
+
+Reste à faire après l'intégration SSO
+-------------------------------------
+
+- réaliser un parcours navigateur complet avec un compte Keycloak de test non
+  personnel dont l'email existe dans les trois bases, puis vérifier l'accès
+  par rôle et la déconnexion globale ;
+- vérifier les correspondances de rôles métier entre les trois applications,
+  car le SSO authentifie l'identité mais conserve les autorisations locales ;
+- traiter séparément les alertes npm d'audit et formaliser le rollback par
+  reconstruction du commit `main` précédent.
+
+21. Correctif CASH-RECON — 23 juillet 2026
+    - Le diagnostic a montré que le bundle CASH-RECON redirigeait bien vers
+      `/api/auth/me`, mais conservait volontairement l'écran `/login` lorsque
+      la session était absente. Le flux OIDC ne pouvait donc pas démarrer
+      depuis le clic du portail.
+    - Le frontend redirige désormais automatiquement vers Keycloak lorsqu'il
+      n'existe pas de session ; le formulaire local reste accessible
+      explicitement avec `?local=1`.
+    - Le bundle a été reconstruit avec un nouveau fingerprint et le service
+      web CASH-RECON redémarré. L'endpoint OIDC renvoie toujours HTTP 302 vers
+      le realm Keycloak.
+    - En cas d'ancien bundle conservé par le navigateur ou la PWA, effectuer
+      un rechargement forcé ou vider le cache du site avant de retester.
+
+22. Vérification SSO TDB et Revue-PDV — 23 juillet 2026
+    - Les bundles réellement servis par `tdb.tadgroupe.com` et
+      `pdv.tadgroupe.com` contiennent le correctif de redirection automatique
+      depuis la page de login vers `/api/auth/oidc/start` ; les deux applications
+      sont donc alignées avec CASH-RECON.
+    - `GET /api/auth/oidc/start` renvoie HTTP 302 vers Keycloak pour TDB et
+      Revue-PDV. La configuration OIDC publique de Revue-PDV renvoie
+      `oidcEnabled: true` ; le endpoint équivalent de TDB est protégé par la
+      session et renvoie HTTP 401 sans cookie, sans empêcher le démarrage OIDC.
+    - Aucun redéploiement supplémentaire n'est nécessaire pour ces deux
+      applications. Pour le test navigateur, effectuer un rechargement forcé
+      afin d'écarter un ancien bundle mis en cache.
+
+23. Correctif Supervision CASH-RECON — 23 juillet 2026
+    - La page restait sur `Chargement...` car elle exigeait un jeton local
+      `localStorage` alors que le SSO utilise la session HttpOnly du cookie.
+    - La condition a été corrigée pour se baser sur l'utilisateur authentifié,
+      puis le frontend CASH-RECON a été reconstruit et redéployé avec succès.
+    - Vérifications : bundle actif renouvelé, page publique HTTP 200 et
+      conteneur `cash-recon-web` relancé correctement.
+    - Le correctif est enregistré sur la branche distante
+      `codex/oidc-nonce-cash-recon` (commit `ac420cc`). Le fichier généré
+      `web/public/build-version.json` reste hors du commit.
+
+24. Vérification session SSO TDB et Revue-PDV — 23 juillet 2026
+    - TDB et Revue-PDV ne présentent pas le défaut CASH-RECON : leur code
+      d'initialisation n'exige pas la présence d'un jeton local pour utiliser
+      la session HttpOnly issuee par le callback OIDC.
+    - Les bundles actuellement servis contiennent les appels avec cookies,
+      et les deux applications répondent HTTP 200 sur la page principale.
+    - `/api/auth/oidc/start` répond HTTP 302 vers Keycloak pour TDB et
+      Revue-PDV. Aucun correctif ni redéploiement supplémentaire n'est requis.
+
+25. Vérification HTTPS des trois applications — 23 juillet 2026
+    - `https://tdb.tadgroupe.com`, `https://pdv.tadgroupe.com` et
+      `https://cash.tadgroupe.com` répondent HTTP 200 sur la page principale.
+    - Les trois routes HTTPS `/api/auth/oidc/start` répondent HTTP 302 vers
+      Keycloak. Les certificats TLS sont valides jusqu'au 21 octobre 2026.
+    - Réserve à traiter séparément : les URLs HTTP ne sont pas uniformément
+      redirigées vers HTTPS (TDB et CASH-RECON renvoient 404, Revue-PDV répond
+      encore en HTTP). Le portail et les callbacks OIDC utilisent exclusivement
+      HTTPS ; aucun impact constaté sur le SSO actuel.
+
+26. Retour vers le portail depuis les applications — 23 juillet 2026
+    - Un bouton `Portail` a été ajouté dans le bandeau supérieur de TDB,
+      Revue-PDV et CASH-RECON, avec retour vers `https://portail.tadgroupe.com/`.
+    - Pour Revue-PDV, le bouton est présent dans les bandeaux administrateur
+      et terrain afin de couvrir les deux interfaces.
+    - Les trois frontends ont été reconstruits et redémarrés. Vérifications
+      live : lien portail présent dans chaque bundle, page HTTPS HTTP 200 et
+      conteneurs web opérationnels.
+    - Changements versionnés sur les branches dédiées : TDB `a3c8564`,
+      Revue-PDV `aeb1f30`, CASH-RECON `3723e0c`.
+
+27. Correctif boucle de connexion Revue-PDV — 23 juillet 2026
+    - Le frontend appelait `GET /api/auth/me` pour restaurer la session SSO,
+      mais cette route manquait dans l'API et renvoyait HTTP 404, provoquant
+      le retour répété vers l'écran de connexion.
+    - La route protégée a été ajoutée avec le format de réponse attendu par le
+      frontend. Sans cookie elle renvoie désormais HTTP 401, et l'OIDC reste
+      activé avec HTTP 200 sur `/api/auth/oidc/config`.
+    - L'API et le frontend Revue-PDV ont été reconstruits et redémarrés. Le
+      meta-tag mobile moderne a aussi été ajouté pour supprimer l'avertissement
+      navigateur non bloquant.
+    - Correctif versionné sur `codex/oidc-nonce-revue-pdv`, commit `383e07c`.

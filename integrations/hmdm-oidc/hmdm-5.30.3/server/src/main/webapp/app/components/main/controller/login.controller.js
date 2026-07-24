@@ -15,7 +15,9 @@ angular
     ) {
       $scope.login = {};
       $scope.transmitPassword = false;
-      $scope.localLogin = $window.location.search.indexOf("local=1") !== -1;
+      $scope.localLogin =
+        $window.location.search.indexOf("local=1") !== -1 ||
+        $window.location.hostname !== "mdm.tadgroupe.com";
 
       $scope.startOidc = function () {
         $window.location.href = "rest/public/oidc/start";

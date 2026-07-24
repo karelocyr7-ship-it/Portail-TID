@@ -83,16 +83,16 @@ public class OidcResource {
     @GET
     @Path("/config")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> config() {
+    public Map<String, Object> config(@Context HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
-        result.put("enabled", enabled);
+        result.put("enabled", enabled && isPortalHost(request));
         return result;
     }
 
     @GET
     @Path("/start")
     public javax.ws.rs.core.Response start(@Context HttpServletRequest request) throws Exception {
-        if (!enabled) return javax.ws.rs.core.Response.status(404).build();
+        if (!enabled || !isPortalHost(request)) return javax.ws.rs.core.Response.status(404).build();
         String state = randomToken();
         String nonce = randomToken();
         HttpSession session = request.getSession(true);
@@ -111,7 +111,7 @@ public class OidcResource {
     @Path("/callback")
     public javax.ws.rs.core.Response callback(@Context HttpServletRequest request,
                                                @javax.ws.rs.core.Context javax.ws.rs.core.UriInfo uriInfo) {
-        if (!enabled) return javax.ws.rs.core.Response.status(404).build();
+        if (!enabled || !isPortalHost(request)) return javax.ws.rs.core.Response.status(404).build();
         try {
             String error = uriInfo.getQueryParameters().getFirst("error");
             if (error != null) return javax.ws.rs.core.Response.status(401).build();
@@ -225,6 +225,9 @@ public class OidcResource {
     }
 
     private static String trim(String value) { return value == null ? "" : value.replaceAll("/$", ""); }
+    private static boolean isPortalHost(HttpServletRequest request) {
+        return request != null && "mdm.tadgroupe.com".equalsIgnoreCase(request.getServerName());
+    }
     private static String enc(String value) throws Exception { return URLEncoder.encode(value, "UTF-8"); }
     private static String text(JsonNode node, String name) { JsonNode value = node == null ? null : node.get(name); return value == null || value.isNull() ? null : value.asText(); }
     private static String pad(String value) { return value + "===".substring((value.length() + 3) % 4); }

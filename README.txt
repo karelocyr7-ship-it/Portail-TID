@@ -574,5 +574,27 @@ Rollback MDM OIDC
 En cas de régression, arrêter uniquement `hmdm-app`, restaurer `ROOT.xml` et le
 WAR depuis `/opt/hmdm/work/oidc-backups/20260724T084940Z`, recopier le WAR dans
 le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
-résultat. Désactiver ensuite le client Keycloak `tad-mdm` si nécessaire, sans
-exposer son secret.
+    résultat. Désactiver ensuite le client Keycloak `tad-mdm` si nécessaire, sans
+    exposer son secret.
+
+29. Séparation des domaines MDM et correction auth/options — 24 juillet 2026
+    - Clarification confirmée : `mdm.tadgroupe.com` est le domaine SSO via le
+      portail; `mdm.tid.atf.onl` est une porte d'accès locale indépendante.
+    - Le callback OIDC reste volontairement configuré sur
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback`.
+    - Le backend OIDC vérifie désormais le hostname : sur `mdm.tadgroupe.com`,
+      il renvoie `enabled=true` et autorise `/rest/public/oidc/start`; sur
+      `mdm.tid.atf.onl`, il renvoie `enabled=false` et `/start` renvoie 404.
+    - Le frontend force le mode local sur tout hostname différent de
+      `mdm.tadgroupe.com`; `?local=1` reste accepté comme secours.
+    - Le HTTP 500 de `/rest/public/auth/options` venait de la négociation de
+      contenu XML par défaut. L'endpoint est maintenant annoté explicitement
+      `application/json`, et renvoie HTTP 200 sur les deux domaines.
+    - Nouveau WAR déployé : SHA-256
+      `bdbede721b8f741ef4607d217a517af8db8aa88b54647d8e288f8d069bf33498`.
+    - Sauvegarde avant ce correctif :
+      `/opt/hmdm/work/oidc-backups/20260724T091106Z` (WAR et `ROOT.xml`,
+      permissions restreintes). Aucun volume ni base n'a été supprimé.
+    - Vérifications live : les deux accueils HTTP 200; ATF `config=false` et
+      `start=404`; TAD `config=true` et `start=303`; `auth/options=200` en
+      requête sans en-tête Accept; conteneur `hmdm-app` actif.

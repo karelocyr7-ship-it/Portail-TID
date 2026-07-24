@@ -1,0 +1,7 @@
+--- server/src/main/java/com/hmdm/rest/resource/AuthResource.java
++++ server/src/main/java/com/hmdm/rest/resource/AuthResource.java
+@@ -192,6 +192,7 @@
+     @GET
+     @Path( "/options" )
++    @Produces( MediaType.APPLICATION_JSON )
+     public Response options() {

@@ -2,6 +2,7 @@ package com.hmdm.rest.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hmdm.persistence.CustomerDAO;
 import com.hmdm.persistence.UnsecureDAO;
 import com.hmdm.persistence.domain.Settings;
@@ -23,6 +24,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -83,16 +85,16 @@ public class OidcResource {
     @GET
     @Path("/config")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Object> config() {
+    public Map<String, Object> config(@Context HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
-        result.put("enabled", enabled);
+        result.put("enabled", enabled && isPortalHost(request));
         return result;
     }
 
     @GET
     @Path("/start")
     public javax.ws.rs.core.Response start(@Context HttpServletRequest request) throws Exception {
-        if (!enabled) return javax.ws.rs.core.Response.status(404).build();
+        if (!enabled || !isPortalHost(request)) return javax.ws.rs.core.Response.status(404).build();
         String state = randomToken();
         String nonce = randomToken();
         HttpSession session = request.getSession(true);
@@ -111,7 +113,7 @@ public class OidcResource {
     @Path("/callback")
     public javax.ws.rs.core.Response callback(@Context HttpServletRequest request,
                                                @javax.ws.rs.core.Context javax.ws.rs.core.UriInfo uriInfo) {
-        if (!enabled) return javax.ws.rs.core.Response.status(404).build();
+        if (!enabled || !isPortalHost(request)) return javax.ws.rs.core.Response.status(404).build();
         try {
             String error = uriInfo.getQueryParameters().getFirst("error");
             if (error != null) return javax.ws.rs.core.Response.status(401).build();
@@ -139,7 +141,14 @@ public class OidcResource {
             session.removeAttribute(STATE);
             session.removeAttribute(NONCE);
             session.setAttribute(ID_TOKEN, idToken);
-            return javax.ws.rs.core.Response.seeOther(URI.create("/" )).build();
+            JsonNode cookieUser = mapper.valueToTree(new UserView(user));
+            if (cookieUser.isObject()) ((ObjectNode) cookieUser).remove("authToken");
+            NewCookie userCookie = new NewCookie(
+                    "user", enc(mapper.writeValueAsString(cookieUser)), "/", null, null,
+                    NewCookie.DEFAULT_MAX_AGE, true, false);
+            return javax.ws.rs.core.Response.seeOther(URI.create("/" ))
+                    .cookie(userCookie)
+                    .build();
         } catch (Exception e) {
             return javax.ws.rs.core.Response.status(401).build();
         }
@@ -225,6 +234,9 @@ public class OidcResource {
     }
 
     private static String trim(String value) { return value == null ? "" : value.replaceAll("/$", ""); }
+    private static boolean isPortalHost(HttpServletRequest request) {
+        return request != null && "mdm.tadgroupe.com".equalsIgnoreCase(request.getServerName());
+    }
     private static String enc(String value) throws Exception { return URLEncoder.encode(value, "UTF-8"); }
     private static String text(JsonNode node, String name) { JsonNode value = node == null ? null : node.get(name); return value == null || value.isNull() ? null : value.asText(); }
     private static String pad(String value) { return value + "===".substring((value.length() + 3) % 4); }

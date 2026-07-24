@@ -19,7 +19,9 @@ Sources actuellement intégrées :
 - HMDM/MDM : rôles Headwind MDM Community (`ADMIN`, `USER`, `OBSERVER`) ;
   URL initiale : `https://mdm.tadgroupe.com`.
 
-MDM reste actuellement au niveau 1 : le portail ouvre l’application externe et
-ne transmet aucun identifiant. L’instance publique expose une connexion locale
-Headwind MDM ; aucun client OIDC Keycloak MDM n’est déclaré tant qu’un flux OIDC
-supporté par l’application n’est pas disponible.
+MDM est désormais au niveau 2 : le portail ouvre l’application externe, et
+HMDM propose un flux OIDC Authorization Code côté serveur avec le client
+Keycloak confidentiel `tad-mdm`. Aucun identifiant ni mot de passe local n’est
+transmis par le portail; l’e-mail Keycloak doit correspondre à un utilisateur
+HMDM déjà existant. La validation navigateur complète avec un compte de test
+non personnel reste à effectuer.

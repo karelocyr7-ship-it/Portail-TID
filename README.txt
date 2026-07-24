@@ -534,3 +534,105 @@ Reste à faire après l'intégration SSO
       meta-tag mobile moderne a aussi été ajouté pour supprimer l'avertissement
       navigateur non bloquant.
     - Correctif versionné sur `codex/oidc-nonce-revue-pdv`, commit `383e07c`.
+
+28. Intégration OIDC de la VM MDM — 24 juillet 2026
+    - La fusion a été confirmée sur `origin/main` avec le commit `8f86902`.
+    - Connexion SSH réussie avec l'alias `mdm-tad`, utilisateur `debian`, vers
+      la VM Debian 13.6 `cnps` correspondant à `mdm.tadgroupe.com`.
+    - Audit : service `hmdm-app` basé sur `headwindmdm/hmdm:0.1.7`, panneau
+      HMDM 5.38.1, PostgreSQL persistant et configuration sous
+      `/opt/hmdm/config/ROOT.xml`. Aucun `.env` n'a été lu, affiché ou copié.
+    - Avant intervention, `/rest/public/oidc/config` et
+      `/rest/public/oidc/start` renvoyaient HTTP 404.
+    - La source amont HMDM v5.38.1 a été compilée avec l'overlay OIDC du dépôt
+      en conservant les protections natives HSTS/JWT de cette version.
+    - La compilation Java 8 a échoué sur ActiveMQ en bytecode Java 11; la
+      compilation Java 17 a réussi avec Maven, tests HMDM désactivés.
+    - WAR déployé : `launcher.war`, SHA-256
+      `4215f1df9f1847b13cb5da1dc1df4924b12ce3b8b1d667077ef0ad377e87d2cc`.
+    - Client Keycloak confidentiel `tad-mdm` créé/mis à jour dans le realm
+      `tad-groupe`, avec callback exact
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback` et origine web
+      limitée à `https://mdm.tadgroupe.com`. Le secret n'est pas dans Git ni
+      dans ce journal.
+    - Sauvegarde avant déploiement créée sous
+      `/opt/hmdm/work/oidc-backups/20260724T084940Z`, permissions restreintes,
+      avec `ROOT.xml` et les WAR courants. Aucun volume ni base n'a été supprimé.
+    - Le WAR custom a été placé dans le cache HMDM, copié dans le conteneur,
+      puis `hmdm-app` a été redémarré.
+    - Vérifications live réussies : accueil HTTP 200; `/rest/public/oidc/config`
+      HTTP 200 avec `enabled=true`; `/rest/public/oidc/start` HTTP 303 vers
+      Keycloak avec `client_id=tad-mdm`; callback invalide HTTP 400; les trois
+      fichiers UI OIDC sont servis en HTTP 200.
+    - Le parcours navigateur complet reste à effectuer avec un compte de test
+      Keycloak non personnel dont l'e-mail existe déjà dans HMDM. Aucun compte
+      réel n'a été créé par cette reprise.
+
+Rollback MDM OIDC
+-----------------
+
+En cas de régression, arrêter uniquement `hmdm-app`, restaurer `ROOT.xml` et le
+WAR depuis `/opt/hmdm/work/oidc-backups/20260724T084940Z`, recopier le WAR dans
+le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
+    résultat. Désactiver ensuite le client Keycloak `tad-mdm` si nécessaire, sans
+    exposer son secret.
+
+29. Séparation des domaines MDM et correction auth/options — 24 juillet 2026
+    - Clarification confirmée : `mdm.tadgroupe.com` est le domaine SSO via le
+      portail; `mdm.tid.atf.onl` est une porte d'accès locale indépendante.
+    - Le callback OIDC reste volontairement configuré sur
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback`.
+    - Le backend OIDC vérifie désormais le hostname : sur `mdm.tadgroupe.com`,
+      il renvoie `enabled=true` et autorise `/rest/public/oidc/start`; sur
+      `mdm.tid.atf.onl`, il renvoie `enabled=false` et `/start` renvoie 404.
+    - Le frontend force le mode local sur tout hostname différent de
+      `mdm.tadgroupe.com`; `?local=1` reste accepté comme secours.
+    - Le HTTP 500 de `/rest/public/auth/options` venait de la négociation de
+      contenu XML par défaut. L'endpoint est maintenant annoté explicitement
+      `application/json`, et renvoie HTTP 200 sur les deux domaines.
+    - Nouveau WAR déployé : SHA-256
+      `bdbede721b8f741ef4607d217a517af8db8aa88b54647d8e288f8d069bf33498`.
+    - Sauvegarde avant ce correctif :
+      `/opt/hmdm/work/oidc-backups/20260724T091106Z` (WAR et `ROOT.xml`,
+      permissions restreintes). Aucun volume ni base n'a été supprimé.
+    - Vérifications live : les deux accueils HTTP 200; ATF `config=false` et
+      `start=404`; TAD `config=true` et `start=303`; `auth/options=200` en
+      requête sans en-tête Accept; conteneur `hmdm-app` actif.
+
+30. Correctif boucle post-callback OIDC — 24 juillet 2026
+    - Le diagnostic de la boucle a montré que le callback créait correctement
+      la session HTTP serveur, mais pas le cookie de profil `user` attendu par
+      l'application Angular pour considérer l'utilisateur connecté.
+    - Le callback pose désormais un cookie de session `user` contenant
+      uniquement `UserView` (profil HMDM sans mot de passe ni token), avec les
+      attributs `Secure` et `HttpOnly=false` nécessaires à Angular. Le token
+      OIDC reste côté serveur et n'est pas placé dans le cookie.
+    - Nouveau WAR déployé : SHA-256
+      `a57364227b8356fbbcd749324bdd2d8eb8fda4658adf0d22533efae680eda6b8`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-session-fix` et
+      `ROOT.war.before-session-fix`, permissions restreintes.
+    - Vérifications live après redémarrage : TAD `config=true`, `start=303`,
+      accueil HTTP 200; ATF `config=false`, `start=404`, accueil HTTP 200;
+      `auth/options=200` sur les deux domaines; conteneur `hmdm-app` actif.
+    - Un parcours navigateur complet avec un compte de test non personnel
+      reste recommandé pour confirmer le callback réel et la déconnexion.
+
+31. Correctif cookie OIDC invalide et rotation du jeton utilisateur — 24 juillet 2026
+    - Le compte fourni `c.navarre@atf.onl` a été retrouvé dans HMDM; le rejet
+      ne venait donc pas d'une absence de compte.
+    - Les logs Tomcat ont montré que le cookie `user` était rejeté car le JSON
+      brut contenait des guillemets, et qu'il exposait le champ `authToken`.
+    - Le callback encode désormais la valeur du cookie et retire `authToken`;
+      le cookie ne contient que le profil nécessaire à Angular. Aucun token
+      OIDC n'est envoyé au navigateur.
+    - Le jeton HMDM précédemment exposé dans un cookie invalide a été renouvelé
+      pour le compte concerné; sa nouvelle valeur n'a pas été affichée ni
+      journalisée.
+    - Nouveau WAR déployé : SHA-256
+      `487d9faeb220d745553711045c187b53dfd68dd3ee582f51bce1ec2a34687232`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-cookie-fix` et
+      `ROOT.war.before-cookie-fix`.
+    - Vérifications live : TAD `config=true`, `options=200`, accueil 200;
+      ATF `config=false`, `options=200`, accueil 200; `hmdm-app` actif.

@@ -534,3 +534,45 @@ Reste à faire après l'intégration SSO
       meta-tag mobile moderne a aussi été ajouté pour supprimer l'avertissement
       navigateur non bloquant.
     - Correctif versionné sur `codex/oidc-nonce-revue-pdv`, commit `383e07c`.
+
+28. Intégration OIDC de la VM MDM — 24 juillet 2026
+    - La fusion a été confirmée sur `origin/main` avec le commit `8f86902`.
+    - Connexion SSH réussie avec l'alias `mdm-tad`, utilisateur `debian`, vers
+      la VM Debian 13.6 `cnps` correspondant à `mdm.tadgroupe.com`.
+    - Audit : service `hmdm-app` basé sur `headwindmdm/hmdm:0.1.7`, panneau
+      HMDM 5.38.1, PostgreSQL persistant et configuration sous
+      `/opt/hmdm/config/ROOT.xml`. Aucun `.env` n'a été lu, affiché ou copié.
+    - Avant intervention, `/rest/public/oidc/config` et
+      `/rest/public/oidc/start` renvoyaient HTTP 404.
+    - La source amont HMDM v5.38.1 a été compilée avec l'overlay OIDC du dépôt
+      en conservant les protections natives HSTS/JWT de cette version.
+    - La compilation Java 8 a échoué sur ActiveMQ en bytecode Java 11; la
+      compilation Java 17 a réussi avec Maven, tests HMDM désactivés.
+    - WAR déployé : `launcher.war`, SHA-256
+      `4215f1df9f1847b13cb5da1dc1df4924b12ce3b8b1d667077ef0ad377e87d2cc`.
+    - Client Keycloak confidentiel `tad-mdm` créé/mis à jour dans le realm
+      `tad-groupe`, avec callback exact
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback` et origine web
+      limitée à `https://mdm.tadgroupe.com`. Le secret n'est pas dans Git ni
+      dans ce journal.
+    - Sauvegarde avant déploiement créée sous
+      `/opt/hmdm/work/oidc-backups/20260724T084940Z`, permissions restreintes,
+      avec `ROOT.xml` et les WAR courants. Aucun volume ni base n'a été supprimé.
+    - Le WAR custom a été placé dans le cache HMDM, copié dans le conteneur,
+      puis `hmdm-app` a été redémarré.
+    - Vérifications live réussies : accueil HTTP 200; `/rest/public/oidc/config`
+      HTTP 200 avec `enabled=true`; `/rest/public/oidc/start` HTTP 303 vers
+      Keycloak avec `client_id=tad-mdm`; callback invalide HTTP 400; les trois
+      fichiers UI OIDC sont servis en HTTP 200.
+    - Le parcours navigateur complet reste à effectuer avec un compte de test
+      Keycloak non personnel dont l'e-mail existe déjà dans HMDM. Aucun compte
+      réel n'a été créé par cette reprise.
+
+Rollback MDM OIDC
+-----------------
+
+En cas de régression, arrêter uniquement `hmdm-app`, restaurer `ROOT.xml` et le
+WAR depuis `/opt/hmdm/work/oidc-backups/20260724T084940Z`, recopier le WAR dans
+le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
+résultat. Désactiver ensuite le client Keycloak `tad-mdm` si nécessaire, sans
+exposer son secret.

@@ -598,3 +598,22 @@ le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
     - Vérifications live : les deux accueils HTTP 200; ATF `config=false` et
       `start=404`; TAD `config=true` et `start=303`; `auth/options=200` en
       requête sans en-tête Accept; conteneur `hmdm-app` actif.
+
+30. Correctif boucle post-callback OIDC — 24 juillet 2026
+    - Le diagnostic de la boucle a montré que le callback créait correctement
+      la session HTTP serveur, mais pas le cookie de profil `user` attendu par
+      l'application Angular pour considérer l'utilisateur connecté.
+    - Le callback pose désormais un cookie de session `user` contenant
+      uniquement `UserView` (profil HMDM sans mot de passe ni token), avec les
+      attributs `Secure` et `HttpOnly=false` nécessaires à Angular. Le token
+      OIDC reste côté serveur et n'est pas placé dans le cookie.
+    - Nouveau WAR déployé : SHA-256
+      `a57364227b8356fbbcd749324bdd2d8eb8fda4658adf0d22533efae680eda6b8`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-session-fix` et
+      `ROOT.war.before-session-fix`, permissions restreintes.
+    - Vérifications live après redémarrage : TAD `config=true`, `start=303`,
+      accueil HTTP 200; ATF `config=false`, `start=404`, accueil HTTP 200;
+      `auth/options=200` sur les deux domaines; conteneur `hmdm-app` actif.
+    - Un parcours navigateur complet avec un compte de test non personnel
+      reste recommandé pour confirmer le callback réel et la déconnexion.

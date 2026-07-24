@@ -23,6 +23,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -139,7 +140,12 @@ public class OidcResource {
             session.removeAttribute(STATE);
             session.removeAttribute(NONCE);
             session.setAttribute(ID_TOKEN, idToken);
-            return javax.ws.rs.core.Response.seeOther(URI.create("/" )).build();
+            NewCookie userCookie = new NewCookie(
+                    "user", mapper.writeValueAsString(new UserView(user)), "/", null, null,
+                    NewCookie.DEFAULT_MAX_AGE, true, false);
+            return javax.ws.rs.core.Response.seeOther(URI.create("/" ))
+                    .cookie(userCookie)
+                    .build();
         } catch (Exception e) {
             return javax.ws.rs.core.Response.status(401).build();
         }

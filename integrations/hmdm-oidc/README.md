@@ -6,6 +6,9 @@ actuellement HMDM 5.38.1 et l’overlay a été adapté à cette version avant
 déploiement. Elle ajoute un flux Authorization Code avec le realm Keycloak
 `tad-groupe`.
 
+Le bandeau authentifié conserve un lien `Portail` vers
+`https://portail.tadgroupe.com/` pour revenir au portail centralisé.
+
 Le callback valide l’état, le nonce, l’issuer, l’audience, la signature RSA
 JWKS et l’expiration du jeton. L’e-mail Keycloak doit correspondre à un compte
 HMDM déjà existant ; aucun compte ni mot de passe n’est créé automatiquement.

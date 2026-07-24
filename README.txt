@@ -617,3 +617,22 @@ le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
       `auth/options=200` sur les deux domaines; conteneur `hmdm-app` actif.
     - Un parcours navigateur complet avec un compte de test non personnel
       reste recommandé pour confirmer le callback réel et la déconnexion.
+
+31. Correctif cookie OIDC invalide et rotation du jeton utilisateur — 24 juillet 2026
+    - Le compte fourni `c.navarre@atf.onl` a été retrouvé dans HMDM; le rejet
+      ne venait donc pas d'une absence de compte.
+    - Les logs Tomcat ont montré que le cookie `user` était rejeté car le JSON
+      brut contenait des guillemets, et qu'il exposait le champ `authToken`.
+    - Le callback encode désormais la valeur du cookie et retire `authToken`;
+      le cookie ne contient que le profil nécessaire à Angular. Aucun token
+      OIDC n'est envoyé au navigateur.
+    - Le jeton HMDM précédemment exposé dans un cookie invalide a été renouvelé
+      pour le compte concerné; sa nouvelle valeur n'a pas été affichée ni
+      journalisée.
+    - Nouveau WAR déployé : SHA-256
+      `487d9faeb220d745553711045c187b53dfd68dd3ee582f51bce1ec2a34687232`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-cookie-fix` et
+      `ROOT.war.before-cookie-fix`.
+    - Vérifications live : TAD `config=true`, `options=200`, accueil 200;
+      ATF `config=false`, `options=200`, accueil 200; `hmdm-app` actif.

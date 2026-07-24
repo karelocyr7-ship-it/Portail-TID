@@ -10,7 +10,8 @@ Le callback valide l’état, le nonce, l’issuer, l’audience, la signature R
 JWKS et l’expiration du jeton. L’e-mail Keycloak doit correspondre à un compte
 HMDM déjà existant ; aucun compte ni mot de passe n’est créé automatiquement.
 Après validation, le callback crée aussi le cookie de profil de session attendu
-par l’interface Angular; il ne contient ni token OIDC ni mot de passe.
+par l’interface Angular. Sa valeur est URL-encodée et ne contient ni
+`authToken`, ni token OIDC, ni mot de passe.
 
 ## Paramètres de déploiement
 

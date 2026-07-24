@@ -2,6 +2,7 @@ package com.hmdm.rest.resource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hmdm.persistence.CustomerDAO;
 import com.hmdm.persistence.UnsecureDAO;
 import com.hmdm.persistence.domain.Settings;
@@ -140,8 +141,10 @@ public class OidcResource {
             session.removeAttribute(STATE);
             session.removeAttribute(NONCE);
             session.setAttribute(ID_TOKEN, idToken);
+            JsonNode cookieUser = mapper.valueToTree(new UserView(user));
+            if (cookieUser.isObject()) ((ObjectNode) cookieUser).remove("authToken");
             NewCookie userCookie = new NewCookie(
-                    "user", mapper.writeValueAsString(new UserView(user)), "/", null, null,
+                    "user", enc(mapper.writeValueAsString(cookieUser)), "/", null, null,
                     NewCookie.DEFAULT_MAX_AGE, true, false);
             return javax.ws.rs.core.Response.seeOther(URI.create("/" ))
                     .cookie(userCookie)

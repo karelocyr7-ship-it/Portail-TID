@@ -31,6 +31,7 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json({
+      lookup: true,
       subject: identity.subject,
       active: Boolean(user?.active),
       profiles: user?.active

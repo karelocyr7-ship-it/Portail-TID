@@ -7,6 +7,7 @@ import { getApplicationIconPath } from "@/lib/application-icons";
 import { UserDirectory } from "@/components/user-directory";
 import { redirect } from "next/navigation";
 import {
+  saveCurrentPortalUser,
   savePortalUser,
   updateApplicationStatus,
   updateApplicationUrl,
@@ -187,6 +188,31 @@ export default async function AdminPage() {
           Associez une identité Keycloak aux profils réels déclarés par chaque
           application. Aucun mot de passe n’est enregistré dans le portail.
         </p>
+
+        <form
+          className="user-editor user-editor-current"
+          action={saveCurrentPortalUser}
+        >
+          <div className="user-editor-heading">
+            <div>
+              <p className="eyebrow">Mon compte</p>
+              <h3>Ajouter ou mettre à jour mes accès</h3>
+            </div>
+            <span className="source-note">
+              Identité Keycloak détectée automatiquement
+            </span>
+          </div>
+          <p className="field-help">
+            Votre identité et votre identifiant Keycloak sont récupérés depuis
+            la session courante. Aucun champ <code>sub</code> n’est à saisir.
+          </p>
+          <ProfilePicker profiles={profiles} />
+          <div className="user-editor-footer">
+            <button className="button primary" type="submit">
+              Enregistrer mes accès
+            </button>
+          </div>
+        </form>
 
         <UserDirectory
           users={users.map((user) => ({

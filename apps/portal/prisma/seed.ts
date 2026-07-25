@@ -181,6 +181,31 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     sourceSystem: "HMDM",
     sourceReference: "Headwind MDM Community: user roles",
   })),
+  ATF: [
+    [
+      "ADMIN",
+      "Administrateur ATF",
+      "Administration complète de la flotte et des comptes",
+    ],
+    [
+      "USER",
+      "Utilisateur ATF",
+      "Consultation et exploitation opérationnelle des appareils",
+    ],
+    ["OBSERVER", "Observateur ATF", "Consultation en lecture seule"],
+    [
+      "OBSERVER_LIMITED",
+      "Observateur restreint ATF",
+      "Consultation en lecture seule avec commandes et rapports restreints",
+    ],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "ATF",
+    sourceReference:
+      "tc_users: administrator, readonly, limitcommands, disablereports",
+  })),
 };
 
 async function main() {

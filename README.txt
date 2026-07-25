@@ -737,3 +737,22 @@ réel ou donnée personnelle.
       le volume PostgreSQL ni le certificat.
     - Reste à faire : implémenter et valider la phase applicative OIDC/
       Keycloak et les traitements métier OCI/Telegram.
+
+35. Phase 1 validation OIDC Telco — 25 juillet 2026
+    - Objectif : ajouter la validation serveur des Bearer tokens Keycloak
+      sans déployer cette phase en production.
+    - Dépôt/branche : dépôt `RECRUT-OM`, branche `agent/oidc-phase-1`, PR #2.
+    - L’API découvre l’issuer et les JWKS depuis `OIDC_ISSUER`, accepte
+      uniquement RS256 et vérifie signature, issuer, audience, `iat`, `exp`
+      et `sub`. `/profile` est protégé; `/health` et `/ready` restent publics.
+    - Les rôles realm `realm_access.roles` peuvent être filtrés par
+      `OIDC_REQUIRED_ROLES`. Aucun secret ni contenu du `.env` réel n’a été
+      lu ou consigné.
+    - Contrôles : configuration Compose réussie, 5 tests API réussis, builds
+      API/web/worker réussis et `git diff --check` réussi.
+    - Risques/limites : le parcours navigateur Authorization Code + PKCE et
+      la création effective du client Keycloak restent à réaliser; la PR ne
+      doit pas être déployée avant revue et fusion.
+    - Rollback : ne pas déployer la PR; si elle est déployée ultérieurement,
+      restaurer l’archive applicative précédente sans supprimer le volume
+      PostgreSQL ni les certificats.

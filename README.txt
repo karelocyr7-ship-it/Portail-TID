@@ -636,3 +636,75 @@ le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
       `ROOT.war.before-cookie-fix`.
     - Vérifications live : TAD `config=true`, `options=200`, accueil 200;
       ATF `config=false`, `options=200`, accueil 200; `hmdm-app` actif.
+
+32. Installation Recrutement Telco & OM sur la VM MDM — 25 juillet 2026
+    - La VM MDM est joignable via l'alias SSH `mdm-tad` et correspond à
+      l'hôte `cnps`.
+    - Le répertoire réel d'installation est
+      `/home/debian/RECRUT_OM` (et non `Recut_OM`).
+    - L'application est déployée depuis la branche `agent/step-0`, commit
+      `bf9453e` (`docs: define MDM deployment procedure`). Le dépôt distant
+      est propre au moment du contrôle.
+    - Le fichier `.env` réel est présent avec les permissions `0600`; son
+      contenu n'a pas été lu, affiché, copié ni consigné.
+    - La configuration Compose est valide. Les services `web`, `api`,
+      `worker` et `db` sont démarrés depuis environ trois heures.
+    - `recrut-om-web-1`, `recrut-om-api-1` et `recrut-om-db-1` sont sains;
+      `recrut-om-worker-1` est actif sans healthcheck dédié. Aucun redémarrage
+      ni erreur récente n'a été détecté.
+    - Les contrôles HTTP locaux sont réussis : `/api/health` et `/api/ready`
+      renvoient HTTP 200; la page web renvoie HTTP 200.
+    - Le web écoute uniquement sur `127.0.0.1:8090`; aucun accès public,
+      DNS ou reverse-proxy n'est encore configuré pour cette application.
+    - Le volume PostgreSQL `recrut-om_telco-db-data` existe. Aucun volume,
+      base ou fichier n'a été supprimé ou modifié pendant ce contrôle.
+
+Reste à faire pour Recrutement Telco & OM
+------------------------------------------
+
+- Configurer le reverse-proxy et le nom DNS public après validation du
+  domaine retenu.
+- Créer et configurer le client Keycloak `tad-recrut-om`, puis valider le
+  parcours SSO avec un compte de test non personnel.
+- Implémenter et tester les traitements métier OCI/Telegram, actuellement
+  absents du squelette de phase 0.
+- Exécuter les tests fonctionnels complets, définir la sauvegarde de la base
+  et formaliser le rollback.
+
+Consigne permanente de reprise Codex
+-------------------------------------
+
+Toute action concernant Recrutement Telco & OM, la VM MDM ou le portail doit
+être consignée dans ce fichier `README.txt` avant la fin de la session. Chaque
+entrée doit indiquer la date, l'objectif, la VM et le répertoire concernés,
+les commandes ou contrôles effectués sans secret, les résultats, les fichiers
+ou services modifiés, les risques, le rollback et les points restant à faire.
+Après chaque reconnexion ou coupure Codex, relire ce journal, vérifier
+`git status --short --branch` et reprendre au dernier point documenté. Ne
+jamais consigner de secret, mot de passe, token, clé privée, contenu de `.env`
+réel ou donnée personnelle.
+
+33. Préparation publication `recrut-oci.tadgroupe.com` — 25 juillet 2026
+    - Objectif : préparer la publication du socle Recrutement Telco & OM.
+    - VM/répertoire : VM MDM `cnps`, `/home/debian/RECRUT_OM` ; aucune
+      configuration de production n'a été modifiée.
+    - Le DNS `recrut-oci.tadgroupe.com` résout vers `91.134.255.77`.
+    - Le service web local écoute sur `127.0.0.1:8090`; `/api/health` local
+      renvoie HTTP 200. Le domaine public répondait auparavant sur le vhost
+      Nginx par défaut et `/api/health` public renvoyait HTTP 404.
+    - Le modèle versionné
+      `integrations/telco-automation/deploy/nginx-recrut-oci.conf` publie
+      uniquement `127.0.0.1:8090`, force HTTPS et ajoute des en-têtes de
+      sécurité. La procédure est documentée dans
+      `integrations/telco-automation/docs/DEPLOYMENT.md`.
+    - `docker compose --env-file .env.example config --quiet` a réussi.
+      Les tests Compose n'ont pas pu démarrer, l'accès au socket Docker étant
+      indisponible dans l'environnement Codex; `pytest` n'est pas installé
+      localement. Aucune installation n'a été effectuée.
+    - Risques : publication avant fusion dans `main`, certificat ACME absent,
+      et OIDC non implémenté dans le squelette phase 0.
+    - Rollback : restaurer le vhost Nginx sauvegardé, vérifier `nginx -t` puis
+      recharger Nginx; ne supprimer aucun certificat, volume ou base.
+    - Reste à faire : revue/fusion de la branche, installation du vhost,
+      émission ACME, contrôles HTTPS, puis phase applicative OIDC et client
+      Keycloak `tad-recrut-om`.

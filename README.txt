@@ -756,3 +756,23 @@ réel ou donnée personnelle.
     - Rollback : ne pas déployer la PR; si elle est déployée ultérieurement,
       restaurer l’archive applicative précédente sans supprimer le volume
       PostgreSQL ni les certificats.
+
+36. Phase 2 SSO navigateur Telco — 25 juillet 2026
+    - Objectif : ajouter le flux navigateur Authorization Code + PKCE au
+      frontend Telco, sans déploiement production.
+    - Dépôt/branche : dépôt `RECRUT-OM`, branche `agent/oidc-phase-1`, PR #3.
+    - Le frontend utilise la découverte OIDC HTTPS, vérifie `state` et
+      `nonce`, échange le code sans secret client, appelle `/api/profile` et
+      propose le logout fournisseur. Le Bearer token reste uniquement en
+      mémoire JavaScript; les données de transaction sont temporaires dans
+      `sessionStorage`.
+    - Les paramètres publics `WEB_OIDC_ISSUER`, `WEB_OIDC_CLIENT_ID`,
+      `WEB_OIDC_REDIRECT_URI` et `WEB_OIDC_SCOPE` sont documentés. Aucun
+      secret client ni contenu du `.env` réel n’a été lu ou consigné.
+    - Contrôles : configuration Compose réussie, build frontend Vite réussi
+      et `git diff --check` réussi.
+    - Risques/limites : le client Keycloak public, ses redirect URI exactes et
+      le test SSO avec un compte non personnel restent à configurer; la PR ne
+      doit pas être déployée avant revue, fusion et recette.
+    - Rollback : ne pas déployer la PR; sinon restaurer l’image applicative
+      précédente et conserver les volumes et certificats existants.

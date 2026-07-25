@@ -708,3 +708,32 @@ réel ou donnée personnelle.
     - Reste à faire : revue/fusion de la branche, installation du vhost,
       émission ACME, contrôles HTTPS, puis phase applicative OIDC et client
       Keycloak `tad-recrut-om`.
+
+34. Publication HTTPS Recrutement OCI — 25 juillet 2026
+    - Objectif : déployer la version fusionnée et publier
+      `recrut-oci.tadgroupe.com`.
+    - VM/répertoire : VM MDM `cnps`, `/home/debian/RECRUT_OM`.
+    - Les PR Telco et portail ont été fusionnées dans `main`. L’archive du
+      commit fusionné `4bf0b11826c14f0f82d61e35aa65779192a27430` a été
+      appliquée sur la VM sans lire ni transférer le `.env` réel.
+    - Sauvegardes créées :
+      `/home/debian/RECRUT_OM.rollback-20260725182137.tar.gz` et
+      `/home/debian/nginx-recrut-oci-20260725182235.tar.gz`.
+    - Les images Compose ont été reconstruites; `api`, `web`, `worker` et
+      `db` sont actifs et sains. Les endpoints locaux `/api/health` et
+      `/api/ready` renvoient HTTP 200.
+    - Le vhost Nginx a été installé, le certificat ACME émis et Nginx
+      rechargé. Le certificat `recrut-oci.tadgroupe.com` expire le
+      23 octobre 2026; le timer Certbot est actif.
+    - Contrôles publics réussis : HTTP 301 vers HTTPS, HTTPS `/api/health`
+      HTTP 200 avec `{"status":"ok","service":"telco-api"}`, et
+      en-têtes `X-Content-Type-Options`, `X-Frame-Options`,
+      `Referrer-Policy` et `Permissions-Policy` présents.
+    - Risques restants : OIDC/Keycloak n’est pas implémenté dans la phase 0;
+      aucun parcours SSO ne doit encore être exigé.
+    - Rollback : restaurer le vhost depuis la sauvegarde, exécuter
+      `nginx -t`, recharger Nginx; pour l’application, restaurer l’archive
+      `/home/debian/RECRUT_OM.rollback-20260725182137.tar.gz` sans supprimer
+      le volume PostgreSQL ni le certificat.
+    - Reste à faire : implémenter et valider la phase applicative OIDC/
+      Keycloak et les traitements métier OCI/Telegram.

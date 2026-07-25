@@ -23,6 +23,7 @@ type OidcConfiguration = {
 export type PortalSession = {
   subject: string;
   name?: string;
+  email?: string;
   username?: string;
   roles: string[];
   groups: string[];
@@ -176,6 +177,7 @@ async function verifyIdToken(
   return {
     subject: String(claims.sub ?? ""),
     name: typeof claims.name === "string" ? claims.name : undefined,
+    email: typeof claims.email === "string" ? claims.email : undefined,
     username:
       typeof claims.preferred_username === "string"
         ? claims.preferred_username

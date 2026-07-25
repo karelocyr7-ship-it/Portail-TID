@@ -211,3 +211,22 @@ export async function savePortalUser(formData: FormData) {
   revalidatePath("/admin");
   revalidatePath("/");
 }
+
+export async function saveCurrentPortalUser(formData: FormData) {
+  const session = await requireAdmin();
+  const currentUser = new FormData();
+
+  currentUser.set(
+    "displayName",
+    session.name ?? session.username ?? session.subject,
+  );
+  currentUser.set("email", session.email ?? session.username ?? "");
+  currentUser.set("keycloakSubject", session.subject);
+  currentUser.set("active", "on");
+  for (const profileId of formData.getAll("profileIds")) {
+    if (typeof profileId === "string")
+      currentUser.append("profileIds", profileId);
+  }
+
+  await savePortalUser(currentUser);
+}

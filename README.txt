@@ -876,3 +876,27 @@ avant de conclure que la VM est inaccessible.
     - Contrôles : lint et tests réussis (7 tests). Typecheck et build bloqués
       par des erreurs TypeScript préexistantes dans l'administration et
       `catalog-db.ts`, sans erreur signalée dans les fichiers modifiés.
+
+42. Correction du build et audit Git des VM — 26 juillet 2026
+    - Prompt utilisateur : « corrige les erreurs : Le build reste bloqué par
+      des erreurs TypeScript préexistantes dans l’administration du portail.
+      verifie que les depots git sont bien à jour sur chaque vm et
+      applications ».
+    - Cause du build : les liens locaux `node_modules` utilisaient Prisma
+      6.19.0 alors que `pnpm-lock.yaml` verrouille Prisma 7.9.0. Les types
+      Prisma devenaient `any`, provoquant les erreurs implicites de
+      l’administration. Réalignement avec `pnpm install --frozen-lockfile`
+      puis `prisma generate`; aucune modification du lockfile.
+    - Contrôles portail : typecheck, lint, 7 tests et build Next.js réussis.
+    - Audit VM `135.125.132.51` : CASH-RECON a 1 modification locale et son
+      fetch GitHub est bloqué par une clé SSH configurée vers un chemin
+      inaccessible; Revue-PDV est à 0 avance/retard sur sa branche distante
+      mais possède 46 éléments locaux; TDB possède 6 éléments locaux et sa
+      branche `codex/modernize-dashboard-kpi` n'a pas de branche distante.
+    - Audit VM `91.134.255.77` : le clone Android Traccar est synchronisé et
+      propre; son clone Flutter est en retard de 99 commits et modifié
+      localement; Recrutement possède 20 éléments locaux et son remote HTTPS
+      demande une authentification non disponible. Les dépôts sans remote
+      exploitable n'ont pas été déclarés à jour par approximation.
+    - Aucun pull, reset, suppression, écrasement de fichier ou lecture de
+      secret n'a été effectué.

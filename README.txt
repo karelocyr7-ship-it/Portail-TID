@@ -776,3 +776,29 @@ réel ou donnée personnelle.
       doit pas être déployée avant revue, fusion et recette.
     - Rollback : ne pas déployer la PR; sinon restaurer l’image applicative
       précédente et conserver les volumes et certificats existants.
+
+37. Registre permanent des accès et applications — 26 juillet 2026
+    - Cette section fait foi pour reprendre les opérations sans redemander les
+      hôtes déjà connus. Elle ne contient aucun mot de passe, token ou clé.
+    - VM Portail : `54.37.11.202`. Dépôt : `/srv/tad/portail`; stack pilotée
+      depuis ce répertoire avec `sudo docker compose`.
+    - VM MDM / Recrutement OCI : `91.134.255.77`, alias SSH `mdm-tad`, dépôt
+      `/home/debian/RECRUT_OM`; services Compose : `api`, `web`, `db`, `worker`.
+    - VM Revue-PDV / CASH-RECON / TDB : `135.125.132.51`, alias SSH
+      `Revue-PDV`, dépôt TDB : `/home/debian/TDB-TID`.
+    - TDB public : `https://tdb.tadgroupe.com`; santé :
+      `https://tdb.tadgroupe.com/api/health`.
+    - Keycloak : VM Portail, chemin `/auth`, realm `tad-groupe`. Client de
+      service TDB : `tad-oci-tdb-ingestion`; rôle : `TDB_INGEST`. Le secret
+      est installé uniquement sur la VM MDM dans
+      `/home/debian/tad-oci-tdb-ingestion.secret`, avec permissions restreintes.
+      Ne jamais afficher, copier dans Git ou inscrire son contenu ici.
+    - L’API TDB expose `POST /api/integrations/performances`, protégé par le
+      jeton Keycloak du client de service. OCI publie ses agrégats anonymisés
+      de Juin 2026 automatiquement depuis le résumé; une indisponibilité du
+      TDB ne bloque pas l’interface OCI.
+    - Branche TDB : `codex/oci-tdb-ingestion`, commit `9b038c5`. Tests backend,
+      validations Compose et builds TDB/OCI réussis.
+    - Reprise : vérifier `git status --short --branch`, utiliser les alias
+      `mdm-tad` et `Revue-PDV`, puis contrôler `sudo docker compose ps` et les
+      endpoints `/health`. Ne jamais chercher les secrets dans un `.env` réel.

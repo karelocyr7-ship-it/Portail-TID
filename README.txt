@@ -942,3 +942,16 @@ avant de conclure que la VM est inaccessible.
     - Les fichiers Recrutement OCI ne sont toujours pas présents dans le
       stockage de la VM source; l'onglet affiche donc la dernière publication
       disponible tant que le dépôt effectif des fichiers n'est pas réalisé.
+
+45. Restauration des KPI métiers dans la météo TDB — 26 juillet 2026
+    - Prompt utilisateur : « sur TDB je ne retrouve plus les kpi metiers sur
+      TDB dans la meteo ».
+    - PR TDB #15 fusionnée dans `main` au commit `63724d8`.
+    - La page Météo interroge désormais l'API TDB et affiche les catégories
+      métier avec réalisé, objectif, écart, nombre de KPI et dernière mise à
+      jour, sans supprimer les compteurs météo du classeur.
+    - Rafraîchissement automatique horaire activé pour cette synthèse.
+    - Déploiement frontend effectué; bundle public `index-YgPNVT1F.js`, API
+      health HTTP 200, frontend et backend actifs.
+    - Base confirmée après déploiement : CASH-RECON 7 lignes, Recrutement OCI
+      10 lignes, Revue-PDV 5 lignes.

@@ -7,7 +7,12 @@ export type PortalRole =
   | "GESTIONNAIRE_PARC"
   | "AUDITEUR"
   | "RH"
-  | "INFORMATIQUE";
+  | "INFORMATIQUE"
+  | "RECRUT_OCI_ADMIN"
+  | "RECRUT_OCI_GESTIONNAIRE"
+  | "RECRUT_OCI_RO"
+  | "RECRUT_OCI_SUPERVISEUR"
+  | "RECRUT_OCI_DIRECTION";
 
 export type CatalogApplication = {
   code: string;
@@ -108,7 +113,14 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "♙",
     integrationLevel: 1,
     active: true,
-    roles: ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    roles: [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   },
   {
     code: "GED",
@@ -129,7 +141,14 @@ export const catalogApplications: CatalogApplication[] = [
     integrationLevel: 1,
     active: true,
     url: "https://recrut-oci.tadgroupe.com",
-    roles: ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    roles: [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   },
 ];
 

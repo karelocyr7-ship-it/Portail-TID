@@ -126,9 +126,21 @@ type ProfileDefinition = {
 const profileDefinitions: Record<string, ProfileDefinition[]> = {
   RECRUTEMENT: [
     ["RECRUT_OCI_ADMIN", "Administrateur", "Administration de Recrutement OCI"],
-    ["RECRUT_OCI_GESTIONNAIRE", "Gestionnaire", "Gestion opérationnelle des imports OCI"],
-    ["RECRUT_OCI_RO", "Responsable Orange (RO)", "Pilotage Orange Côte d’Ivoire"],
-    ["RECRUT_OCI_SUPERVISEUR", "Superviseur", "Supervision des traitements et équipes"],
+    [
+      "RECRUT_OCI_GESTIONNAIRE",
+      "Gestionnaire",
+      "Gestion opérationnelle des imports OCI",
+    ],
+    [
+      "RECRUT_OCI_RO",
+      "Responsable Orange (RO)",
+      "Pilotage Orange Côte d’Ivoire",
+    ],
+    [
+      "RECRUT_OCI_SUPERVISEUR",
+      "Superviseur",
+      "Supervision des traitements et équipes",
+    ],
     ["RECRUT_OCI_DIRECTION", "Direction", "Accès direction et pilotage"],
   ].map(([key, name, description]) => ({
     key,

@@ -802,3 +802,25 @@ réel ou donnée personnelle.
     - Reprise : vérifier `git status --short --branch`, utiliser les alias
       `mdm-tad` et `Revue-PDV`, puis contrôler `sudo docker compose ps` et les
       endpoints `/health`. Ne jamais chercher les secrets dans un `.env` réel.
+
+38. Synchronisation TDB multi-applications — 26 juillet 2026
+    - Un collecteur central est installé sur la VM TDB/Revue-PDV/CASH-RECON
+      (`135.125.132.51`) dans `/home/debian/tdb_sync.py`.
+    - Il lit uniquement les agrégats nécessaires dans les bases MariaDB des
+      conteneurs `pdv-prod-db` et `cash-recon-db`, sans lire les données
+      individuelles ni exposer les identifiants de base.
+    - Il obtient un jeton Keycloak `client_credentials` avec le client de
+      service `tad-oci-tdb-ingestion`, puis publie les KPI vers
+      `POST https://tdb.tadgroupe.com/api/integrations/performances`.
+    - Revue-PDV publie : PDV référencés/actifs, visites du jour, tournées
+      approuvées et tournées en attente.
+    - CASH-RECON publie : collecte totale, E-Recharge, Orange Money, besoin
+      cash, zones traitées/équilibrées et écarts détectés.
+    - Fréquence : toutes les 15 minutes, avec un premier passage 2 minutes
+      après le démarrage de la VM et rattrapage après interruption.
+    - Un verrou `flock` empêche deux synchronisations simultanées. Le service
+      est `tdb-sync.service` et le timer `tdb-sync.timer`.
+    - Vérification : `systemctl status tdb-sync.timer` puis
+      `sudo journalctl -u tdb-sync.service -n 30 --no-pager`.
+    - Le dernier test a publié 12 KPI : 5 Revue-PDV et 7 CASH-RECON pour
+      `2026-07`. Aucun secret n’est documenté dans ce fichier.

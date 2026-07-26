@@ -682,7 +682,19 @@ ou services modifiés, les risques, le rollback et les points restant à faire.
 Après chaque reconnexion ou coupure Codex, relire ce journal, vérifier
 `git status --short --branch` et reprendre au dernier point documenté. Ne
 jamais consigner de secret, mot de passe, token, clé privée, contenu de `.env`
-réel ou donnée personnelle.
+réel ou donnée personnelle. Pour permettre la reprise après une déconnexion de
+Codex ou de SSH, consigner également le texte intégral de chaque prompt
+utilisateur, dans l'ordre de réception, avec la réponse ou l'action associée,
+en masquant tout secret ou donnée personnelle éventuelle. Si le prompt est
+long, le conserver dans une entrée dédiée du journal plutôt que le résumer.
+
+Règle d’accès permanente TDB — La VM TDB est la même VM que Revue-PDV et
+CASH-RECON : `135.125.132.51`, alias SSH `Revue-PDV`, utilisateur `debian`,
+répertoire TDB `/home/debian/TDB-TID`. Toute installation npm, synchronisation,
+mise à jour ou déploiement TDB doit être exécuté directement sur cette VM via
+cet accès ; ne pas traiter un clone local comme environnement de production.
+Si l’alias SSH échoue, vérifier la résolution ou la configuration de l’alias
+avant de conclure que la VM est inaccessible.
 
 33. Préparation publication `recrut-oci.tadgroupe.com` — 25 juillet 2026
     - Objectif : préparer la publication du socle Recrutement Telco & OM.
@@ -816,11 +828,51 @@ réel ou donnée personnelle.
       approuvées et tournées en attente.
     - CASH-RECON publie : collecte totale, E-Recharge, Orange Money, besoin
       cash, zones traitées/équilibrées et écarts détectés.
-    - Fréquence : toutes les 15 minutes, avec un premier passage 2 minutes
-      après le démarrage de la VM et rattrapage après interruption.
+    - Fréquence : toutes les heures, avec un premier passage 2 minutes après
+      le démarrage de la VM et rattrapage après interruption.
     - Un verrou `flock` empêche deux synchronisations simultanées. Le service
       est `tdb-sync.service` et le timer `tdb-sync.timer`.
+    - Chaque KPI conserve désormais les détails de collecte : source, champ,
+      agrégation, unité, période, date observée, valeur brute, horodatage et
+      requête SQL ; ces détails sont transmis dans le commentaire de la ligne.
     - Vérification : `systemctl status tdb-sync.timer` puis
       `sudo journalctl -u tdb-sync.service -n 30 --no-pager`.
     - Le dernier test a publié 12 KPI : 5 Revue-PDV et 7 CASH-RECON pour
       `2026-07`. Aucun secret n’est documenté dans ce fichier.
+
+40. Restauration fidèle de la météo issue du classeur compteur — 26 juillet 2026
+    - Objectif : remplacer la synthèse calculée générique par la météo
+      d’origine issue de la feuille `Tableau de bord` du fichier
+      `Tableau_de_Bord_Meteo_T2_2026_AVRIL_compteurs.xlsx`.
+    - Les seules données intégrées sont les 28 compteurs de cette feuille :
+      paires mensuelles/trimestrielles, seuils N1 et statuts. Les feuilles
+      nominatives du classeur n’ont pas été transférées.
+    - Dépôt/branche : TDB, `codex/restore-original-meteo-counters`, PR #12,
+      fusionnée dans `main` au commit `0643378`.
+    - Contrôles : 2 tests backend, build frontend et `git diff --check`
+      réussis. Avertissement de taille du bundle frontend non bloquant.
+    - Déploiement : stack TDB reconstruite avec Docker Compose; `/api/health`
+      HTTP 200, page HTTPS publique HTTP 200, frontend et backend actifs.
+    - Vérification du bundle actif : titre `TABLEAU DE BORD — COMPTEURS`,
+      moyenne `44,9 %`, `1 / 28`, `17` alertes et compteur trimestriel présents.
+    - Rollback : reconstruire le commit `c3d92c9` précédent, sans supprimer
+      les volumes ni les données persistantes.
+
+41. Nettoyage des tuiles applicatives et icônes VM — 26 juillet 2026
+    - Prompt utilisateur : supprimer la notion « Niveau 1 » des tuiles du
+      portail et reprendre les vraies icônes des applications depuis les VM.
+    - Cause : `integrationLevel` est un champ technique du catalogue; toutes
+      les entrées statiques sont actuellement au niveau 1 car elles ouvrent
+      des applications externes. Ce champ n'est plus affiché aux utilisateurs.
+    - Branche de travail : `codex/remove-integration-level-icons`.
+    - Icônes récupérées par SSH, sans lire de fichier `.env` : CASH-RECON et
+      TDB depuis `135.125.132.51`; Revue-PDV depuis `135.125.132.51`; GPARC,
+      MDM et Recrutement depuis `91.134.255.77`.
+    - ATF, SIRH et GED restent sur leurs assets existants faute de logo
+      applicatif identifiable dans les répertoires inspectés; aucune image
+      générique n'a été substituée.
+    - Modification : suppression du badge « Niveau N » et mise à jour des
+      chemins PNG/SVG dans `apps/portal/lib/application-icons.ts`.
+    - Contrôles : lint et tests réussis (7 tests). Typecheck et build bloqués
+      par des erreurs TypeScript préexistantes dans l'administration et
+      `catalog-db.ts`, sans erreur signalée dans les fichiers modifiés.

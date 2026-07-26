@@ -28,9 +28,6 @@ export function ApplicationCard({
             <p className="eyebrow">{application.category}</p>
             <h3>{application.name}</h3>
           </div>
-          <span className="integration-badge">
-            Niveau {application.integrationLevel}
-          </span>
         </div>
         <p className="muted">{application.description}</p>
         {application.maintenance && (

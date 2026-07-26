@@ -81,7 +81,14 @@ const applications = [
     "Recrutement Telco & OM",
     "Recrutement Telco et OM pour Orange Côte d’Ivoire",
     "Recrutement OCI",
-    ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   ],
 ] as const;
 
@@ -100,6 +107,11 @@ const profileNames: Record<string, string> = {
   GESTIONNAIRE_PARC: "Gestionnaire parc",
   RH: "Ressources humaines",
   INFORMATIQUE: "Informatique",
+  RECRUT_OCI_ADMIN: "Administrateur",
+  RECRUT_OCI_GESTIONNAIRE: "Gestionnaire",
+  RECRUT_OCI_RO: "Responsable Orange (RO)",
+  RECRUT_OCI_SUPERVISEUR: "Superviseur",
+  RECRUT_OCI_DIRECTION: "Direction",
 };
 
 type ProfileDefinition = {
@@ -111,6 +123,19 @@ type ProfileDefinition = {
 };
 
 const profileDefinitions: Record<string, ProfileDefinition[]> = {
+  RECRUTEMENT: [
+    ["RECRUT_OCI_ADMIN", "Administrateur", "Administration de Recrutement OCI"],
+    ["RECRUT_OCI_GESTIONNAIRE", "Gestionnaire", "Gestion opérationnelle des imports OCI"],
+    ["RECRUT_OCI_RO", "Responsable Orange (RO)", "Pilotage Orange Côte d’Ivoire"],
+    ["RECRUT_OCI_SUPERVISEUR", "Superviseur", "Supervision des traitements et équipes"],
+    ["RECRUT_OCI_DIRECTION", "Direction", "Accès direction et pilotage"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "RECRUTEMENT",
+    sourceReference: "apps/portal/prisma/seed.ts",
+  })),
   TDB: [
     ["ADMIN", "Administrateur TDB", "Administration des comptes et données"],
     ["MANAGER", "Manager", "Pilotage des indicateurs et équipes"],

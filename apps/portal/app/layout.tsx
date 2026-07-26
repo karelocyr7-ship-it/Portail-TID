@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getRoles, getSession } from "@/lib/oidc";
@@ -15,6 +16,7 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const session = await getSession();
+  if (!session) redirect("/api/auth/login");
   const isPortalAdmin = getRoles(session).includes("PORTAL_ADMIN");
 
   return (

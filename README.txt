@@ -923,3 +923,22 @@ avant de conclure que la VM est inaccessible.
     - Vérification publique : `https://tdb.tadgroupe.com/api/health` répond
       HTTP 200; le bundle actif contient bien les libellés Objectif, Réalisé,
       Écart et le détail des KPI.
+
+44. Correction d'affichage des dernières données dans les onglets TDB — 26 juillet 2026
+    - Prompt utilisateur : « recutement OCI à des data issues des fichiers
+      injecter et je ne vois rien dans Cash-recon resout le problème chaque
+      onglet doit afficher les dernières data à disposition ».
+    - PR TDB #13 fusionnée dans `main` au commit `7903df9`.
+    - Les onglets applicatifs affichent désormais un bloc `Données reçues`
+      avec total réalisé, objectif, source, date de mise à jour et les 12
+      dernières lignes disponibles; les objectifs absents ne masquent plus
+      les montants réalisés.
+    - Le rafraîchissement horaire et le choix automatique de la dernière
+      période disponible sont conservés.
+    - Déploiement frontend effectué via un worktree de livraison temporaire,
+      sans recréer ni supprimer le volume TDB; frontend et backend sont actifs.
+    - Vérifications : API health HTTP 200 et bundle public contenant le bloc
+      `Données reçues`, `Réalisé` et `Objectif`.
+    - Les fichiers Recrutement OCI ne sont toujours pas présents dans le
+      stockage de la VM source; l'onglet affiche donc la dernière publication
+      disponible tant que le dépôt effectif des fichiers n'est pas réalisé.

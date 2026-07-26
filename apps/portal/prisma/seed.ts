@@ -95,6 +95,7 @@ const applications = [
 export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
+  TDB: "https://tdb.tadgroupe.com",
   MDM: "https://mdm.tadgroupe.com",
 };
 

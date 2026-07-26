@@ -62,6 +62,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▥",
     integrationLevel: 1,
     active: true,
+    url: "https://tdb.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
   },
   {

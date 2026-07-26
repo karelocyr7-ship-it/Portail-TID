@@ -38,7 +38,10 @@ export async function getVisibleApplicationsFromDatabase(
     url:
       application.code === "RECRUTEMENT"
         ? "https://recrut-oci.tadgroupe.com"
-        : application.url ?? undefined,
+        : application.url ??
+          (application.code === "TDB"
+            ? "https://tdb.tadgroupe.com"
+            : undefined),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }

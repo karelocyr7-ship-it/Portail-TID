@@ -900,3 +900,26 @@ avant de conclure que la VM est inaccessible.
       exploitable n'ont pas été déclarés à jour par approximation.
     - Aucun pull, reset, suppression, écrasement de fichier ou lecture de
       secret n'a été effectué.
+
+43. Vérification des montants KPI et des alimentations applicatives — 26 juillet 2026
+    - Prompt utilisateur : « sur le portail je ne vois pas les montants dans
+      le details des kpi, pas de data CAsh-Recon ni de Gparc,.. verifie tout
+      ça ».
+    - Le portail principal (`/`) ne contient actuellement que le catalogue
+      des applications; les KPI et leur modal sont dans TDB.
+    - Vérification de la base TDB en lecture seule : CASH-RECON contient 7
+      lignes `excel_import`, réalisées mensuelles cumulées `505232586`, mise
+      à jour le `2026-07-26 17:54:44`; Revue-PDV contient 5 lignes et
+      Recrutement OCI 10 lignes. Les montants sont présents dans les champs
+      `monthly_realized` et sont rendus par le bundle publié dans la synthèse
+      et le détail des catégories.
+    - Limitation actuelle : les imports automatiques publient des objectifs
+      nuls (`monthlyTarget: null`), donc les taux et objectifs sont affichés
+      comme non renseignés; les montants réalisés restent disponibles.
+    - GPARC n'apparaît ni dans les indicateurs TDB ni dans le collecteur
+      `/home/debian/tdb_sync.py`; aucun service GPARC actif n'a été trouvé sur
+      les VM inspectées. Aucune donnée GPARC ne peut donc être affichée sans
+      définir sa source et son connecteur.
+    - Vérification publique : `https://tdb.tadgroupe.com/api/health` répond
+      HTTP 200; le bundle actif contient bien les libellés Objectif, Réalisé,
+      Écart et le détail des KPI.

@@ -1063,3 +1063,35 @@ avant de conclure que la VM est inaccessible.
     - Prochaine action : créer ou rattacher le remote Git officiel GParc,
       puis implémenter l’intégration OIDC/Keycloak et le lien catalogue après
       validation des URLs et rôles métier.
+
+50. Remote Git et socle OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Dépôt GitHub privé créé : `karelocyr7-ship-it/GParc`.
+    - Une clé de déploiement dédiée a été générée sur la VM GParc; sa clé
+      privée reste sur cette VM et n'a pas été affichée, copiée ou consignée.
+      La branche `codex/gparc-integration` est poussée et suit son remote.
+    - Le commit GParc `d0f2811` ajoute le socle OIDC serveur : découverte,
+      state, nonce, vérification JWKS/issuer/audience/expiration, session
+      `HttpOnly` et mapping de l'e-mail Keycloak vers un compte GParc actif.
+      Le login local reste disponible explicitement via `?local=1`.
+    - Le frontend utilise désormais les cookies de session et propose le
+      bouton « Se connecter avec le portail TAD ». Le logout nettoie la
+      session locale et prépare le retour fournisseur.
+    - Le build frontend GParc est réussi; l'API et Nginx ont été redémarrés
+      sans migration, suppression de base ou suppression de volume.
+    - Vérifications live : `/api/health` HTTP 200; `/api/oidc/config` HTTP
+      200 avec `enabled=false`; `/api/oidc/start` HTTP 503 tant que le client
+      Keycloak et son secret ne sont pas configurés. Aucun token n'a été
+      journalisé.
+    - Le catalogue portail relie désormais GPARC à
+      `https://gparc.atf.onl`; lint, typecheck, 7 tests, build et
+      `git diff --check` réussis. Commit portail `41b9def`.
+    - Blocage restant : créer le client Keycloak confidentiel `tad-gparc`,
+      avec callback exact `https://gparc.atf.onl/api/oidc/callback`, retour
+      post-déconnexion `https://gparc.atf.onl/`, puis déposer son secret dans
+      la configuration GParc sans l'afficher ni le versionner. Le parcours
+      navigateur SSO et le filtrage par rôle restent à tester après cette
+      configuration.
+    - Rollback : revenir au commit GParc `f4e800f`, arrêter les conteneurs
+      uniquement si nécessaire, puis restaurer la version précédente sans
+      supprimer le volume MariaDB ni les certificats.

@@ -1240,3 +1240,20 @@ avant de conclure que la VM est inaccessible.
     - Commits GParc : `85a6dc3`, `a339bfe`; commit TDB audiences multiples :
       `520ec04`. Les branches distantes sont propres; les fichiers de travail
       préexistants du dépôt TDB restent inchangés et non commités.
+
+59. Correction connexion automatique portail → GParc — 27 juillet 2026
+    - Prompt utilisateur : « la connexion automatique à GParc depuis le
+      portail ne fonctionne pas ».
+    - Cause confirmée : la tuile portail ouvrait la racine
+      `https://gparc.tadgroupe.com/`, qui affiche le formulaire local et ne
+      déclenche pas OIDC automatiquement.
+    - Correction : la tuile ouvre désormais
+      `https://gparc.tadgroupe.com/api/oidc/start`; le fallback du catalogue
+      lu depuis la base portail utilise la même URL. Keycloak réutilise alors
+      la session déjà ouverte par le portail.
+    - Contrôles : lint, typecheck, 7 tests, build et `git diff --check`
+      réussis; image portail reconstruite et conteneur redémarré.
+    - Vérifications live : portail `/health` HTTP 200 et GParc `/api/oidc/start`
+      HTTP 302 vers Keycloak avec callback `gparc.tadgroupe.com`.
+    - Commit portail : `7c364c7`, branche poussée; les fichiers non suivis
+      préexistants du workspace n'ont pas été ajoutés.

@@ -682,7 +682,19 @@ ou services modifiés, les risques, le rollback et les points restant à faire.
 Après chaque reconnexion ou coupure Codex, relire ce journal, vérifier
 `git status --short --branch` et reprendre au dernier point documenté. Ne
 jamais consigner de secret, mot de passe, token, clé privée, contenu de `.env`
-réel ou donnée personnelle.
+réel ou donnée personnelle. Pour permettre la reprise après une déconnexion de
+Codex ou de SSH, consigner également le texte intégral de chaque prompt
+utilisateur, dans l'ordre de réception, avec la réponse ou l'action associée,
+en masquant tout secret ou donnée personnelle éventuelle. Si le prompt est
+long, le conserver dans une entrée dédiée du journal plutôt que le résumer.
+
+Règle d’accès permanente TDB — La VM TDB est la même VM que Revue-PDV et
+CASH-RECON : `135.125.132.51`, alias SSH `Revue-PDV`, utilisateur `debian`,
+répertoire TDB `/home/debian/TDB-TID`. Toute installation npm, synchronisation,
+mise à jour ou déploiement TDB doit être exécuté directement sur cette VM via
+cet accès ; ne pas traiter un clone local comme environnement de production.
+Si l’alias SSH échoue, vérifier la résolution ou la configuration de l’alias
+avant de conclure que la VM est inaccessible.
 
 33. Préparation publication `recrut-oci.tadgroupe.com` — 25 juillet 2026
     - Objectif : préparer la publication du socle Recrutement Telco & OM.
@@ -816,11 +828,323 @@ réel ou donnée personnelle.
       approuvées et tournées en attente.
     - CASH-RECON publie : collecte totale, E-Recharge, Orange Money, besoin
       cash, zones traitées/équilibrées et écarts détectés.
-    - Fréquence : toutes les 15 minutes, avec un premier passage 2 minutes
-      après le démarrage de la VM et rattrapage après interruption.
+    - Fréquence : toutes les heures, avec un premier passage 2 minutes après
+      le démarrage de la VM et rattrapage après interruption.
     - Un verrou `flock` empêche deux synchronisations simultanées. Le service
       est `tdb-sync.service` et le timer `tdb-sync.timer`.
+    - Chaque KPI conserve désormais les détails de collecte : source, champ,
+      agrégation, unité, période, date observée, valeur brute, horodatage et
+      requête SQL ; ces détails sont transmis dans le commentaire de la ligne.
     - Vérification : `systemctl status tdb-sync.timer` puis
       `sudo journalctl -u tdb-sync.service -n 30 --no-pager`.
     - Le dernier test a publié 12 KPI : 5 Revue-PDV et 7 CASH-RECON pour
       `2026-07`. Aucun secret n’est documenté dans ce fichier.
+
+40. Restauration fidèle de la météo issue du classeur compteur — 26 juillet 2026
+    - Objectif : remplacer la synthèse calculée générique par la météo
+      d’origine issue de la feuille `Tableau de bord` du fichier
+      `Tableau_de_Bord_Meteo_T2_2026_AVRIL_compteurs.xlsx`.
+    - Les seules données intégrées sont les 28 compteurs de cette feuille :
+      paires mensuelles/trimestrielles, seuils N1 et statuts. Les feuilles
+      nominatives du classeur n’ont pas été transférées.
+    - Dépôt/branche : TDB, `codex/restore-original-meteo-counters`, PR #12,
+      fusionnée dans `main` au commit `0643378`.
+    - Contrôles : 2 tests backend, build frontend et `git diff --check`
+      réussis. Avertissement de taille du bundle frontend non bloquant.
+    - Déploiement : stack TDB reconstruite avec Docker Compose; `/api/health`
+      HTTP 200, page HTTPS publique HTTP 200, frontend et backend actifs.
+    - Vérification du bundle actif : titre `TABLEAU DE BORD — COMPTEURS`,
+      moyenne `44,9 %`, `1 / 28`, `17` alertes et compteur trimestriel présents.
+    - Rollback : reconstruire le commit `c3d92c9` précédent, sans supprimer
+      les volumes ni les données persistantes.
+
+41. Nettoyage des tuiles applicatives et icônes VM — 26 juillet 2026
+    - Prompt utilisateur : supprimer la notion « Niveau 1 » des tuiles du
+      portail et reprendre les vraies icônes des applications depuis les VM.
+    - Cause : `integrationLevel` est un champ technique du catalogue; toutes
+      les entrées statiques sont actuellement au niveau 1 car elles ouvrent
+      des applications externes. Ce champ n'est plus affiché aux utilisateurs.
+    - Branche de travail : `codex/remove-integration-level-icons`.
+    - Icônes récupérées par SSH, sans lire de fichier `.env` : CASH-RECON et
+      TDB depuis `135.125.132.51`; Revue-PDV depuis `135.125.132.51`; GPARC,
+      MDM et Recrutement depuis `91.134.255.77`.
+    - ATF, SIRH et GED restent sur leurs assets existants faute de logo
+      applicatif identifiable dans les répertoires inspectés; aucune image
+      générique n'a été substituée.
+    - Modification : suppression du badge « Niveau N » et mise à jour des
+      chemins PNG/SVG dans `apps/portal/lib/application-icons.ts`.
+    - Contrôles : lint et tests réussis (7 tests). Typecheck et build bloqués
+      par des erreurs TypeScript préexistantes dans l'administration et
+      `catalog-db.ts`, sans erreur signalée dans les fichiers modifiés.
+
+42. Correction du build et audit Git des VM — 26 juillet 2026
+    - Prompt utilisateur : « corrige les erreurs : Le build reste bloqué par
+      des erreurs TypeScript préexistantes dans l’administration du portail.
+      verifie que les depots git sont bien à jour sur chaque vm et
+      applications ».
+    - Cause du build : les liens locaux `node_modules` utilisaient Prisma
+      6.19.0 alors que `pnpm-lock.yaml` verrouille Prisma 7.9.0. Les types
+      Prisma devenaient `any`, provoquant les erreurs implicites de
+      l’administration. Réalignement avec `pnpm install --frozen-lockfile`
+      puis `prisma generate`; aucune modification du lockfile.
+    - Contrôles portail : typecheck, lint, 7 tests et build Next.js réussis.
+    - Audit VM `135.125.132.51` : CASH-RECON a 1 modification locale et son
+      fetch GitHub est bloqué par une clé SSH configurée vers un chemin
+      inaccessible; Revue-PDV est à 0 avance/retard sur sa branche distante
+      mais possède 46 éléments locaux; TDB possède 6 éléments locaux et sa
+      branche `codex/modernize-dashboard-kpi` n'a pas de branche distante.
+    - Audit VM `91.134.255.77` : le clone Android Traccar est synchronisé et
+      propre; son clone Flutter est en retard de 99 commits et modifié
+      localement; Recrutement possède 20 éléments locaux et son remote HTTPS
+      demande une authentification non disponible. Les dépôts sans remote
+      exploitable n'ont pas été déclarés à jour par approximation.
+    - Aucun pull, reset, suppression, écrasement de fichier ou lecture de
+      secret n'a été effectué.
+
+43. Vérification des montants KPI et des alimentations applicatives — 26 juillet 2026
+    - Prompt utilisateur : « sur le portail je ne vois pas les montants dans
+      le details des kpi, pas de data CAsh-Recon ni de Gparc,.. verifie tout
+      ça ».
+    - Le portail principal (`/`) ne contient actuellement que le catalogue
+      des applications; les KPI et leur modal sont dans TDB.
+    - Vérification de la base TDB en lecture seule : CASH-RECON contient 7
+      lignes `excel_import`, réalisées mensuelles cumulées `505232586`, mise
+      à jour le `2026-07-26 17:54:44`; Revue-PDV contient 5 lignes et
+      Recrutement OCI 10 lignes. Les montants sont présents dans les champs
+      `monthly_realized` et sont rendus par le bundle publié dans la synthèse
+      et le détail des catégories.
+    - Limitation actuelle : les imports automatiques publient des objectifs
+      nuls (`monthlyTarget: null`), donc les taux et objectifs sont affichés
+      comme non renseignés; les montants réalisés restent disponibles.
+    - GPARC n'apparaît ni dans les indicateurs TDB ni dans le collecteur
+      `/home/debian/tdb_sync.py`; aucun service GPARC actif n'a été trouvé sur
+      les VM inspectées. Aucune donnée GPARC ne peut donc être affichée sans
+      définir sa source et son connecteur.
+    - Vérification publique : `https://tdb.tadgroupe.com/api/health` répond
+      HTTP 200; le bundle actif contient bien les libellés Objectif, Réalisé,
+      Écart et le détail des KPI.
+
+44. Correction d'affichage des dernières données dans les onglets TDB — 26 juillet 2026
+    - Prompt utilisateur : « recutement OCI à des data issues des fichiers
+      injecter et je ne vois rien dans Cash-recon resout le problème chaque
+      onglet doit afficher les dernières data à disposition ».
+    - PR TDB #13 fusionnée dans `main` au commit `7903df9`.
+    - Les onglets applicatifs affichent désormais un bloc `Données reçues`
+      avec total réalisé, objectif, source, date de mise à jour et les 12
+      dernières lignes disponibles; les objectifs absents ne masquent plus
+      les montants réalisés.
+    - Le rafraîchissement horaire et le choix automatique de la dernière
+      période disponible sont conservés.
+    - Déploiement frontend effectué via un worktree de livraison temporaire,
+      sans recréer ni supprimer le volume TDB; frontend et backend sont actifs.
+    - Vérifications : API health HTTP 200 et bundle public contenant le bloc
+      `Données reçues`, `Réalisé` et `Objectif`.
+    - Les fichiers Recrutement OCI ne sont toujours pas présents dans le
+      stockage de la VM source; l'onglet affiche donc la dernière publication
+      disponible tant que le dépôt effectif des fichiers n'est pas réalisé.
+
+45. Restauration des KPI métiers dans la météo TDB — 26 juillet 2026
+    - Prompt utilisateur : « sur TDB je ne retrouve plus les kpi metiers sur
+      TDB dans la meteo ».
+    - PR TDB #15 fusionnée dans `main` au commit `63724d8`.
+    - La page Météo interroge désormais l'API TDB et affiche les catégories
+      métier avec réalisé, objectif, écart, nombre de KPI et dernière mise à
+      jour, sans supprimer les compteurs météo du classeur.
+    - Rafraîchissement automatique horaire activé pour cette synthèse.
+    - Déploiement frontend effectué; bundle public `index-YgPNVT1F.js`, API
+      health HTTP 200, frontend et backend actifs.
+    - Base confirmée après déploiement : CASH-RECON 7 lignes, Recrutement OCI
+      10 lignes, Revue-PDV 5 lignes.
+
+46. Préparation intégration GParc — 27 juillet 2026
+    - Prompt utilisateur : « maintenant tu va integrer GParc sur la vm
+      51.91.102.44 dans /home/debian/gparc-prod commence par me donner les
+      commandes pour que tu puisse y acceder en ssh ».
+    - Précision utilisateur : « sur quel vm je rentre les commande et ou je
+      trouve la clef ssh ?? ».
+    - Autorisation utilisateur : « fait le pour moi ».
+    - Nouvelle consigne utilisateur : « avant liste moi en quoi consiste
+      l'integration de GParc ».
+    - Consigne de reprise : « n'oublie d'enrichir le fichier README.txt afin
+      de ne pas pendre le fil du contexte ou tu te sera arreter en cas de
+      coupure reseaux ».
+    - VM cible : `51.91.102.44`, hôte identifié `gparc`, utilisateur `debian`,
+      répertoire `/home/debian/gparc-prod` présent.
+    - Accès SSH depuis la VM portail `vps-f97dd485` validé avec la clé locale
+      `id_ed25519_tad_vm`; aucun secret ni contenu de clé privée n'a été lu,
+      affiché ou consigné.
+    - Aucun fichier, service, dépôt ou base de GParc n'a encore été modifié.
+    - Périmètre prévu : préparation Git, installation/configuration de l'agent
+      non privilégié, audit de l'application, catalogue portail, client OIDC
+      Keycloak, rôles, éventuelle alimentation KPI, déploiement, tests et
+      rollback documenté.
+    - L'installation système de Git ou de l'agent, la création d'unités
+      systemd, l'ajout d'un client Keycloak et tout déploiement nécessitent
+      une validation explicite avant exécution si une modification système ou
+      une action risquée est requise.
+    - Prochaine action : auditer sans modification `/home/debian/gparc-prod`,
+      vérifier Git, l'état du dépôt, les services, les ports, les healthchecks,
+      la procédure de déploiement et la présence éventuelle de `.env` sans
+      jamais lire ni afficher un `.env` réel.
+    - Rollback : aucune action applicative réalisée à ce stade; les contrôles
+      d'audit sont en lecture seule.
+
+47. Règle Git GParc — 27 juillet 2026
+    - Prompt utilisateur : « attention d'utiliser le git de la vm gparc et
+      pas du portail ».
+    - Toute opération Git relative à GParc doit être exécutée sur la VM
+      `51.91.102.44` (`gparc`), dans `/home/debian/gparc-prod`.
+    - Le dépôt `/srv/tad/portail` ne doit servir qu'aux modifications du
+      portail et à leur journalisation documentaire; ne pas y cloner, tirer,
+      committer ou pousser le dépôt GParc.
+    - Avant toute opération Git GParc : vérifier localement sur la VM cible
+      `git status --short --branch`, le remote et la branche active, sans lire
+      de `.env` réel.
+    - Aucun dépôt GParc n'a encore été modifié par cette reprise.
+
+48. Audit initial GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu peux maintenant demarrer l'intégration ».
+    - Audit exécuté en lecture seule sur `gparc` dans
+      `/home/debian/gparc-prod`; aucun `.env` réel n'a été lu ou affiché.
+    - GParc est actif sous Docker Compose : `api`, `db`, `nginx` et `web`
+      (avec Certbot dans le projet). MariaDB est saine; les conteneurs
+      applicatifs sont actifs depuis environ deux semaines.
+    - Les ports publics 80/443 sont liés à `51.91.102.44`; les tests directs
+      sur cette adresse renvoient HTTP 301 en HTTP et HTTP 200 en HTTPS,
+      notamment sur `/api/health`.
+    - Le dossier `/home/debian/gparc-prod/.git` existe mais est vide et ne
+      contient aucun dépôt exploitable : `git status` et `git rev-parse`
+      échouent. Aucun remote source n'a été identifié dans la documentation.
+    - Les fichiers du projet sont détenus par `root:root`; certains fichiers
+      frontend sont en permissions restreintes. Aucun changement de propriété
+      ou de permission n'a été effectué.
+    - Git est déjà installé sur la VM (`2.39.5`). Aucun agent Codex ou timer
+      d'agent GParc n'a été identifié; le dossier `.agents` est vide.
+    - Le domaine actuellement configuré par Nginx pour GParc est
+      `gparc.atf.onl`; les fichiers de configuration mentionnent aussi
+      d'autres services de la VM. Aucun changement de domaine ou de proxy
+      n'a été effectué.
+    - Blocages avant implémentation : obtenir l'URL/branche du dépôt Git
+      officiel GParc, définir le mode d'installation de l'agent et confirmer
+      si la reprise doit préserver le propriétaire `root` ou créer une copie
+      de travail contrôlée pour `debian`.
+    - Rollback : aucune modification applicative ou système réalisée pendant
+      cet audit.
+
+49. Initialisation Git et agent GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu as deja toutes les infos pour creer le depot
+      git, modifier les droits des fichiers et lancé l'intégration ».
+    - Dépôt Git initialisé directement sur la VM `gparc`, dans
+      `/home/debian/gparc-prod`, avec la branche `codex/gparc-integration`.
+    - Exclusions Git ajoutées pour le `.env` réel, certificats, clés, secrets,
+      données persistantes, uploads, dépendances, sorties générées et copies
+      de sauvegarde. Seul `.env.example` est versionné.
+    - Sources et fichiers de configuration nécessaires rendus éditables par
+      `debian`; les répertoires de données, uploads, certificats et secrets
+      n'ont pas été rendus accessibles à l'agent.
+    - Le `.env` réel a été sécurisé en permissions `0600`, sans lecture,
+      affichage ou versionnement.
+    - Commit initial GParc : `f4e800f`, 226 fichiers; le dépôt reste local et
+      ne possède pas encore de remote configuré.
+    - CLI Codex présent sur GParc : version `0.142.5`.
+    - Agent installé sous l'utilisateur système non privilégié
+      `gparc-agents`, avec état dans `/srv/gparc-agents`; aucune tâche n'a été
+      exécutée et `AGENT_ALLOW_RUN=false` reste configuré.
+    - Cinq timers systemd GParc sont actifs dans `Africa/Abidjan` : démarrage
+      19 h 30, suspension 5 h 30, arrêt propre 5 h 45, arrêt forcé 6 h et
+      rapport 6 h 05. Vérifications `systemd-analyze verify` réussies.
+    - L'agent n'appartient pas au groupe Docker; le test d'accès Docker
+      échoue comme attendu. Aucun secret, base de production ou socket Docker
+      n'est fourni à l'agent.
+    - Rollback : désactiver les cinq timers, retirer les unités GParc et
+      conserver `/srv/gparc-agents` pour analyse; ne supprimer aucune donnée
+      applicative ni volume. Le dépôt initial peut être conservé comme point
+      de restauration local.
+    - Prochaine action : créer ou rattacher le remote Git officiel GParc,
+      puis implémenter l’intégration OIDC/Keycloak et le lien catalogue après
+      validation des URLs et rôles métier.
+
+50. Remote Git et socle OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Dépôt GitHub privé créé : `karelocyr7-ship-it/GParc`.
+    - Une clé de déploiement dédiée a été générée sur la VM GParc; sa clé
+      privée reste sur cette VM et n'a pas été affichée, copiée ou consignée.
+      La branche `codex/gparc-integration` est poussée et suit son remote.
+    - Le commit GParc `d0f2811` ajoute le socle OIDC serveur : découverte,
+      state, nonce, vérification JWKS/issuer/audience/expiration, session
+      `HttpOnly` et mapping de l'e-mail Keycloak vers un compte GParc actif.
+      Le login local reste disponible explicitement via `?local=1`.
+    - Le frontend utilise désormais les cookies de session et propose le
+      bouton « Se connecter avec le portail TAD ». Le logout nettoie la
+      session locale et prépare le retour fournisseur.
+    - Le build frontend GParc est réussi; l'API et Nginx ont été redémarrés
+      sans migration, suppression de base ou suppression de volume.
+    - Vérifications live : `/api/health` HTTP 200; `/api/oidc/config` HTTP
+      200 avec `enabled=false`; `/api/oidc/start` HTTP 503 tant que le client
+      Keycloak et son secret ne sont pas configurés. Aucun token n'a été
+      journalisé.
+    - Le catalogue portail relie désormais GPARC à
+      `https://gparc.atf.onl`; lint, typecheck, 7 tests, build et
+      `git diff --check` réussis. Commit portail `41b9def`.
+    - Blocage restant : créer le client Keycloak confidentiel `tad-gparc`,
+      avec callback exact `https://gparc.atf.onl/api/oidc/callback`, retour
+      post-déconnexion `https://gparc.atf.onl/`, puis déposer son secret dans
+      la configuration GParc sans l'afficher ni le versionner. Le parcours
+      navigateur SSO et le filtrage par rôle restent à tester après cette
+      configuration.
+    - Rollback : revenir au commit GParc `f4e800f`, arrêter les conteneurs
+      uniquement si nécessaire, puis restaurer la version précédente sans
+      supprimer le volume MariaDB ni les certificats.
+
+51. Activation OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Client Keycloak confidentiel `tad-gparc` créé dans le realm
+      `tad-groupe`, avec callback exact
+      `https://gparc.atf.onl/api/oidc/callback`, origine web limitée à
+      `https://gparc.atf.onl` et retour post-déconnexion configuré.
+    - Un secret aléatoire a été généré et déposé directement dans le `.env`
+      réel de GParc; sa valeur n'a jamais été affichée, copiée dans Git,
+      journalisée ou inscrite dans ce fichier. Permissions `.env` vérifiées en
+      `0600`.
+    - `docker-compose.yml` transmet désormais les paramètres OIDC au service
+      API. Commit GParc `ef78492`, branche poussée sur le remote GitHub.
+    - Le conteneur API a été recréé sans migration, suppression de base ou
+      suppression de volume.
+    - Vérifications publiques réussies : page GParc HTTP 200, `/api/health`
+      HTTP 200, `/api/oidc/config` HTTP 200 avec `enabled=true`, et
+      `/api/oidc/start` HTTP 302 vers Keycloak avec le client `tad-gparc`.
+      Le bundle public contient le bouton « Se connecter avec le portail TAD ».
+    - Parcours restant : effectuer une connexion navigateur avec un compte de
+      test Keycloak dont l'e-mail existe dans la table `utilisateur`, vérifier
+      le mapping des rôles, l'accès aux écrans protégés et la déconnexion SSO.
+    - Aucun compte utilisateur réel n'a été créé ni modifié.
+
+52. Recette navigateur SSO GParc — 27 juillet 2026
+    - Un compte temporaire non personnel
+      `gparc.sso.test@example.invalid` a été créé uniquement pour la recette
+      dans GParc et Keycloak, avec un mot de passe aléatoire non affiché.
+    - Parcours automatisé réussi : démarrage OIDC, affichage du formulaire
+      Keycloak, authentification, callback GParc, création de session
+      `HttpOnly` et contrôle `/api/check` HTTP 200.
+    - Le compte temporaire a été supprimé de GParc et de Keycloak après le
+      test; aucun compte réel n'a été créé ou modifié.
+    - Les cookies et fichiers temporaires de recette ont été vidés; aucun
+      mot de passe, code d'autorisation ou token n'a été affiché ou journalisé.
+    - Le mapping validé utilise l'e-mail Keycloak vers un compte local GParc;
+      le rôle local est conservé pour les autorisations applicatives.
+    - Reste à livrer : fusionner la modification du catalogue portail qui
+      ajoute l'URL GParc, puis déployer le portail via sa procédure. Aucun
+      déploiement direct sur `main` n'a été effectué.
+
+53. Livraison portail GParc — 27 juillet 2026
+    - La branche portail `codex/remove-integration-level-icons` a été poussée
+      sur le remote GitHub.
+    - Pull Request brouillon créée : `Portail-TID#45`, titre « feat: intégrer
+      GParc au portail ».
+    - La PR contient l'URL GParc dans le catalogue et la documentation de la
+      recette; les contrôles lint, typecheck, 7 tests, build et diff-check sont
+      réussis.
+    - Aucun fichier non suivi préexistant n'a été ajouté, fusionné ou supprimé.
+      Aucun déploiement du portail ni fusion directe dans `main` n'a été fait.
+    - Prochaine action après revue : fusionner la PR, reconstruire le portail
+      selon la procédure, contrôler la tuile GParc et vérifier le retour SSO.

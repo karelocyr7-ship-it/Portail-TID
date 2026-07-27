@@ -73,6 +73,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▣",
     integrationLevel: 1,
     active: true,
+    url: "https://gparc.atf.onl",
     roles: ["PORTAL_ADMIN", "GESTIONNAIRE_PARC", "DIRECTION"],
   },
   {

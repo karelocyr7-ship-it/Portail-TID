@@ -1171,3 +1171,19 @@ avant de conclure que la VM est inaccessible.
       certificat TLS couvrant ce nom et ajouter le server_name Nginx avant de
       déclarer l'accès public final. Cette modification DNS/certificat reste
       soumise à validation explicite.
+
+55. DNS et certificat public GParc — 27 juillet 2026
+    - Validation utilisateur reçue pour le DNS et les certificats.
+    - `gparc.tadgroupe.com` résout désormais vers `51.91.102.44`.
+    - Le challenge DNS-OVH a échoué avec HTTP 403; aucun secret OVH n'a été
+      affiché ou modifié. Un challenge HTTP-01 Let’s Encrypt a ensuite réussi.
+    - Certificat SAN émis pour `gparc.tadgroupe.com` et `gparc.atf.onl`, valide
+      jusqu'au 25 octobre 2026. Le timer système `certbot.timer` est actif.
+    - Nginx publie les deux domaines avec le certificat SAN; `nginx -t` et le
+      rechargement ont réussi. Le fichier de configuration a été sauvegardé
+      avant modification et la copie est ignorée par Git.
+    - Vérifications publiques : les deux pages et `/api/health` HTTP 200;
+      `atf.onl` conserve OIDC désactivé et `/api/oidc/start` HTTP 404;
+      `tadgroupe.com` conserve OIDC actif et `/api/oidc/start` HTTP 302.
+    - Commit GParc de configuration HTTPS : `c4c2f5a`; commit d'exclusion de
+      sauvegarde : `43a6fd0`; branche distante propre.

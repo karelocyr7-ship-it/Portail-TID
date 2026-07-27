@@ -1095,3 +1095,26 @@ avant de conclure que la VM est inaccessible.
     - Rollback : revenir au commit GParc `f4e800f`, arrêter les conteneurs
       uniquement si nécessaire, puis restaurer la version précédente sans
       supprimer le volume MariaDB ni les certificats.
+
+51. Activation OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Client Keycloak confidentiel `tad-gparc` créé dans le realm
+      `tad-groupe`, avec callback exact
+      `https://gparc.atf.onl/api/oidc/callback`, origine web limitée à
+      `https://gparc.atf.onl` et retour post-déconnexion configuré.
+    - Un secret aléatoire a été généré et déposé directement dans le `.env`
+      réel de GParc; sa valeur n'a jamais été affichée, copiée dans Git,
+      journalisée ou inscrite dans ce fichier. Permissions `.env` vérifiées en
+      `0600`.
+    - `docker-compose.yml` transmet désormais les paramètres OIDC au service
+      API. Commit GParc `ef78492`, branche poussée sur le remote GitHub.
+    - Le conteneur API a été recréé sans migration, suppression de base ou
+      suppression de volume.
+    - Vérifications publiques réussies : page GParc HTTP 200, `/api/health`
+      HTTP 200, `/api/oidc/config` HTTP 200 avec `enabled=true`, et
+      `/api/oidc/start` HTTP 302 vers Keycloak avec le client `tad-gparc`.
+      Le bundle public contient le bouton « Se connecter avec le portail TAD ».
+    - Parcours restant : effectuer une connexion navigateur avec un compte de
+      test Keycloak dont l'e-mail existe dans la table `utilisateur`, vérifier
+      le mapping des rôles, l'accès aux écrans protégés et la déconnexion SSO.
+    - Aucun compte utilisateur réel n'a été créé ni modifié.

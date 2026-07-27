@@ -342,6 +342,19 @@ async function main() {
         },
       });
     }
+
+    if (profileDefinitions[code]) {
+      await prisma.applicationProfile.updateMany({
+        where: {
+          applicationId: application.id,
+          key: { notIn: definitions.map((profile) => profile.key) },
+        },
+        data: {
+          active: false,
+          syncedAt: new Date(),
+        },
+      });
+    }
   }
 
   await prisma.application.updateMany({

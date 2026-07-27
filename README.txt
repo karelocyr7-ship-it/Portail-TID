@@ -1299,3 +1299,17 @@ avant de conclure que la VM est inaccessible.
     - Vérification base portail réussie : 5 profils GParc présents. Le seed
       reproductible est également versionné dans `apps/portal/prisma/seed.ts`
       (commit `34cac1e`).
+
+63. Nettoyage des rôles portail affichés comme profils GParc — 27 juillet 2026
+    - Vérification complémentaire demandée : l'ancien amorçage avait aussi
+      créé `PORTAL_ADMIN`, `GESTIONNAIRE_PARC` et `DIRECTION` comme profils
+      GParc, alors qu'il s'agit de rôles d'accès au catalogue du portail.
+    - Ces trois anciennes entrées sont maintenant inactives dans
+      `ApplicationProfile` (aucune suppression de données); les rôles
+      `ApplicationRole` du catalogue restent inchangés.
+    - Les seuls profils GParc actifs affichables sont désormais `ADMIN`,
+      `DAF`, `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - Le seed désactive automatiquement les profils obsolètes d'une
+      application dont les définitions sont explicitement synchronisées.
+    - Contrôles réussis après modification : lint, typecheck, 7 tests, build
+      et `git diff --check`.

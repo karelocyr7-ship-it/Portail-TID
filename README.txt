@@ -1271,3 +1271,12 @@ avant de conclure que la VM est inaccessible.
       `nginx -t` réussis.
     - Commit GParc : `d8b9468`, branche poussée. Aucun secret n'a été ajouté
       au dépôt.
+
+61. Icône Android GParc dans le portail — 27 juillet 2026
+    - Demande utilisateur : utiliser l'icône applicative Android présente dans
+      le dossier GParc.
+    - L'asset `GParc_android_icons/playstore/icon-512.png` (512×512 RGBA) de
+      la VM GParc a remplacé l'ancien visuel portail
+      `apps/portal/public/branding/apps/gparc.png`.
+    - Lint, typecheck, 7 tests, build et diff-check réussis; portail
+      reconstruit et redémarré. Commit `0bdc9d3`.

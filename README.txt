@@ -1118,3 +1118,20 @@ avant de conclure que la VM est inaccessible.
       test Keycloak dont l'e-mail existe dans la table `utilisateur`, vérifier
       le mapping des rôles, l'accès aux écrans protégés et la déconnexion SSO.
     - Aucun compte utilisateur réel n'a été créé ni modifié.
+
+52. Recette navigateur SSO GParc — 27 juillet 2026
+    - Un compte temporaire non personnel
+      `gparc.sso.test@example.invalid` a été créé uniquement pour la recette
+      dans GParc et Keycloak, avec un mot de passe aléatoire non affiché.
+    - Parcours automatisé réussi : démarrage OIDC, affichage du formulaire
+      Keycloak, authentification, callback GParc, création de session
+      `HttpOnly` et contrôle `/api/check` HTTP 200.
+    - Le compte temporaire a été supprimé de GParc et de Keycloak après le
+      test; aucun compte réel n'a été créé ou modifié.
+    - Les cookies et fichiers temporaires de recette ont été vidés; aucun
+      mot de passe, code d'autorisation ou token n'a été affiché ou journalisé.
+    - Le mapping validé utilise l'e-mail Keycloak vers un compte local GParc;
+      le rôle local est conservé pour les autorisations applicatives.
+    - Reste à livrer : fusionner la modification du catalogue portail qui
+      ajoute l'URL GParc, puis déployer le portail via sa procédure. Aucun
+      déploiement direct sur `main` n'a été effectué.

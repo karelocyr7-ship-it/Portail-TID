@@ -1260,3 +1260,14 @@ avant de conclure que la VM est inaccessible.
     - Correctif complémentaire : le catalogue issu de la base force également
       ce point d'entrée OIDC, même lorsqu'une ancienne URL GParc est déjà
       enregistrée. Commit `f4235d4`; portail reconstruit une seconde fois.
+
+60. Auto-redirection GParc sur le domaine portail — 27 juillet 2026
+    - Après nouvelle vérification, l'écran de connexion GParc déclenche aussi
+      automatiquement `/api/oidc/start` lorsque l'hôte est
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve strictement
+      le formulaire local.
+    - Frontend GParc reconstruit, synchronisation Capacitor Android effectuée,
+      services `web`, `api` et `nginx` redémarrés; `/api/health` HTTP 200 et
+      `nginx -t` réussis.
+    - Commit GParc : `d8b9468`, branche poussée. Aucun secret n'a été ajouté
+      au dépôt.

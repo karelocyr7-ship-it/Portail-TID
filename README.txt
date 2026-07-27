@@ -1030,3 +1030,36 @@ avant de conclure que la VM est inaccessible.
       de travail contrôlée pour `debian`.
     - Rollback : aucune modification applicative ou système réalisée pendant
       cet audit.
+
+49. Initialisation Git et agent GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu as deja toutes les infos pour creer le depot
+      git, modifier les droits des fichiers et lancé l'intégration ».
+    - Dépôt Git initialisé directement sur la VM `gparc`, dans
+      `/home/debian/gparc-prod`, avec la branche `codex/gparc-integration`.
+    - Exclusions Git ajoutées pour le `.env` réel, certificats, clés, secrets,
+      données persistantes, uploads, dépendances, sorties générées et copies
+      de sauvegarde. Seul `.env.example` est versionné.
+    - Sources et fichiers de configuration nécessaires rendus éditables par
+      `debian`; les répertoires de données, uploads, certificats et secrets
+      n'ont pas été rendus accessibles à l'agent.
+    - Le `.env` réel a été sécurisé en permissions `0600`, sans lecture,
+      affichage ou versionnement.
+    - Commit initial GParc : `f4e800f`, 226 fichiers; le dépôt reste local et
+      ne possède pas encore de remote configuré.
+    - CLI Codex présent sur GParc : version `0.142.5`.
+    - Agent installé sous l'utilisateur système non privilégié
+      `gparc-agents`, avec état dans `/srv/gparc-agents`; aucune tâche n'a été
+      exécutée et `AGENT_ALLOW_RUN=false` reste configuré.
+    - Cinq timers systemd GParc sont actifs dans `Africa/Abidjan` : démarrage
+      19 h 30, suspension 5 h 30, arrêt propre 5 h 45, arrêt forcé 6 h et
+      rapport 6 h 05. Vérifications `systemd-analyze verify` réussies.
+    - L'agent n'appartient pas au groupe Docker; le test d'accès Docker
+      échoue comme attendu. Aucun secret, base de production ou socket Docker
+      n'est fourni à l'agent.
+    - Rollback : désactiver les cinq timers, retirer les unités GParc et
+      conserver `/srv/gparc-agents` pour analyse; ne supprimer aucune donnée
+      applicative ni volume. Le dépôt initial peut être conservé comme point
+      de restauration local.
+    - Prochaine action : créer ou rattacher le remote Git officiel GParc,
+      puis implémenter l’intégration OIDC/Keycloak et le lien catalogue après
+      validation des URLs et rôles métier.

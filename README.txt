@@ -1198,3 +1198,28 @@ avant de conclure que la VM est inaccessible.
     - Le hook est détenu par `root`, en permissions `0755`, passe `sh -n` et
       a été exécuté avec succès; aucune donnée applicative ni certificat n'a
       été supprimé.
+
+57. KPI et reporting GParc dans TDB — 27 juillet 2026
+    - Demande utilisateur : « ok maintenant tu ajoutes les kpi et reporting
+      dans ça page dedier dans TDB avec la synchro automatique »; précision
+      ajoutée : harmoniser export XLSX enrichi et sélecteur de périodicité.
+    - Une page dédiée TDB `/metiers/gparc` a été ajoutée avec navigation métier,
+      KPI agrégés, périodes mois/trimestre/année/personnalisée, actualisation,
+      rafraîchissement horaire et export XLSX via l'API existante.
+    - Les indicateurs prévus sont : véhicules, carburant entreprise hors prises
+      personnelles, litres, entretiens, demandes en attente, montant des
+      demandes et alertes actives. Aucune ligne nominative n'est transférée.
+    - L'API d'ingestion TDB accepte désormais `sourceSystem=gparc` et crée un
+      compte technique distinct, sans élargir la contrainte historique de
+      source SQLite. Commit TDB : `08f27f3`, puis correction des agrégations de
+      période `38bb04f`; branche poussée `codex/modernize-dashboard-kpi`.
+    - Un collecteur Python et un service/timer systemd horaires ont été
+      préparés sur la branche GParc `codex/gparc-integration`, commit `85a6dc3`.
+      Il lit seulement des agrégats MariaDB et publie vers TDB avec un compte
+      de service Keycloak dédié à configurer.
+    - Contrôles réussis : build frontend TDB, deux tests backend TDB, syntaxe
+      Node de la route d'ingestion et compilation syntaxique Python du
+      collecteur. Les modifications restent sur branches dédiées; aucun
+      déploiement production, activation de timer ou création de secret n'a
+      été effectué avant fusion et confirmation explicite conformément aux
+      règles du dépôt.

@@ -1187,3 +1187,14 @@ avant de conclure que la VM est inaccessible.
       `tadgroupe.com` conserve OIDC actif et `/api/oidc/start` HTTP 302.
     - Commit GParc de configuration HTTPS : `c4c2f5a`; commit d'exclusion de
       sauvegarde : `43a6fd0`; branche distante propre.
+
+56. Renouvellement automatique TLS GParc — 27 juillet 2026
+    - Vérification : `certbot.timer` est activé et actif; le service exécute
+      périodiquement `certbot renew`.
+    - Un hook de déploiement a été ajouté sur la VM GParc dans
+      `/etc/letsencrypt/renewal-hooks/deploy/gparc-nginx-reload.sh`.
+    - Après chaque renouvellement réussi, le hook exécute `nginx -t` puis
+      recharge le conteneur Nginx `gparc-prod-nginx-1`.
+    - Le hook est détenu par `root`, en permissions `0755`, passe `sh -n` et
+      a été exécuté avec succès; aucune donnée applicative ni certificat n'a
+      été supprimé.

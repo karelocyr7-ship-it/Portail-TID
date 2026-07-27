@@ -1135,3 +1135,16 @@ avant de conclure que la VM est inaccessible.
     - Reste à livrer : fusionner la modification du catalogue portail qui
       ajoute l'URL GParc, puis déployer le portail via sa procédure. Aucun
       déploiement direct sur `main` n'a été effectué.
+
+53. Livraison portail GParc — 27 juillet 2026
+    - La branche portail `codex/remove-integration-level-icons` a été poussée
+      sur le remote GitHub.
+    - Pull Request brouillon créée : `Portail-TID#45`, titre « feat: intégrer
+      GParc au portail ».
+    - La PR contient l'URL GParc dans le catalogue et la documentation de la
+      recette; les contrôles lint, typecheck, 7 tests, build et diff-check sont
+      réussis.
+    - Aucun fichier non suivi préexistant n'a été ajouté, fusionné ou supprimé.
+      Aucun déploiement du portail ni fusion directe dans `main` n'a été fait.
+    - Prochaine action après revue : fusionner la PR, reconstruire le portail
+      selon la procédure, contrôler la tuile GParc et vérifier le retour SSO.

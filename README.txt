@@ -1001,3 +1001,32 @@ avant de conclure que la VM est inaccessible.
       `git status --short --branch`, le remote et la branche active, sans lire
       de `.env` réel.
     - Aucun dépôt GParc n'a encore été modifié par cette reprise.
+
+48. Audit initial GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu peux maintenant demarrer l'intégration ».
+    - Audit exécuté en lecture seule sur `gparc` dans
+      `/home/debian/gparc-prod`; aucun `.env` réel n'a été lu ou affiché.
+    - GParc est actif sous Docker Compose : `api`, `db`, `nginx` et `web`
+      (avec Certbot dans le projet). MariaDB est saine; les conteneurs
+      applicatifs sont actifs depuis environ deux semaines.
+    - Les ports publics 80/443 sont liés à `51.91.102.44`; les tests directs
+      sur cette adresse renvoient HTTP 301 en HTTP et HTTP 200 en HTTPS,
+      notamment sur `/api/health`.
+    - Le dossier `/home/debian/gparc-prod/.git` existe mais est vide et ne
+      contient aucun dépôt exploitable : `git status` et `git rev-parse`
+      échouent. Aucun remote source n'a été identifié dans la documentation.
+    - Les fichiers du projet sont détenus par `root:root`; certains fichiers
+      frontend sont en permissions restreintes. Aucun changement de propriété
+      ou de permission n'a été effectué.
+    - Git est déjà installé sur la VM (`2.39.5`). Aucun agent Codex ou timer
+      d'agent GParc n'a été identifié; le dossier `.agents` est vide.
+    - Le domaine actuellement configuré par Nginx pour GParc est
+      `gparc.atf.onl`; les fichiers de configuration mentionnent aussi
+      d'autres services de la VM. Aucun changement de domaine ou de proxy
+      n'a été effectué.
+    - Blocages avant implémentation : obtenir l'URL/branche du dépôt Git
+      officiel GParc, définir le mode d'installation de l'agent et confirmer
+      si la reprise doit préserver le propriétaire `root` ou créer une copie
+      de travail contrôlée pour `debian`.
+    - Rollback : aucune modification applicative ou système réalisée pendant
+      cet audit.

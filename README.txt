@@ -988,3 +988,16 @@ avant de conclure que la VM est inaccessible.
       jamais lire ni afficher un `.env` réel.
     - Rollback : aucune action applicative réalisée à ce stade; les contrôles
       d'audit sont en lecture seule.
+
+47. Règle Git GParc — 27 juillet 2026
+    - Prompt utilisateur : « attention d'utiliser le git de la vm gparc et
+      pas du portail ».
+    - Toute opération Git relative à GParc doit être exécutée sur la VM
+      `51.91.102.44` (`gparc`), dans `/home/debian/gparc-prod`.
+    - Le dépôt `/srv/tad/portail` ne doit servir qu'aux modifications du
+      portail et à leur journalisation documentaire; ne pas y cloner, tirer,
+      committer ou pousser le dépôt GParc.
+    - Avant toute opération Git GParc : vérifier localement sur la VM cible
+      `git status --short --branch`, le remote et la branche active, sans lire
+      de `.env` réel.
+    - Aucun dépôt GParc n'a encore été modifié par cette reprise.

@@ -1223,3 +1223,20 @@ avant de conclure que la VM est inaccessible.
       déploiement production, activation de timer ou création de secret n'a
       été effectué avant fusion et confirmation explicite conformément aux
       règles du dépôt.
+
+58. Activation synchronisation KPI GParc — 27 juillet 2026
+    - Confirmation explicite utilisateur reçue pour l'activation.
+    - Client Keycloak de service `tad-gparc-tdb-ingestion` créé dans le realm
+      `tad-groupe`; le rôle realm `TDB_INGEST` lui est attribué. Le secret est
+      stocké uniquement dans `/home/debian/gparc-prod/.tdb-ingestion-secret`,
+      détenu par `root` en `0600`, ignoré par Git et jamais affiché.
+    - TDB accepte désormais les audiences OCI et GParc simultanément. Backend
+      et frontend TDB reconstruits puis redémarrés; `/api/health` répond HTTP
+      200 après redémarrage.
+    - Le timer `gparc-tdb-sync.timer` est activé sur la VM GParc, avec une
+      exécution horaire persistante. Le premier lancement a réussi : 7 KPI
+      agrégés publiés pour la période `2026-07`; aucune donnée nominative n'a
+      été transférée.
+    - Commits GParc : `85a6dc3`, `a339bfe`; commit TDB audiences multiples :
+      `520ec04`. Les branches distantes sont propres; les fichiers de travail
+      préexistants du dépôt TDB restent inchangés et non commités.

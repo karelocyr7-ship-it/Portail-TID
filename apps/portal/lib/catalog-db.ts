@@ -38,12 +38,12 @@ export async function getVisibleApplicationsFromDatabase(
     url:
       application.code === "RECRUTEMENT"
         ? "https://recrut-oci.tadgroupe.com"
+        : application.code === "GPARC"
+          ? "https://gparc.tadgroupe.com/api/oidc/start"
         : application.url ??
           (application.code === "TDB"
             ? "https://tdb.tadgroupe.com"
-            : application.code === "GPARC"
-              ? "https://gparc.tadgroupe.com/api/oidc/start"
-              : undefined),
+            : undefined),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }

@@ -1280,3 +1280,22 @@ avant de conclure que la VM est inaccessible.
       `apps/portal/public/branding/apps/gparc.png`.
     - Lint, typecheck, 7 tests, build et diff-check réussis; portail
       reconstruit et redémarré. Commit `0bdc9d3`.
+
+62. Profils GParc intégrés au portail — 27 juillet 2026
+    - Demande utilisateur : récupérer les profils de GParc et les intégrer au
+      portail.
+    - Audit agrégé des rôles présents dans GParc : `ADMIN` (4), `DAF` (1),
+      `CHAUFFEUR` (22) et `CHAUFFEUR_GESTIONNAIRE` (1); le rôle
+      `GESTIONNAIRE` est également défini par l'application.
+    - Les cinq profils applicatifs ont été ajoutés/synchronisés dans
+      `ApplicationProfile` pour l'application `GPARC` : `ADMIN`, `DAF`,
+      `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - La source est tracée comme `GPARC` avec la référence
+      `backend/src/routes/auth.js:normalizeStoredRole`; les profils sont
+      actifs et ordonnés dans le portail.
+    - Aucun compte utilisateur, identifiant ou donnée nominative n'a été
+      copié. La synchronisation porte uniquement sur les définitions de
+      profils; les affectations individuelles nécessitent un mapping validé.
+    - Vérification base portail réussie : 5 profils GParc présents. Le seed
+      reproductible est également versionné dans `apps/portal/prisma/seed.ts`
+      (commit `34cac1e`).

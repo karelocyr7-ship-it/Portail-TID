@@ -1257,3 +1257,6 @@ avant de conclure que la VM est inaccessible.
       HTTP 302 vers Keycloak avec callback `gparc.tadgroupe.com`.
     - Commit portail : `7c364c7`, branche poussée; les fichiers non suivis
       préexistants du workspace n'ont pas été ajoutés.
+    - Correctif complémentaire : le catalogue issu de la base force également
+      ce point d'entrée OIDC, même lorsqu'une ancienne URL GParc est déjà
+      enregistrée. Commit `f4235d4`; portail reconstruit une seconde fois.

@@ -73,7 +73,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▣",
     integrationLevel: 1,
     active: true,
-    url: "https://gparc.tadgroupe.com",
+    url: "https://gparc.tadgroupe.com/api/oidc/start",
     roles: ["PORTAL_ADMIN", "GESTIONNAIRE_PARC", "DIRECTION"],
   },
   {

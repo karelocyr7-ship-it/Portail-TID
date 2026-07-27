@@ -41,7 +41,9 @@ export async function getVisibleApplicationsFromDatabase(
         : application.url ??
           (application.code === "TDB"
             ? "https://tdb.tadgroupe.com"
-            : undefined),
+            : application.code === "GPARC"
+              ? "https://gparc.tadgroupe.com/api/oidc/start"
+              : undefined),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }

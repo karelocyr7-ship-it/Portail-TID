@@ -1148,3 +1148,26 @@ avant de conclure que la VM est inaccessible.
       Aucun déploiement du portail ni fusion directe dans `main` n'a été fait.
     - Prochaine action après revue : fusionner la PR, reconstruire le portail
       selon la procédure, contrôler la tuile GParc et vérifier le retour SSO.
+
+54. Séparation des domaines GParc — 27 juillet 2026
+    - Précision utilisateur : l'accès `gparc.atf.onl` doit conserver
+      l'authentification locale; seul l'accès via le portail et le domaine
+      `gparc.tadgroupe.com` doit utiliser Keycloak.
+    - Le service API applique désormais cette séparation par hostname : sur
+      `gparc.atf.onl`, `/api/oidc/config` indique `enabled=false` et
+      `/api/oidc/start` renvoie HTTP 404; sur `gparc.tadgroupe.com`, OIDC est
+      actif et `/api/oidc/start` renvoie HTTP 302 vers Keycloak.
+    - Le client Keycloak `tad-gparc` utilise désormais exclusivement le
+      callback et le retour post-déconnexion `gparc.tadgroupe.com`.
+    - Le frontend affiche le bouton SSO uniquement sur `gparc.tadgroupe.com`;
+      le formulaire local reste l'interface de `gparc.atf.onl`.
+    - Le catalogue portail pointe désormais vers
+      `https://gparc.tadgroupe.com`; lint, typecheck, 7 tests et diff-check
+      réussis.
+    - Commit GParc : `e4b814a`, branche poussée. Le frontend a été reconstruit
+      dans le volume web et l'API recréée sans toucher à MariaDB.
+    - Réserve d'infrastructure : `gparc.tadgroupe.com` ne résout pas encore
+      publiquement. Il faut créer son DNS vers `51.91.102.44`, émettre un
+      certificat TLS couvrant ce nom et ajouter le server_name Nginx avant de
+      déclarer l'accès public final. Cette modification DNS/certificat reste
+      soumise à validation explicite.

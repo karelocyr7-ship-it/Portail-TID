@@ -955,3 +955,36 @@ avant de conclure que la VM est inaccessible.
       health HTTP 200, frontend et backend actifs.
     - Base confirmée après déploiement : CASH-RECON 7 lignes, Recrutement OCI
       10 lignes, Revue-PDV 5 lignes.
+
+46. Préparation intégration GParc — 27 juillet 2026
+    - Prompt utilisateur : « maintenant tu va integrer GParc sur la vm
+      51.91.102.44 dans /home/debian/gparc-prod commence par me donner les
+      commandes pour que tu puisse y acceder en ssh ».
+    - Précision utilisateur : « sur quel vm je rentre les commande et ou je
+      trouve la clef ssh ?? ».
+    - Autorisation utilisateur : « fait le pour moi ».
+    - Nouvelle consigne utilisateur : « avant liste moi en quoi consiste
+      l'integration de GParc ».
+    - Consigne de reprise : « n'oublie d'enrichir le fichier README.txt afin
+      de ne pas pendre le fil du contexte ou tu te sera arreter en cas de
+      coupure reseaux ».
+    - VM cible : `51.91.102.44`, hôte identifié `gparc`, utilisateur `debian`,
+      répertoire `/home/debian/gparc-prod` présent.
+    - Accès SSH depuis la VM portail `vps-f97dd485` validé avec la clé locale
+      `id_ed25519_tad_vm`; aucun secret ni contenu de clé privée n'a été lu,
+      affiché ou consigné.
+    - Aucun fichier, service, dépôt ou base de GParc n'a encore été modifié.
+    - Périmètre prévu : préparation Git, installation/configuration de l'agent
+      non privilégié, audit de l'application, catalogue portail, client OIDC
+      Keycloak, rôles, éventuelle alimentation KPI, déploiement, tests et
+      rollback documenté.
+    - L'installation système de Git ou de l'agent, la création d'unités
+      systemd, l'ajout d'un client Keycloak et tout déploiement nécessitent
+      une validation explicite avant exécution si une modification système ou
+      une action risquée est requise.
+    - Prochaine action : auditer sans modification `/home/debian/gparc-prod`,
+      vérifier Git, l'état du dépôt, les services, les ports, les healthchecks,
+      la procédure de déploiement et la présence éventuelle de `.env` sans
+      jamais lire ni afficher un `.env` réel.
+    - Rollback : aucune action applicative réalisée à ce stade; les contrôles
+      d'audit sont en lecture seule.

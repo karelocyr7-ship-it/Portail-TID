@@ -167,7 +167,7 @@ export async function verifyApplicationIdToken(
   const clientIds = Object.fromEntries(
     (
       process.env.APPLICATION_OIDC_CLIENT_IDS ??
-      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf"
+      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf,RECRUTEMENT=tad-recrut-om"
     )
       .split(",")
       .map((entry) => entry.split("=", 2).map((value) => value.trim()))

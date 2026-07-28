@@ -73,6 +73,6 @@ log_file="$log_dir/$(basename "$job" .task).log"
   echo "- Tâche : $(basename "$job")"
   echo "- Début : $(date --iso-8601=seconds)"
   echo
-  codex exec --sandbox workspace-write --cd "$workspace" \
+  codex exec --skip-git-repo-check --sandbox workspace-write --cd "$workspace" \
     "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $task_content"
 } > >(tee "$result_file" | tee "$log_file") 2>&1

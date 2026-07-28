@@ -37,7 +37,7 @@ export async function getVisibleApplicationsFromDatabase(
     maintenanceMessage: application.maintenanceMessage ?? undefined,
     url:
       application.code === "RECRUTEMENT"
-        ? "https://recrut-oci.tadgroupe.com"
+        ? "https://recrut-oci.tadgroupe.com/?sso=1"
         : application.code === "GPARC"
           ? "https://gparc.tadgroupe.com/api/oidc/start"
         : application.url ??

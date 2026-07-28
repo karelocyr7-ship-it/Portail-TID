@@ -187,7 +187,12 @@ export async function verifyApplicationIdToken(
   }
   return {
     subject: claims.sub,
-    email: typeof claims.email === "string" ? claims.email : undefined,
+    email:
+      typeof claims.email === "string"
+        ? claims.email
+        : typeof claims.preferred_username === "string"
+          ? claims.preferred_username
+          : undefined,
   };
 }
 

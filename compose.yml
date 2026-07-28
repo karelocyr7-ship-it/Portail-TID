@@ -45,6 +45,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
     volumes:
       - /srv/tad/agents/results:/var/lib/tad-agent-results:ro
+      - /srv/tad/agents/queue:/var/lib/tad-agent-queue
     group_add:
       - "989"
     expose: ["3000"]

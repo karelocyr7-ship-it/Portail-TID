@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getRoles, getSession } from "@/lib/oidc";
-import { getAgentReports, syncAgentReports } from "@/lib/agent-reports";
+import {
+  dispatchQueuedAgentActions,
+  getAgentReports,
+  syncAgentReports,
+} from "@/lib/agent-reports";
 import { reviewAgentReport } from "./actions";
 
 const statusLabels: Record<string, string> = {
@@ -17,6 +21,7 @@ export default async function AgentReportsPage() {
   const session = await getSession();
   if (!getRoles(session).includes("PORTAL_ADMIN")) redirect("/");
   await syncAgentReports();
+  await dispatchQueuedAgentActions();
   const reports = await getAgentReports();
   const pending = reports.filter(
     (report) => report.status === "PENDING",

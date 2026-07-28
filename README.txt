@@ -1334,3 +1334,21 @@ avant de conclure que la VM est inaccessible.
       un rechargement forcé avant la recette navigateur.
     - Rollback : revenir au commit GParc précédent `f1949b8`, reconstruire le
       frontend et redémarrer le proxy, sans toucher à MariaDB ni aux volumes.
+
+65. Correctif des cookies de session OIDC GParc — 28 juillet 2026
+    - Objectif : corriger les HTTP 401 persistants sur `/api/entretiens` et
+      `/api/vehicules` après le SSO.
+    - Diagnostic : le callback assemblait les cookies avec un tableau imbriqué,
+      ce qui pouvait produire un en-tête `Set-Cookie` invalide et empêcher la
+      conservation de `gparc_session` par le navigateur.
+    - Modification : ajout d'un helper d'ajout de cookies qui normalise les
+      en-têtes existants et émet séparément la session GParc et l'effacement
+      de l'état OIDC.
+    - Contrôles : syntaxe Node, `git diff --check`, redémarrage du seul service
+      API et endpoint santé HTTP 200 réussis. Commit GParc `c0d067c` créé et
+      poussé depuis le dépôt Git local de la VM.
+    - Aucun secret, token, compte, base ou volume n'a été lu ou modifié.
+    - Action de recette : effectuer une nouvelle connexion SSO après purge ou
+      expiration de l'ancien cookie navigateur.
+    - Rollback : revenir au commit GParc `a24cb47` et redémarrer uniquement
+      l'API, sans toucher à MariaDB ni aux volumes.

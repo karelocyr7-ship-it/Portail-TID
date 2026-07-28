@@ -1313,3 +1313,24 @@ avant de conclure que la VM est inaccessible.
       application dont les définitions sont explicitement synchronisées.
     - Contrôles réussis après modification : lint, typecheck, 7 tests, build
       et `git diff --check`.
+
+64. Correction session SSO et tableau de bord GParc — 28 juillet 2026
+    - Objectif : corriger l'accès au tableau de bord après une connexion depuis
+      le portail, qui échouait avec une erreur de token manquant.
+    - VM/répertoire : VM GParc `51.91.102.44`, dépôt local
+      `/home/debian/gparc-prod`, branche `codex/gparc-integration`.
+    - Diagnostic : le bundle était configuré avec une base API absolue vers le
+      domaine local ATF, alors que la session OIDC est portée par
+      `gparc.tadgroupe.com`; le cookie HttpOnly n'était donc pas transmis.
+    - Modification : le frontend utilise désormais `/api` en same-origin sur
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve son mode local.
+    - Contrôles : build Vite réussi; `git diff --check` réussi; commit GParc
+      `a24cb47` créé et poussé depuis le dépôt Git local de la VM; services
+      Docker opérationnels; santé TAD HTTP 200; démarrage OIDC TAD HTTP 302;
+      démarrage OIDC ATF HTTP 404.
+    - Aucun secret, cookie, token, compte ou donnée personnelle n'a été lu,
+      affiché, créé ou modifié. Aucun volume ni base n'a été supprimé.
+    - Risque restant : un navigateur peut conserver l'ancien bundle; effectuer
+      un rechargement forcé avant la recette navigateur.
+    - Rollback : revenir au commit GParc précédent `f1949b8`, reconstruire le
+      frontend et redémarrer le proxy, sans toucher à MariaDB ni aux volumes.

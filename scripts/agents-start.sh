@@ -22,6 +22,7 @@ declare -A repository_by_agent=(
   [cash-recon-agent]="/srv/tad/agents/repositories/cash-recon"
   [revue-pdv-agent]="/srv/tad/agents/repositories/revue-pdv"
   [gparc-agent]="/srv/tad/agents/repositories/gparc"
+  [mdm-agent]="/srv/tad/agents/repositories/mdm"
   [recrutement-om-telco-agent]="/srv/tad/agents/repositories/recrutement-om-telco"
 )
 state_dir="$agent_root/state"

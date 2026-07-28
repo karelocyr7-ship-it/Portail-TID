@@ -5,6 +5,7 @@ import {
   dispatchQueuedAgentActions,
   getAgentReports,
   syncAgentReports,
+  syncAgentActionStatuses,
 } from "@/lib/agent-reports";
 import { reviewAgentReport } from "./actions";
 
@@ -22,6 +23,7 @@ export default async function AgentReportsPage() {
   if (!getRoles(session).includes("PORTAL_ADMIN")) redirect("/");
   await syncAgentReports();
   await dispatchQueuedAgentActions();
+  await syncAgentActionStatuses();
   const reports = await getAgentReports();
   const pending = reports.filter(
     (report) => report.status === "PENDING",

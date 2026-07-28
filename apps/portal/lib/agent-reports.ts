@@ -143,6 +143,47 @@ export async function dispatchQueuedAgentActions() {
   return dispatched;
 }
 
+export async function syncAgentActionStatuses() {
+  const prisma = getPrisma();
+  const actions = await prisma.agentAction.findMany({
+    where: { status: { in: ["QUEUED", "EXECUTING"] } },
+    include: { report: true },
+  });
+  for (const action of actions) {
+    const taskName = `PORTAL-${action.id}.task`;
+    const archivePath = path.join(
+      resultsRoot,
+      action.report.agentId,
+      "tasks",
+      taskName,
+    );
+    const resultPath = path.join(
+      resultsRoot,
+      action.report.agentId,
+      taskName.replace(/\.task$/, ".md"),
+    );
+    if (await pathExists(resultPath)) {
+      const result = await readFile(resultPath, "utf8");
+      const failed = /non exécuté|bloqué|échec|failed/i.test(result);
+      await prisma.agentAction.update({
+        where: { id: action.id },
+        data: {
+          status: failed ? "FAILED" : "COMPLETED",
+          executedAt: new Date(),
+          error: failed
+            ? "Le rapport runtime signale un blocage technique."
+            : null,
+        },
+      });
+    } else if (await pathExists(archivePath)) {
+      await prisma.agentAction.update({
+        where: { id: action.id },
+        data: { status: "EXECUTING" },
+      });
+    }
+  }
+}
+
 export async function getAgentReports() {
   return getPrisma().agentReport.findMany({
     orderBy: { createdAt: "desc" },

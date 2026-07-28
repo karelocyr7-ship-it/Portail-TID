@@ -16,20 +16,37 @@ export async function POST(request: Request) {
     }
     const identity = await verifyApplicationIdToken(idToken, application);
     const prisma = getPrisma();
-    const user = await prisma.portalUser.findUnique({
-      where: { keycloakSubject: identity.subject },
-      include: {
-        assignments: {
-          where: {
-            profile: {
-              active: true,
-              application: { code: application, active: true },
-            },
+    const userInclude = {
+      assignments: {
+        where: {
+          profile: {
+            active: true,
+            application: { code: application, active: true },
           },
-          select: { profile: { select: { key: true } } },
         },
+        select: { profile: { select: { key: true } } },
       },
+    } as const;
+
+    // The portal provisions access by Keycloak subject. If Keycloak has
+    // re-created a user, the verified email is the only safe recovery key
+    // available to this endpoint. Keep subject lookup authoritative and use
+    // the email only when no subject record exists, without changing stored
+    // identities implicitly.
+    const subjectUser = await prisma.portalUser.findUnique({
+      where: { keycloakSubject: identity.subject },
+      include: userInclude,
     });
+    const user =
+      subjectUser ??
+      (identity.email
+        ? await prisma.portalUser.findFirst({
+            where: {
+              email: { equals: identity.email, mode: "insensitive" },
+            },
+            include: userInclude,
+          })
+        : null);
     return NextResponse.json({
       lookup: true,
       subject: identity.subject,

@@ -45,10 +45,10 @@ export default async function RootLayout({
               </Link>
               {isPortalAdmin && (
                 <>
-                  <Link className="nav-link" href="/admin#comptes">
+                  <Link className="nav-link" href="/admin?section=users">
                     ♙ <span>Utilisateurs</span>
                   </Link>
-                  <Link className="nav-link" href="/admin#catalogue">
+                  <Link className="nav-link" href="/admin?section=catalogue">
                     ⚙ <span>Administration</span>
                   </Link>
                   <Link className="nav-link" href="/admin/agents">

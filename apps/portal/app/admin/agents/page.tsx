@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getRoles, getSession } from "@/lib/oidc";
-import { getAgentReports } from "@/lib/agent-reports";
+import { getAgentReports, syncAgentReports } from "@/lib/agent-reports";
 import { reviewAgentReport } from "./actions";
 
 const statusLabels: Record<string, string> = {
@@ -16,9 +16,14 @@ const statusLabels: Record<string, string> = {
 export default async function AgentReportsPage() {
   const session = await getSession();
   if (!getRoles(session).includes("PORTAL_ADMIN")) redirect("/");
+  await syncAgentReports();
   const reports = await getAgentReports();
-  const pending = reports.filter((report) => report.status === "PENDING").length;
-  const queued = reports.filter((report) => report.status === "APPROVED").length;
+  const pending = reports.filter(
+    (report) => report.status === "PENDING",
+  ).length;
+  const queued = reports.filter(
+    (report) => report.status === "APPROVED",
+  ).length;
 
   return (
     <div className="page-container admin-page agent-reports-page">
@@ -37,10 +42,22 @@ export default async function AgentReportsPage() {
         </div>
       </section>
 
-      <section className="agent-report-toolbar" aria-label="Résumé des rapports">
-        <div><strong>{reports.length}</strong><span>rapports reçus</span></div>
-        <div><strong>{pending}</strong><span>à valider</span></div>
-        <div><strong>1</strong><span>action simultanée maximale</span></div>
+      <section
+        className="agent-report-toolbar"
+        aria-label="Résumé des rapports"
+      >
+        <div>
+          <strong>{reports.length}</strong>
+          <span>rapports reçus</span>
+        </div>
+        <div>
+          <strong>{pending}</strong>
+          <span>à valider</span>
+        </div>
+        <div>
+          <strong>1</strong>
+          <span>action simultanée maximale</span>
+        </div>
         <p>
           Une validation ne déclenche pas une commande distante : elle crée
           uniquement une action <code>QUEUED</code> traitée par l’orchestrateur.
@@ -61,11 +78,17 @@ export default async function AgentReportsPage() {
             <article className="agent-report-card" key={report.id}>
               <div className="agent-report-heading">
                 <div>
-                  <p className="eyebrow">{report.applicationId} · {report.agentId}</p>
+                  <p className="eyebrow">
+                    {report.applicationId} · {report.agentId}
+                  </p>
                   <h2>{report.title}</h2>
-                  <p className="muted">Tâche {report.taskId} · Risque niveau {report.riskLevel}</p>
+                  <p className="muted">
+                    Tâche {report.taskId} · Risque niveau {report.riskLevel}
+                  </p>
                 </div>
-                <span className={`status-pill agent-status-${report.status.toLowerCase()}`}>
+                <span
+                  className={`status-pill agent-status-${report.status.toLowerCase()}`}
+                >
                   {statusLabels[report.status] ?? report.status}
                 </span>
               </div>
@@ -73,12 +96,18 @@ export default async function AgentReportsPage() {
               <details>
                 <summary>Afficher le rapport et les preuves</summary>
                 <pre className="agent-report-body">{report.reportBody}</pre>
-                {report.evidence ? <pre className="agent-report-evidence">{JSON.stringify(report.evidence, null, 2)}</pre> : null}
+                {report.evidence ? (
+                  <pre className="agent-report-evidence">
+                    {JSON.stringify(report.evidence, null, 2)}
+                  </pre>
+                ) : null}
               </details>
               {report.proposal ? (
                 <details>
                   <summary>Proposition d’action</summary>
-                  <pre className="agent-report-evidence">{JSON.stringify(report.proposal, null, 2)}</pre>
+                  <pre className="agent-report-evidence">
+                    {JSON.stringify(report.proposal, null, 2)}
+                  </pre>
                 </details>
               ) : null}
               {report.status === "PENDING" ? (
@@ -86,18 +115,23 @@ export default async function AgentReportsPage() {
                   <form action={reviewAgentReport}>
                     <input type="hidden" name="reportId" value={report.id} />
                     <input type="hidden" name="decision" value="APPROVE" />
-                    <button className="button primary" type="submit">Valider et mettre en file</button>
+                    <button className="button primary" type="submit">
+                      Valider et mettre en file
+                    </button>
                   </form>
                   <form action={reviewAgentReport}>
                     <input type="hidden" name="reportId" value={report.id} />
                     <input type="hidden" name="decision" value="REJECT" />
-                    <button className="button secondary" type="submit">Refuser la proposition</button>
+                    <button className="button secondary" type="submit">
+                      Refuser la proposition
+                    </button>
                   </form>
                 </div>
               ) : null}
               {report.actions.length > 0 ? (
                 <p className="agent-report-history">
-                  Dernière décision : {report.actions[0].action} · {report.actions[0].status}
+                  Dernière décision : {report.actions[0].action} ·{" "}
+                  {report.actions[0].status}
                 </p>
               ) : null}
             </article>
@@ -109,9 +143,13 @@ export default async function AgentReportsPage() {
         <div>
           <p className="eyebrow">Orchestration</p>
           <h2>File contrôlée</h2>
-          <p className="muted">Aucune action approuvée n’est exécutée par cette page.</p>
+          <p className="muted">
+            Aucune action approuvée n’est exécutée par cette page.
+          </p>
         </div>
-        <Link className="button secondary" href="/admin">Retour à l’administration</Link>
+        <Link className="button secondary" href="/admin">
+          Retour à l’administration
+        </Link>
       </div>
     </div>
   );

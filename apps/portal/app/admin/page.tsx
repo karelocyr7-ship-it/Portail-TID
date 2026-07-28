@@ -13,10 +13,16 @@ import {
   updateApplicationUrl,
 } from "./actions";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string }>;
+}) {
   const session = await getSession();
   const isAdmin = getRoles(session).includes("PORTAL_ADMIN");
   if (!isAdmin) redirect("/");
+  const section =
+    (await searchParams).section === "users" ? "users" : "catalogue";
 
   const applications = await getAdminApplications();
   const profiles = await getAdminProfiles();
@@ -34,10 +40,15 @@ export default async function AdminPage() {
       <section className="admin-hero">
         <div>
           <p className="eyebrow light">Espace administrateur</p>
-          <h1>Utilisateurs, accès et applications.</h1>
+          <h1>
+            {section === "users"
+              ? "Utilisateurs et habilitations."
+              : "Administration du catalogue."}
+          </h1>
           <p>
-            Gérez les comptes Keycloak, les profils autorisés et le catalogue
-            métier depuis un espace centralisé.
+            {section === "users"
+              ? "Gérez les comptes Keycloak et les profils autorisés dans un espace dédié."
+              : "Gérez les applications, leurs URLs, leur statut et leur maintenance."}
           </p>
         </div>
         <div className="admin-hero-mark" aria-hidden="true">
@@ -81,268 +92,287 @@ export default async function AdminPage() {
         </div>
       </section>
 
-      <div className="section-header admin-section-heading" id="catalogue">
-        <div>
-          <p className="eyebrow">Catalogue central</p>
-          <h2>Applications et accès</h2>
-        </div>
-        <span className="count-badge">PORTAL_ADMIN</span>
-      </div>
-
-      <section className="admin-app-grid" aria-label="Applications du portail">
-        {applications.map((application) => (
-          <article className="admin-app-card" key={application.code}>
-            <div className="admin-app-card-top">
-              <span className="admin-app-icon" aria-hidden="true">
-                {getApplicationIconPath(application.code) ? (
-                  <Image
-                    src={getApplicationIconPath(application.code)!}
-                    alt=""
-                    width={56}
-                    height={56}
-                  />
-                ) : (
-                  application.icon
-                )}
-              </span>
-              <span className="status-pill">
-                {!application.active
-                  ? "Désactivée"
-                  : application.maintenance
-                    ? "Maintenance"
-                    : "Active"}
-              </span>
-            </div>
-            <p className="eyebrow">{application.category}</p>
-            <h3>{application.name}</h3>
-            <p className="muted">{application.description}</p>
-            <div
-              className="role-list"
-              aria-label={`Rôles de ${application.name}`}
-            >
-              {application.roles.map((role) => (
-                <span className="role-chip" key={role}>
-                  {role}
-                </span>
-              ))}
-            </div>
-            <div className="admin-actions">
-              <form action={updateApplicationStatus}>
-                <input type="hidden" name="code" value={application.code} />
-                <input type="hidden" name="action" value="toggle-active" />
-                <button className="button secondary" type="submit">
-                  {application.active ? "Désactiver" : "Activer"}
-                </button>
-              </form>
-              <form action={updateApplicationStatus}>
-                <input type="hidden" name="code" value={application.code} />
-                <input type="hidden" name="action" value="toggle-maintenance" />
-                <button className="button secondary" type="submit">
-                  {application.maintenance ? "Fin maintenance" : "Maintenance"}
-                </button>
-              </form>
-            </div>
-            <form className="admin-url-form" action={updateApplicationUrl}>
-              <input type="hidden" name="code" value={application.code} />
-              <label htmlFor={`url-${application.code}`}>
-                URL de l’application
-              </label>
-              <div className="admin-url-row">
-                <input
-                  id={`url-${application.code}`}
-                  name="url"
-                  type="url"
-                  inputMode="url"
-                  placeholder="https://..."
-                  defaultValue={application.url ?? ""}
-                  maxLength={2048}
-                />
-                <button className="button primary" type="submit">
-                  Enregistrer
-                </button>
-              </div>
-            </form>
-            {application.url ? (
-              <a
-                className="button secondary admin-app-link"
-                href={application.url}
-              >
-                Ouvrir l’application <span aria-hidden="true">↗</span>
-              </a>
-            ) : (
-              <span className="admin-app-unavailable">URL à configurer</span>
-            )}
-          </article>
-        ))}
-      </section>
-
-      <section className="admin-users-section" id="comptes">
-        <div className="section-header admin-section-heading">
-          <div>
-            <p className="eyebrow">Habilitations</p>
-            <h2>Comptes et profils applicatifs</h2>
-          </div>
-          <span className="count-badge">{profiles.length} profils</span>
-        </div>
-        <p className="section-intro">
-          Associez une identité Keycloak aux profils réels déclarés par chaque
-          application. Aucun mot de passe n’est enregistré dans le portail.
-        </p>
-
-        <form
-          className="user-editor user-editor-current"
-          action={saveCurrentPortalUser}
-        >
-          <div className="user-editor-heading">
+      {section === "catalogue" && (
+        <>
+          <div className="section-header admin-section-heading" id="catalogue">
             <div>
-              <p className="eyebrow">Mon compte</p>
-              <h3>Ajouter ou mettre à jour mes accès</h3>
+              <p className="eyebrow">Catalogue central</p>
+              <h2>Applications et accès</h2>
             </div>
-            <span className="source-note">
-              Identité Keycloak détectée automatiquement
-            </span>
+            <span className="count-badge">PORTAL_ADMIN</span>
           </div>
-          <p className="field-help">
-            Votre identité et votre identifiant Keycloak sont récupérés depuis
-            la session courante. Aucun champ <code>sub</code> n’est à saisir.
-          </p>
-          <ProfilePicker profiles={profiles} />
-          <div className="user-editor-footer">
-            <button className="button primary" type="submit">
-              Enregistrer mes accès
-            </button>
-          </div>
-        </form>
 
-        <UserDirectory
-          users={users.map((user) => ({
-            id: user.id,
-            displayName: user.displayName,
-            email: user.email,
-            active: user.active,
-            profileCount: user.assignments.length,
-          }))}
-        />
-
-        <form className="user-editor" action={savePortalUser}>
-          <div className="user-editor-heading">
-            <div>
-              <p className="eyebrow">Nouveau compte</p>
-              <h3>Ajouter une habilitation</h3>
-            </div>
-            <span className="source-note">Source : identité Keycloak</span>
-          </div>
-          <div className="user-fields">
-            <label>
-              Nom affiché
-              <input name="displayName" required maxLength={160} />
-            </label>
-            <label>
-              E-mail de référence
-              <input name="email" type="email" maxLength={320} />
-            </label>
-            <label className="field-wide">
-              Identifiant Keycloak (sub)
-              <input name="keycloakSubject" required maxLength={200} />
-            </label>
-          </div>
-          <ProfilePicker profiles={profiles} />
-          <div className="user-editor-footer">
-            <label className="check-label">
-              <input type="checkbox" name="active" defaultChecked /> Compte
-              actif
-            </label>
-            <button className="button primary" type="submit">
-              Enregistrer le compte
-            </button>
-          </div>
-        </form>
-
-        <div className="user-list" aria-label="Comptes portail">
-          {users.length === 0 ? (
-            <div className="empty-state compact-empty">
-              <h3>Aucun compte administré</h3>
-              <p>Ajoutez une identité Keycloak pour gérer ses accès.</p>
-            </div>
-          ) : (
-            users.map((user) => (
-              <form
-                className="user-editor user-editor-existing"
-                action={savePortalUser}
-                key={user.id}
-                id={`user-${user.id}`}
-              >
-                <input type="hidden" name="userId" value={user.id} />
-                <div className="user-editor-heading">
-                  <div>
-                    <p className="eyebrow">Compte portail</p>
-                    <h3>{user.displayName}</h3>
-                    <p className="user-meta">
-                      {user.email ?? "E-mail non renseigné"} ·{" "}
-                      {user.keycloakSubject}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      user.active ? "status-pill" : "status-pill inactive"
-                    }
-                  >
-                    {user.active ? "Actif" : "Désactivé"}
+          <section
+            className="admin-app-grid"
+            aria-label="Applications du portail"
+          >
+            {applications.map((application) => (
+              <article className="admin-app-card" key={application.code}>
+                <div className="admin-app-card-top">
+                  <span className="admin-app-icon" aria-hidden="true">
+                    {getApplicationIconPath(application.code) ? (
+                      <Image
+                        src={getApplicationIconPath(application.code)!}
+                        alt=""
+                        width={56}
+                        height={56}
+                      />
+                    ) : (
+                      application.icon
+                    )}
+                  </span>
+                  <span className="status-pill">
+                    {!application.active
+                      ? "Désactivée"
+                      : application.maintenance
+                        ? "Maintenance"
+                        : "Active"}
                   </span>
                 </div>
-                <div className="user-fields">
-                  <label>
-                    Nom affiché
-                    <input
-                      name="displayName"
-                      required
-                      maxLength={160}
-                      defaultValue={user.displayName}
-                    />
-                  </label>
-                  <label>
-                    E-mail de référence
-                    <input
-                      name="email"
-                      type="email"
-                      maxLength={320}
-                      defaultValue={user.email ?? ""}
-                    />
-                  </label>
-                  <label className="field-wide">
-                    Identifiant Keycloak (sub)
-                    <input
-                      name="keycloakSubject"
-                      required
-                      maxLength={200}
-                      defaultValue={user.keycloakSubject}
-                    />
-                  </label>
+                <p className="eyebrow">{application.category}</p>
+                <h3>{application.name}</h3>
+                <p className="muted">{application.description}</p>
+                <div
+                  className="role-list"
+                  aria-label={`Rôles de ${application.name}`}
+                >
+                  {application.roles.map((role) => (
+                    <span className="role-chip" key={role}>
+                      {role}
+                    </span>
+                  ))}
                 </div>
-                <ProfilePicker
-                  profiles={profiles}
-                  selected={
-                    new Set(user.assignments.map(({ profileId }) => profileId))
-                  }
-                />
-                <div className="user-editor-footer">
-                  <label className="check-label">
+                <div className="admin-actions">
+                  <form action={updateApplicationStatus}>
+                    <input type="hidden" name="code" value={application.code} />
+                    <input type="hidden" name="action" value="toggle-active" />
+                    <button className="button secondary" type="submit">
+                      {application.active ? "Désactiver" : "Activer"}
+                    </button>
+                  </form>
+                  <form action={updateApplicationStatus}>
+                    <input type="hidden" name="code" value={application.code} />
                     <input
-                      type="checkbox"
-                      name="active"
-                      defaultChecked={user.active}
-                    />{" "}
-                    Compte actif
-                  </label>
-                  <button className="button primary" type="submit">
-                    Enregistrer les accès
-                  </button>
+                      type="hidden"
+                      name="action"
+                      value="toggle-maintenance"
+                    />
+                    <button className="button secondary" type="submit">
+                      {application.maintenance
+                        ? "Fin maintenance"
+                        : "Maintenance"}
+                    </button>
+                  </form>
                 </div>
-              </form>
-            ))
-          )}
-        </div>
-      </section>
+                <form className="admin-url-form" action={updateApplicationUrl}>
+                  <input type="hidden" name="code" value={application.code} />
+                  <label htmlFor={`url-${application.code}`}>
+                    URL de l’application
+                  </label>
+                  <div className="admin-url-row">
+                    <input
+                      id={`url-${application.code}`}
+                      name="url"
+                      type="url"
+                      inputMode="url"
+                      placeholder="https://..."
+                      defaultValue={application.url ?? ""}
+                      maxLength={2048}
+                    />
+                    <button className="button primary" type="submit">
+                      Enregistrer
+                    </button>
+                  </div>
+                </form>
+                {application.url ? (
+                  <a
+                    className="button secondary admin-app-link"
+                    href={application.url}
+                  >
+                    Ouvrir l’application <span aria-hidden="true">↗</span>
+                  </a>
+                ) : (
+                  <span className="admin-app-unavailable">
+                    URL à configurer
+                  </span>
+                )}
+              </article>
+            ))}
+          </section>
+        </>
+      )}
+
+      {section === "users" && (
+        <section className="admin-users-section" id="comptes">
+          <div className="section-header admin-section-heading">
+            <div>
+              <p className="eyebrow">Habilitations</p>
+              <h2>Comptes et profils applicatifs</h2>
+            </div>
+            <span className="count-badge">{profiles.length} profils</span>
+          </div>
+          <p className="section-intro">
+            Associez une identité Keycloak aux profils réels déclarés par chaque
+            application. Aucun mot de passe n’est enregistré dans le portail.
+          </p>
+
+          <form
+            className="user-editor user-editor-current"
+            action={saveCurrentPortalUser}
+          >
+            <div className="user-editor-heading">
+              <div>
+                <p className="eyebrow">Mon compte</p>
+                <h3>Ajouter ou mettre à jour mes accès</h3>
+              </div>
+              <span className="source-note">
+                Identité Keycloak détectée automatiquement
+              </span>
+            </div>
+            <p className="field-help">
+              Votre identité et votre identifiant Keycloak sont récupérés depuis
+              la session courante. Aucun champ <code>sub</code> n’est à saisir.
+            </p>
+            <ProfilePicker profiles={profiles} />
+            <div className="user-editor-footer">
+              <button className="button primary" type="submit">
+                Enregistrer mes accès
+              </button>
+            </div>
+          </form>
+
+          <UserDirectory
+            users={users.map((user) => ({
+              id: user.id,
+              displayName: user.displayName,
+              email: user.email,
+              active: user.active,
+              profileCount: user.assignments.length,
+            }))}
+          />
+
+          <form className="user-editor" action={savePortalUser}>
+            <div className="user-editor-heading">
+              <div>
+                <p className="eyebrow">Nouveau compte</p>
+                <h3>Ajouter une habilitation</h3>
+              </div>
+              <span className="source-note">Source : identité Keycloak</span>
+            </div>
+            <div className="user-fields">
+              <label>
+                Nom affiché
+                <input name="displayName" required maxLength={160} />
+              </label>
+              <label>
+                E-mail de référence
+                <input name="email" type="email" maxLength={320} />
+              </label>
+              <label className="field-wide">
+                Identifiant Keycloak (sub)
+                <input name="keycloakSubject" required maxLength={200} />
+              </label>
+            </div>
+            <ProfilePicker profiles={profiles} />
+            <div className="user-editor-footer">
+              <label className="check-label">
+                <input type="checkbox" name="active" defaultChecked /> Compte
+                actif
+              </label>
+              <button className="button primary" type="submit">
+                Enregistrer le compte
+              </button>
+            </div>
+          </form>
+
+          <div className="user-list" aria-label="Comptes portail">
+            {users.length === 0 ? (
+              <div className="empty-state compact-empty">
+                <h3>Aucun compte administré</h3>
+                <p>Ajoutez une identité Keycloak pour gérer ses accès.</p>
+              </div>
+            ) : (
+              users.map((user) => (
+                <form
+                  className="user-editor user-editor-existing"
+                  action={savePortalUser}
+                  key={user.id}
+                  id={`user-${user.id}`}
+                >
+                  <input type="hidden" name="userId" value={user.id} />
+                  <div className="user-editor-heading">
+                    <div>
+                      <p className="eyebrow">Compte portail</p>
+                      <h3>{user.displayName}</h3>
+                      <p className="user-meta">
+                        {user.email ?? "E-mail non renseigné"} ·{" "}
+                        {user.keycloakSubject}
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        user.active ? "status-pill" : "status-pill inactive"
+                      }
+                    >
+                      {user.active ? "Actif" : "Désactivé"}
+                    </span>
+                  </div>
+                  <div className="user-fields">
+                    <label>
+                      Nom affiché
+                      <input
+                        name="displayName"
+                        required
+                        maxLength={160}
+                        defaultValue={user.displayName}
+                      />
+                    </label>
+                    <label>
+                      E-mail de référence
+                      <input
+                        name="email"
+                        type="email"
+                        maxLength={320}
+                        defaultValue={user.email ?? ""}
+                      />
+                    </label>
+                    <label className="field-wide">
+                      Identifiant Keycloak (sub)
+                      <input
+                        name="keycloakSubject"
+                        required
+                        maxLength={200}
+                        defaultValue={user.keycloakSubject}
+                      />
+                    </label>
+                  </div>
+                  <ProfilePicker
+                    profiles={profiles}
+                    selected={
+                      new Set(
+                        user.assignments.map(({ profileId }) => profileId),
+                      )
+                    }
+                  />
+                  <div className="user-editor-footer">
+                    <label className="check-label">
+                      <input
+                        type="checkbox"
+                        name="active"
+                        defaultChecked={user.active}
+                      />{" "}
+                      Compte actif
+                    </label>
+                    <button className="button primary" type="submit">
+                      Enregistrer les accès
+                    </button>
+                  </div>
+                </form>
+              ))
+            )}
+          </div>
+        </section>
+      )}
 
       <section
         className="admin-tool-strip"
@@ -350,10 +380,15 @@ export default async function AdminPage() {
       >
         <div>
           <p className="eyebrow">Actions disponibles</p>
-          <h2>Pilotage du catalogue</h2>
+          <h2>
+            {section === "users"
+              ? "Gestion des utilisateurs"
+              : "Pilotage du catalogue"}
+          </h2>
           <p className="muted">
-            Activez une application ou signalez sa mise en maintenance. Chaque
-            action est enregistrée dans l’audit du portail.
+            {section === "users"
+              ? "Les accès sont enregistrés dans l’audit du portail et restent séparés du catalogue applicatif."
+              : "Activez une application ou signalez sa mise en maintenance. Chaque action est enregistrée dans l’audit du portail."}
           </p>
         </div>
         <Link className="button secondary" href="/">

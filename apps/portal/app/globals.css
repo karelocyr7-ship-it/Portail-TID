@@ -1707,6 +1707,36 @@ body {
   margin: 24px 0;
 }
 
+.agent-action-ledger {
+  margin: 2rem 0;
+}
+
+.agent-action-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.agent-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-color, #dbe4ee);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.agent-action-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+
+.error-text {
+  color: #b42318;
+}
+
 @media (max-width: 720px) {
   .agent-report-toolbar {
     grid-template-columns: 1fr 1fr;

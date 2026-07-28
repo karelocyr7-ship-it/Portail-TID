@@ -18,6 +18,14 @@ const statusLabels: Record<string, string> = {
   FAILED: "Échec",
 };
 
+const actionStatusLabels: Record<string, string> = {
+  QUEUED: "En file",
+  EXECUTING: "En cours",
+  COMPLETED: "Terminée",
+  FAILED: "Échec",
+  REJECTED: "Refusée",
+};
+
 export default async function AgentReportsPage() {
   const session = await getSession();
   if (!getRoles(session).includes("PORTAL_ADMIN")) redirect("/");
@@ -28,9 +36,10 @@ export default async function AgentReportsPage() {
   const pending = reports.filter(
     (report) => report.status === "PENDING",
   ).length;
-  const queued = reports.filter(
-    (report) => report.status === "APPROVED",
-  ).length;
+  const actions = reports.flatMap((report) =>
+    report.actions.map((action) => ({ ...action, report })),
+  );
+  const queued = actions.filter((action) => action.status === "QUEUED").length;
 
   return (
     <div className="page-container admin-page agent-reports-page">
@@ -47,6 +56,52 @@ export default async function AgentReportsPage() {
           <strong>{queued}</strong>
           <span>actions en file</span>
         </div>
+      </section>
+
+      <section className="agent-action-ledger" aria-label="Journal des actions">
+        <div className="section-header admin-section-heading">
+          <div>
+            <p className="eyebrow">Orchestrateur</p>
+            <h2>Actions validées et exécutées</h2>
+          </div>
+          <span className="count-badge">{actions.length} actions</span>
+        </div>
+        {actions.length === 0 ? (
+          <p className="empty-state compact-empty">
+            Aucune action enregistrée.
+          </p>
+        ) : (
+          <div className="agent-action-list">
+            {actions.map((action) => (
+              <article className="agent-action-row" key={action.id}>
+                <div>
+                  <strong>
+                    {action.report.applicationId} · {action.report.agentId}
+                  </strong>
+                  <p className="muted">
+                    {action.report.title} · décision {action.action}
+                  </p>
+                </div>
+                <div className="agent-action-meta">
+                  <span
+                    className={`status-pill agent-status-${action.status.toLowerCase()}`}
+                  >
+                    {actionStatusLabels[action.status] ?? action.status}
+                  </span>
+                  <small>
+                    {new Intl.DateTimeFormat("fr-FR", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    }).format(action.requestedAt)}
+                  </small>
+                  {action.error ? (
+                    <small className="error-text">{action.error}</small>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section

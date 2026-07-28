@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { getRoles, getSession } from "@/lib/oidc";
+import { MainNavigation } from "@/components/main-navigation";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,24 +40,7 @@ export default async function RootLayout({
                 <small>Espace métier</small>
               </span>
             </Link>
-            <nav aria-label="Navigation principale">
-              <Link className="nav-link active" href="/#applications">
-                ▦ <span>Applications</span>
-              </Link>
-              {isPortalAdmin && (
-                <>
-                  <Link className="nav-link" href="/admin?section=users">
-                    ♙ <span>Utilisateurs</span>
-                  </Link>
-                  <Link className="nav-link" href="/admin?section=catalogue">
-                    ⚙ <span>Administration</span>
-                  </Link>
-                  <Link className="nav-link" href="/admin/agents">
-                    ◈ <span>Rapports agents</span>
-                  </Link>
-                </>
-              )}
-            </nav>
+            <MainNavigation isPortalAdmin={isPortalAdmin} />
             <div className="sidebar-footer">
               <span className="status-dot" /> Services opérationnels
             </div>

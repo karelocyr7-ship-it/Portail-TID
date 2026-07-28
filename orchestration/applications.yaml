@@ -1,0 +1,144 @@
+applications:
+  - id: tdb
+    name: TDB
+    description: Tableau de bord transverse et consolidation des KPI
+    vm_alias: Revue-PDV
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/TDB-TID
+    git_remote: git@github.com:karelocyr7-ship-it/TDB.git
+    default_branch: main
+    integration_branch: codex/modernize-dashboard-kpi
+    deployment_method: Docker Compose
+    compose_file: /home/debian/TDB-TID/docker-compose.yml
+    healthcheck_url: https://tdb.tadgroupe.com/api/health
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: tdb-agent
+    criticality: high
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; Git status, remote and Compose metadata
+
+  - id: cash-recon
+    name: CASH-RECON
+    description: Rapprochement et contrôle des opérations financières
+    vm_alias: Revue-PDV
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/CASH-RECON
+    git_remote: git@github.com:karelocyr7-ship-it/cash-recon.git
+    default_branch: main
+    integration_branch: codex/domain-aware-login-cash
+    deployment_method: Docker Compose
+    compose_file: /home/debian/CASH-RECON/docker-compose.yml
+    healthcheck_url: https://cash.tadgroupe.com/api/health
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: cash-recon-agent
+    criticality: critical
+    contains_financial_data: true
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; Git status, remote and Compose metadata
+
+  - id: atf
+    name: ATF
+    description: Plateforme de géolocalisation et d’exploitation terrain
+    vm_alias: to_confirm
+    ssh_user: to_confirm
+    environment: to_confirm
+    repository_path: to_confirm
+    git_remote: to_confirm
+    default_branch: main
+    integration_branch: develop
+    deployment_method: to_confirm
+    compose_file: to_confirm
+    healthcheck_url: to_confirm
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: atf-agent
+    criticality: critical
+    contains_location_data: true
+    automatic_production_deployment: false
+    evidence: Aucun dépôt ou service ATF confirmé pendant l’audit
+
+  - id: revue-pdv
+    name: Revue-PDV
+    description: Suivi des visites, tournées et points de vente
+    vm_alias: Revue-PDV
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/Revue-PDV-PROD
+    git_remote: git@github.com:karelocyr7-ship-it/Revue-PDV.git
+    default_branch: main
+    integration_branch: codex/domain-aware-login-pdv
+    deployment_method: Docker Compose
+    compose_file: /home/debian/Revue-PDV-PROD/docker-compose.yml
+    healthcheck_url: https://pdv.tadgroupe.com/api/health
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: revue-pdv-agent
+    criticality: high
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; Git status, remote and Compose metadata
+
+  - id: gparc
+    name: GParc
+    description: Gestion du parc et des équipements
+    vm_alias: gparc
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/gparc-prod
+    git_remote: git@github.com:karelocyr7-ship-it/GParc.git
+    default_branch: main
+    integration_branch: codex/gparc-integration
+    deployment_method: Docker Compose
+    compose_file: /home/debian/gparc-prod/docker-compose.yml
+    healthcheck_url: https://gparc.tadgroupe.com/api/health
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: gparc-agent
+    criticality: high
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; Git status, remote and Compose metadata
+
+  - id: mdm
+    name: MDM
+    description: Gestion et contrôle des terminaux mobiles
+    vm_alias: mdm-tad
+    ssh_user: debian
+    environment: production
+    repository_path: /opt/hmdm
+    git_remote: to_confirm
+    default_branch: main
+    integration_branch: develop
+    deployment_method: Docker Compose / WAR HMDM
+    compose_file: to_confirm
+    healthcheck_url: https://mdm.tadgroupe.com
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: mdm-agent
+    criticality: critical
+    contains_device_management_functions: true
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; hmdm-app and hmdm-postgres actifs, dépôt source non confirmé
+
+  - id: recrutement-om-telco
+    name: Recrutement OM & Telco
+    description: Gestion des recrutements Orange Money et Telco
+    vm_alias: mdm-tad
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/RECRUT_OM
+    git_remote: https://github.com/karelocyr7-ship-it/RECRUT-OM.git
+    default_branch: main
+    integration_branch: agent/step-0
+    deployment_method: Docker Compose
+    compose_file: /home/debian/RECRUT_OM/compose.yml
+    healthcheck_url: https://recrut-oci.tadgroupe.com/api/health
+    agent_file: AGENTS.md
+    documentation_path: docs
+    owner_agent: recrutement-om-telco-agent
+    criticality: critical
+    contains_personal_data: true
+    automatic_production_deployment: false
+    evidence: VM audit 2026-07-28; Git status, remote and Compose metadata

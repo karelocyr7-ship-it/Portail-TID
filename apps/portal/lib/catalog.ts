@@ -142,7 +142,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "✦",
     integrationLevel: 1,
     active: true,
-    url: "https://recrut-oci.tadgroupe.com",
+    url: "https://recrut-oci.tadgroupe.com/?sso=1",
     roles: [
       "PORTAL_ADMIN",
       "RECRUT_OCI_ADMIN",

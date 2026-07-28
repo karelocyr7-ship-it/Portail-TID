@@ -17,6 +17,13 @@ agent_ids=(
   deployment-agent
   documentation-agent
 )
+declare -A repository_by_agent=(
+  [tdb-agent]="/srv/tad/agents/repositories/tdb"
+  [cash-recon-agent]="/srv/tad/agents/repositories/cash-recon"
+  [revue-pdv-agent]="/srv/tad/agents/repositories/revue-pdv"
+  [gparc-agent]="/srv/tad/agents/repositories/gparc"
+  [recrutement-om-telco-agent]="/srv/tad/agents/repositories/recrutement-om-telco"
+)
 state_dir="$agent_root/state"
 pid_file="$state_dir/agent.pid"
 lock_file="$state_dir/agent.lock"
@@ -61,6 +68,11 @@ workspace="$agent_root/workspaces/$job_agent/$(basename "$job" .task)"
 result_dir="$agent_root/results/$job_agent"
 log_dir="$agent_root/logs/$job_agent"
 mkdir -p "$workspace" "$result_dir" "$log_dir"
+repository="${repository_by_agent[$job_agent]:-}"
+if [[ -n "$repository" && -d "$repository/.git" && -z "$(find "$workspace" -mindepth 1 -print -quit 2>/dev/null)" ]]; then
+  git clone --quiet --no-local "$repository" "$workspace"
+  git -C "$workspace" checkout -q -b "agent/$job_agent/$(basename "$job" .task)"
+fi
 echo "$$" > "$pid_file"
 cleanup() { rm -f "$pid_file"; }
 trap cleanup EXIT

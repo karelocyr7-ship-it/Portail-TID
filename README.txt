@@ -1352,3 +1352,19 @@ avant de conclure que la VM est inaccessible.
       expiration de l'ancien cookie navigateur.
     - Rollback : revenir au commit GParc `a24cb47` et redémarrer uniquement
       l'API, sans toucher à MariaDB ni aux volumes.
+
+66. Activation du runtime central des agents — 28 juillet 2026
+    - Validation utilisateur reçue pour configurer puis activer les agents.
+    - Le runtime central du Portail utilise désormais une file dédiée par
+      agent, une concurrence maximale de un et un dispatcher sans secrets,
+      sudo, base de production ni socket Docker.
+    - Le timer `tad-agent-start.timer` est enabled/active; son premier cycle
+      après activation s’est terminé avec succès sans tâche exécutée.
+    - Les agents applicatifs confirmés sont configurés dans
+      `orchestration/runtime.yaml`; `atf-agent` reste désactivé jusqu’à
+      confirmation de sa VM et de son dépôt.
+    - Aucun service applicatif distant, dépôt distant ou base applicative n’a
+      été modifié. Aucune tâche agent n’était en attente.
+    - Rollback : désactiver le timer `tad-agent-start.timer`, restaurer l’unité
+      précédente et conserver les files pour analyse; ne supprimer aucune
+      tâche ni donnée.

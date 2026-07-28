@@ -2,6 +2,21 @@
 set -euo pipefail
 
 agent_root="${AGENT_ROOT:-/srv/tad/agents}"
+agent_ids=(
+  portal-orchestrator
+  tdb-agent
+  cash-recon-agent
+  revue-pdv-agent
+  gparc-agent
+  mdm-agent
+  recrutement-om-telco-agent
+  architecture-review-agent
+  security-review-agent
+  database-review-agent
+  test-quality-agent
+  deployment-agent
+  documentation-agent
+)
 state_dir="$agent_root/state"
 pid_file="$state_dir/agent.pid"
 lock_file="$state_dir/agent.lock"
@@ -14,7 +29,18 @@ if [[ -e "$state_dir/stop-new-tasks" ]]; then
   exit 0
 fi
 
-job="$(find "$agent_root/queue" -maxdepth 1 -type f -name '*.task' -print 2>/dev/null | sort | head -1 || true)"
+job=""
+job_agent=""
+for candidate in "${agent_ids[@]}"; do
+  candidate_job="$(find "$agent_root/queue/$candidate" -maxdepth 1 -type f -name '*.task' -printf '%T@ %p\n' 2>/dev/null | sort -n | head -1 || true)"
+  if [[ -n "$candidate_job" ]]; then
+    candidate_job="${candidate_job#* }"
+    if [[ -z "$job" || "$candidate_job" -ot "$job" ]]; then
+      job="$candidate_job"
+      job_agent="$candidate"
+    fi
+  fi
+done
 if [[ -z "$job" ]]; then
   echo "Aucune tâche en attente."
   exit 0
@@ -26,10 +52,22 @@ if [[ "${AGENT_ALLOW_RUN:-false}" != "true" ]]; then
 fi
 
 command -v codex >/dev/null 2>&1 || { echo "Codex CLI introuvable." >&2; exit 1; }
-workspace="$agent_root/workspaces/$(basename "$job" .task)"
-mkdir -p "$workspace"
+workspace="$agent_root/workspaces/$job_agent/$(basename "$job" .task)"
+result_dir="$agent_root/results/$job_agent"
+log_dir="$agent_root/logs/$job_agent"
+mkdir -p "$workspace" "$result_dir" "$log_dir"
 echo "$$" > "$pid_file"
 cleanup() { rm -f "$pid_file"; }
 trap cleanup EXIT
 
-codex exec --sandbox workspace-write --cd "$workspace" "$(<"$job")"
+result_file="$result_dir/$(basename "$job" .task).md"
+log_file="$log_dir/$(basename "$job" .task).log"
+{
+  echo "# Rapport — $job_agent"
+  echo
+  echo "- Tâche : $(basename "$job")"
+  echo "- Début : $(date --iso-8601=seconds)"
+  echo
+  codex exec --sandbox workspace-write --cd "$workspace" \
+    "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $(<"$job")"
+} > >(tee "$result_file" | tee "$log_file") 2>&1

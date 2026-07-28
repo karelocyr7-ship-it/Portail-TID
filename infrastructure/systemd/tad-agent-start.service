@@ -7,6 +7,7 @@ Type=oneshot
 User=tad-agents
 Group=tad-agents
 WorkingDirectory=/srv/tad/agents
+Environment=AGENT_ALLOW_RUN=true
 ExecStart=/srv/tad/portail/scripts/agents-start.sh
 NoNewPrivileges=true
 PrivateTmp=true

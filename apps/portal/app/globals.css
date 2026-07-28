@@ -1732,6 +1732,52 @@ body {
   justify-items: end;
   gap: 0.25rem;
 }
+.agent-live-board {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+.agent-live-board .section-header small {
+  color: #61718a;
+}
+.agent-live-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.agent-live-card {
+  padding: 16px;
+  border: 1px solid #dce5f0;
+  border-radius: 14px;
+  background: #fff;
+}
+.agent-live-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.agent-live-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+.agent-live-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.agent-live-card dt {
+  color: #718096;
+}
+.agent-live-card dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
 
 .error-text {
   color: #b42318;
@@ -1748,6 +1794,9 @@ body {
 
   .agent-report-heading {
     display: grid;
+  }
+  .agent-live-grid {
+    grid-template-columns: 1fr;
   }
 }
 .applications-page .application-card-content {

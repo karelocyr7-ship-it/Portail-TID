@@ -8,6 +8,7 @@ import {
   syncAgentActionStatuses,
 } from "@/lib/agent-reports";
 import { reviewAgentReport } from "./actions";
+import { AgentLiveBoard } from "@/components/agent-live-board";
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -103,6 +104,8 @@ export default async function AgentReportsPage() {
           </div>
         )}
       </section>
+
+      <AgentLiveBoard />
 
       <section
         className="agent-report-toolbar"

@@ -268,6 +268,14 @@ export default async function AdminPage({
                 E-mail de référence
                 <input name="email" type="email" maxLength={320} />
               </label>
+              <label>
+                Matricule d’entreprise
+                <input
+                  name="employeeId"
+                  placeholder="TID000… ou TIDP000…"
+                  maxLength={32}
+                />
+              </label>
               <label className="field-wide">
                 Identifiant Keycloak (sub)
                 <input name="keycloakSubject" required maxLength={200} />
@@ -305,6 +313,7 @@ export default async function AdminPage({
                       <p className="eyebrow">Compte portail</p>
                       <h3>{user.displayName}</h3>
                       <p className="user-meta">
+                        {user.employeeId ?? "Matricule non renseigné"} ·{" "}
                         {user.email ?? "E-mail non renseigné"} ·{" "}
                         {user.keycloakSubject}
                       </p>
@@ -334,6 +343,15 @@ export default async function AdminPage({
                         type="email"
                         maxLength={320}
                         defaultValue={user.email ?? ""}
+                      />
+                    </label>
+                    <label>
+                      Matricule d’entreprise
+                      <input
+                        name="employeeId"
+                        placeholder="TID000… ou TIDP000…"
+                        maxLength={32}
+                        defaultValue={user.employeeId ?? ""}
                       />
                     </label>
                     <label className="field-wide">

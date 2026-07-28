@@ -71,6 +71,7 @@ model ApplicationProfile {
 model PortalUser {
   id              String                    @id @default(cuid())
   keycloakSubject String                    @unique
+  employeeId      String?                   @unique
   email           String?
   displayName     String
   active          Boolean                   @default(true)

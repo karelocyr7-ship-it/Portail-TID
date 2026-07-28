@@ -39,6 +39,12 @@ export async function POST(request: Request) {
     });
     const user =
       subjectUser ??
+      (identity.employeeId
+        ? await prisma.portalUser.findUnique({
+            where: { employeeId: identity.employeeId },
+            include: userInclude,
+          })
+        : null) ??
       (identity.email
         ? await prisma.portalUser.findFirst({
             where: {

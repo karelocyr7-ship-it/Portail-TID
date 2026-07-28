@@ -30,6 +30,10 @@ Les unités et timers `infrastructure/systemd/tad-agent-*` prévoient la fenêtr
 à 6 h et rapport à 6 h 05, fuseau `Africa/Abidjan`. Ils ne doivent pas être
 copiés dans `/etc/systemd/system` ni activés sans validation administrateur.
 
+Les prérequis système `bubblewrap` et `ripgrep` sont installés sur la VM du
+Portail. Le service systemd autorise `AF_NETLINK`, requis par bubblewrap, sans
+accorder d’accès SSH, Docker ou base de données aux agents.
+
 ## n8n local
 
 n8n utilise sa base PostgreSQL dédiée et reste privé. Pour un accès ponctuel,

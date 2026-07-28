@@ -23,6 +23,7 @@ type OidcConfiguration = {
 export type PortalSession = {
   subject: string;
   name?: string;
+  email?: string;
   username?: string;
   roles: string[];
   groups: string[];
@@ -124,6 +125,72 @@ export async function exchangeCode(
   return verifyIdToken(token.id_token, oidc, expectedNonce);
 }
 
+export async function verifyApplicationIdToken(
+  token: string,
+  applicationCode: string,
+): Promise<{ subject: string; email?: string }> {
+  const oidc = await configuration();
+  const parts = token.split(".");
+  if (parts.length !== 3) throw new Error("Invalid application ID token");
+  const header = JSON.parse(
+    Buffer.from(parts[0], "base64url").toString("utf8"),
+  ) as {
+    alg?: string;
+    kid?: string;
+  };
+  if (header.alg !== "RS256" || !header.kid)
+    throw new Error("Unsupported application ID token");
+  const jwksResponse = await fetch(oidc.jwks_uri, { cache: "no-store" });
+  if (!jwksResponse.ok) throw new Error("OIDC JWKS request failed");
+  const jwks = (await jwksResponse.json()) as {
+    keys: Array<Record<string, unknown>>;
+  };
+  const jwk = jwks.keys.find(
+    (key) => key.kid === header.kid && key.kty === "RSA",
+  );
+  if (!jwk) throw new Error("OIDC signing key not found");
+  const valid = verify(
+    "RSA-SHA256",
+    Buffer.from(`${parts[0]}.${parts[1]}`),
+    createPublicKey({ key: jwk as any, format: "jwk" }),
+    Buffer.from(parts[2], "base64url"),
+  );
+  if (!valid) throw new Error("Invalid application ID token signature");
+  const claims = JSON.parse(
+    Buffer.from(parts[1], "base64url").toString("utf8"),
+  ) as Record<string, unknown>;
+  const audiences = Array.isArray(claims.aud)
+    ? claims.aud.filter((aud): aud is string => typeof aud === "string")
+    : typeof claims.aud === "string"
+      ? [claims.aud]
+      : [];
+  const clientIds = Object.fromEntries(
+    (
+      process.env.APPLICATION_OIDC_CLIENT_IDS ??
+      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf"
+    )
+      .split(",")
+      .map((entry) => entry.split("=", 2).map((value) => value.trim()))
+      .filter(([code, clientId]) => code && clientId),
+  );
+  const expectedClientId = clientIds[applicationCode];
+  if (
+    claims.iss !== oidc.issuer ||
+    !expectedClientId ||
+    !audiences.includes(expectedClientId) ||
+    typeof claims.exp !== "number" ||
+    claims.exp <= Math.floor(Date.now() / 1000) ||
+    typeof claims.sub !== "string" ||
+    !claims.sub
+  ) {
+    throw new Error(`Invalid application ID token for ${applicationCode}`);
+  }
+  return {
+    subject: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : undefined,
+  };
+}
+
 async function verifyIdToken(
   token: string,
   oidc: OidcConfiguration,
@@ -176,6 +243,7 @@ async function verifyIdToken(
   return {
     subject: String(claims.sub ?? ""),
     name: typeof claims.name === "string" ? claims.name : undefined,
+    email: typeof claims.email === "string" ? claims.email : undefined,
     username:
       typeof claims.preferred_username === "string"
         ? claims.preferred_username

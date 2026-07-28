@@ -1,0 +1,76 @@
+version: 1
+runtime:
+  root: /srv/tad/agents
+  queue_layout: per-agent
+  max_concurrent_agents: 1
+  execution_enabled: true
+  production_deployment: false
+  ssh_access: false
+  docker_socket: false
+  secrets: false
+  databases: false
+  timezone: Africa/Abidjan
+  start_at: "19:30"
+  stop_new_tasks_at: "05:30 Africa/Abidjan"
+  stop_agents_at: "05:45 Africa/Abidjan"
+  force_stop_at: "06:00 Africa/Abidjan"
+  report_at: "06:05 Africa/Abidjan"
+
+agents:
+  - id: tdb-agent
+    application: tdb
+    enabled: true
+    repository_access: mirror-required
+  - id: cash-recon-agent
+    application: cash-recon
+    enabled: true
+    repository_access: mirror-required
+  - id: atf-agent
+    application: atf
+    enabled: false
+    blocked_reason: "VM, dépôt et environnement ATF non confirmés"
+    repository_access: blocked
+  - id: revue-pdv-agent
+    application: revue-pdv
+    enabled: true
+    repository_access: mirror-required
+  - id: gparc-agent
+    application: gparc
+    enabled: true
+    repository_access: mirror-required
+  - id: mdm-agent
+    application: mdm
+    enabled: true
+    repository_access: mirror-required
+  - id: recrutement-om-telco-agent
+    application: recrutement-om-telco
+    enabled: true
+    repository_access: mirror-required
+
+review_agents:
+  - architecture-review-agent
+  - security-review-agent
+  - database-review-agent
+  - test-quality-agent
+  - deployment-agent
+  - documentation-agent
+  execution: queued-after-independent-review
+
+activation:
+  enabled_agents:
+    - portal-orchestrator
+    - tdb-agent
+    - cash-recon-agent
+    - revue-pdv-agent
+    - gparc-agent
+    - mdm-agent
+    - recrutement-om-telco-agent
+    - architecture-review-agent
+    - security-review-agent
+    - database-review-agent
+    - test-quality-agent
+    - deployment-agent
+    - documentation-agent
+  disabled_agents:
+    - id: atf-agent
+      reason: "Rattachement technique à confirmer"

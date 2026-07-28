@@ -1,0 +1,1 @@
+Audit de démonstration en lecture seule. Application : TDB. Analyse uniquement les documents d’orchestration et les preuves déjà présentes dans /srv/tad/portail. Ne contacte aucune VM distante, ne lis aucun .env, ne modifie aucun fichier du dépôt. Retourne un rapport court : périmètre, preuves consultées, risques, état et prochaine action recommandée.

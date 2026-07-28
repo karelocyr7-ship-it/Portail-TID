@@ -1,0 +1,26 @@
+id: TASK-2026-001
+title: Audit initial et proposition orchestrateur multi-applications
+application: portal
+environment: production-inventory
+requested_by: user
+created_at: 2026-07-28
+priority: high
+risk_level: 0
+status: deployed
+assigned_agent: portal-orchestrator
+review_agent: architecture-review-agent
+description: Audit strictement en lecture seule puis préparation locale de l’orchestration.
+acceptance_criteria:
+  - Les sept applications officielles sont enregistrées.
+  - Les VM et dépôts confirmés sont documentés sans secret.
+  - ATF reste to_confirm si aucune preuve suffisante n’existe.
+  - Aucune VM n’est modifiée.
+  - Les validations d’agents sont mises en file et non exécutées directement.
+dependencies: []
+related_applications: [tdb, cash-recon, atf, revue-pdv, gparc, mdm, recrutement-om-telco]
+branch: codex/remove-integration-level-icons
+test_commands: []
+deployment_required: false
+human_approval_required: true
+rollback_plan: Supprimer les seuls fichiers locaux de proposition avant commit ou revenir au commit documentaire.
+result_summary: Audit terminé; runtime central et page de rapports déployés. Aucun agent n’a exécuté de tâche.

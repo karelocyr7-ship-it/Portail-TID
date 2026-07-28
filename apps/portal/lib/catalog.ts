@@ -7,7 +7,12 @@ export type PortalRole =
   | "GESTIONNAIRE_PARC"
   | "AUDITEUR"
   | "RH"
-  | "INFORMATIQUE";
+  | "INFORMATIQUE"
+  | "RECRUT_OCI_ADMIN"
+  | "RECRUT_OCI_GESTIONNAIRE"
+  | "RECRUT_OCI_RO"
+  | "RECRUT_OCI_SUPERVISEUR"
+  | "RECRUT_OCI_DIRECTION";
 
 export type CatalogApplication = {
   code: string;
@@ -57,6 +62,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▥",
     integrationLevel: 1,
     active: true,
+    url: "https://tdb.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
   },
   {
@@ -67,6 +73,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▣",
     integrationLevel: 1,
     active: true,
+    url: "https://gparc.tadgroupe.com/api/oidc/start",
     roles: ["PORTAL_ADMIN", "GESTIONNAIRE_PARC", "DIRECTION"],
   },
   {
@@ -92,11 +99,12 @@ export const catalogApplications: CatalogApplication[] = [
   {
     code: "MDM",
     name: "MDM",
-    description: "Référentiel des données",
+    description: "Gestion des appareils mobiles",
     category: "Informatique",
     icon: "⌘",
     integrationLevel: 1,
     active: true,
+    url: "https://mdm.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
   },
   {
@@ -107,7 +115,14 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "♙",
     integrationLevel: 1,
     active: true,
-    roles: ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    roles: [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   },
   {
     code: "GED",
@@ -127,7 +142,15 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "✦",
     integrationLevel: 1,
     active: true,
-    roles: ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    url: "https://recrut-oci.tadgroupe.com",
+    roles: [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   },
 ];
 

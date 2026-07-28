@@ -16,8 +16,8 @@ nombre de profils qui lui sont affectés. La navigation latérale expose aussi
 un accès direct à cette section via `/admin#comptes`.
 
 Les profils persistés dans `ApplicationProfile` sont synchronisés depuis les
-définitions de rôles versionnées des applications TDB, Revue-PDV et
-CASH-RECON. Chaque profil conserve sa provenance (`sourceSystem`,
+définitions de rôles versionnées des applications TDB, Revue-PDV, CASH-RECON et
+HMDM. Chaque profil conserve sa provenance (`sourceSystem`,
 `sourceReference`, `syncedAt`). Cette synchronisation ne copie ni les comptes,
 ni les mots de passe, ni les données personnelles des applications externes.
 Les applications externes conservent leurs propres autorisations et doivent

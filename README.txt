@@ -534,3 +534,837 @@ Reste à faire après l'intégration SSO
       meta-tag mobile moderne a aussi été ajouté pour supprimer l'avertissement
       navigateur non bloquant.
     - Correctif versionné sur `codex/oidc-nonce-revue-pdv`, commit `383e07c`.
+
+28. Intégration OIDC de la VM MDM — 24 juillet 2026
+    - La fusion a été confirmée sur `origin/main` avec le commit `8f86902`.
+    - Connexion SSH réussie avec l'alias `mdm-tad`, utilisateur `debian`, vers
+      la VM Debian 13.6 `cnps` correspondant à `mdm.tadgroupe.com`.
+    - Audit : service `hmdm-app` basé sur `headwindmdm/hmdm:0.1.7`, panneau
+      HMDM 5.38.1, PostgreSQL persistant et configuration sous
+      `/opt/hmdm/config/ROOT.xml`. Aucun `.env` n'a été lu, affiché ou copié.
+    - Avant intervention, `/rest/public/oidc/config` et
+      `/rest/public/oidc/start` renvoyaient HTTP 404.
+    - La source amont HMDM v5.38.1 a été compilée avec l'overlay OIDC du dépôt
+      en conservant les protections natives HSTS/JWT de cette version.
+    - La compilation Java 8 a échoué sur ActiveMQ en bytecode Java 11; la
+      compilation Java 17 a réussi avec Maven, tests HMDM désactivés.
+    - WAR déployé : `launcher.war`, SHA-256
+      `4215f1df9f1847b13cb5da1dc1df4924b12ce3b8b1d667077ef0ad377e87d2cc`.
+    - Client Keycloak confidentiel `tad-mdm` créé/mis à jour dans le realm
+      `tad-groupe`, avec callback exact
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback` et origine web
+      limitée à `https://mdm.tadgroupe.com`. Le secret n'est pas dans Git ni
+      dans ce journal.
+    - Sauvegarde avant déploiement créée sous
+      `/opt/hmdm/work/oidc-backups/20260724T084940Z`, permissions restreintes,
+      avec `ROOT.xml` et les WAR courants. Aucun volume ni base n'a été supprimé.
+    - Le WAR custom a été placé dans le cache HMDM, copié dans le conteneur,
+      puis `hmdm-app` a été redémarré.
+    - Vérifications live réussies : accueil HTTP 200; `/rest/public/oidc/config`
+      HTTP 200 avec `enabled=true`; `/rest/public/oidc/start` HTTP 303 vers
+      Keycloak avec `client_id=tad-mdm`; callback invalide HTTP 400; les trois
+      fichiers UI OIDC sont servis en HTTP 200.
+    - Le parcours navigateur complet reste à effectuer avec un compte de test
+      Keycloak non personnel dont l'e-mail existe déjà dans HMDM. Aucun compte
+      réel n'a été créé par cette reprise.
+
+Rollback MDM OIDC
+-----------------
+
+En cas de régression, arrêter uniquement `hmdm-app`, restaurer `ROOT.xml` et le
+WAR depuis `/opt/hmdm/work/oidc-backups/20260724T084940Z`, recopier le WAR dans
+le conteneur, puis redémarrer. Vérifier l'accueil HTTP 200 et consigner le
+    résultat. Désactiver ensuite le client Keycloak `tad-mdm` si nécessaire, sans
+    exposer son secret.
+
+29. Séparation des domaines MDM et correction auth/options — 24 juillet 2026
+    - Clarification confirmée : `mdm.tadgroupe.com` est le domaine SSO via le
+      portail; `mdm.tid.atf.onl` est une porte d'accès locale indépendante.
+    - Le callback OIDC reste volontairement configuré sur
+      `https://mdm.tadgroupe.com/rest/public/oidc/callback`.
+    - Le backend OIDC vérifie désormais le hostname : sur `mdm.tadgroupe.com`,
+      il renvoie `enabled=true` et autorise `/rest/public/oidc/start`; sur
+      `mdm.tid.atf.onl`, il renvoie `enabled=false` et `/start` renvoie 404.
+    - Le frontend force le mode local sur tout hostname différent de
+      `mdm.tadgroupe.com`; `?local=1` reste accepté comme secours.
+    - Le HTTP 500 de `/rest/public/auth/options` venait de la négociation de
+      contenu XML par défaut. L'endpoint est maintenant annoté explicitement
+      `application/json`, et renvoie HTTP 200 sur les deux domaines.
+    - Nouveau WAR déployé : SHA-256
+      `bdbede721b8f741ef4607d217a517af8db8aa88b54647d8e288f8d069bf33498`.
+    - Sauvegarde avant ce correctif :
+      `/opt/hmdm/work/oidc-backups/20260724T091106Z` (WAR et `ROOT.xml`,
+      permissions restreintes). Aucun volume ni base n'a été supprimé.
+    - Vérifications live : les deux accueils HTTP 200; ATF `config=false` et
+      `start=404`; TAD `config=true` et `start=303`; `auth/options=200` en
+      requête sans en-tête Accept; conteneur `hmdm-app` actif.
+
+30. Correctif boucle post-callback OIDC — 24 juillet 2026
+    - Le diagnostic de la boucle a montré que le callback créait correctement
+      la session HTTP serveur, mais pas le cookie de profil `user` attendu par
+      l'application Angular pour considérer l'utilisateur connecté.
+    - Le callback pose désormais un cookie de session `user` contenant
+      uniquement `UserView` (profil HMDM sans mot de passe ni token), avec les
+      attributs `Secure` et `HttpOnly=false` nécessaires à Angular. Le token
+      OIDC reste côté serveur et n'est pas placé dans le cookie.
+    - Nouveau WAR déployé : SHA-256
+      `a57364227b8356fbbcd749324bdd2d8eb8fda4658adf0d22533efae680eda6b8`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-session-fix` et
+      `ROOT.war.before-session-fix`, permissions restreintes.
+    - Vérifications live après redémarrage : TAD `config=true`, `start=303`,
+      accueil HTTP 200; ATF `config=false`, `start=404`, accueil HTTP 200;
+      `auth/options=200` sur les deux domaines; conteneur `hmdm-app` actif.
+    - Un parcours navigateur complet avec un compte de test non personnel
+      reste recommandé pour confirmer le callback réel et la déconnexion.
+
+31. Correctif cookie OIDC invalide et rotation du jeton utilisateur — 24 juillet 2026
+    - Le compte fourni `c.navarre@atf.onl` a été retrouvé dans HMDM; le rejet
+      ne venait donc pas d'une absence de compte.
+    - Les logs Tomcat ont montré que le cookie `user` était rejeté car le JSON
+      brut contenait des guillemets, et qu'il exposait le champ `authToken`.
+    - Le callback encode désormais la valeur du cookie et retire `authToken`;
+      le cookie ne contient que le profil nécessaire à Angular. Aucun token
+      OIDC n'est envoyé au navigateur.
+    - Le jeton HMDM précédemment exposé dans un cookie invalide a été renouvelé
+      pour le compte concerné; sa nouvelle valeur n'a pas été affichée ni
+      journalisée.
+    - Nouveau WAR déployé : SHA-256
+      `487d9faeb220d745553711045c187b53dfd68dd3ee582f51bce1ec2a34687232`.
+    - Sauvegarde avant redémarrage : dossier le plus récent sous
+      `/opt/hmdm/work/oidc-backups/` avec `ROOT.xml.before-cookie-fix` et
+      `ROOT.war.before-cookie-fix`.
+    - Vérifications live : TAD `config=true`, `options=200`, accueil 200;
+      ATF `config=false`, `options=200`, accueil 200; `hmdm-app` actif.
+
+32. Installation Recrutement Telco & OM sur la VM MDM — 25 juillet 2026
+    - La VM MDM est joignable via l'alias SSH `mdm-tad` et correspond à
+      l'hôte `cnps`.
+    - Le répertoire réel d'installation est
+      `/home/debian/RECRUT_OM` (et non `Recut_OM`).
+    - L'application est déployée depuis la branche `agent/step-0`, commit
+      `bf9453e` (`docs: define MDM deployment procedure`). Le dépôt distant
+      est propre au moment du contrôle.
+    - Le fichier `.env` réel est présent avec les permissions `0600`; son
+      contenu n'a pas été lu, affiché, copié ni consigné.
+    - La configuration Compose est valide. Les services `web`, `api`,
+      `worker` et `db` sont démarrés depuis environ trois heures.
+    - `recrut-om-web-1`, `recrut-om-api-1` et `recrut-om-db-1` sont sains;
+      `recrut-om-worker-1` est actif sans healthcheck dédié. Aucun redémarrage
+      ni erreur récente n'a été détecté.
+    - Les contrôles HTTP locaux sont réussis : `/api/health` et `/api/ready`
+      renvoient HTTP 200; la page web renvoie HTTP 200.
+    - Le web écoute uniquement sur `127.0.0.1:8090`; aucun accès public,
+      DNS ou reverse-proxy n'est encore configuré pour cette application.
+    - Le volume PostgreSQL `recrut-om_telco-db-data` existe. Aucun volume,
+      base ou fichier n'a été supprimé ou modifié pendant ce contrôle.
+
+Reste à faire pour Recrutement Telco & OM
+------------------------------------------
+
+- Configurer le reverse-proxy et le nom DNS public après validation du
+  domaine retenu.
+- Créer et configurer le client Keycloak `tad-recrut-om`, puis valider le
+  parcours SSO avec un compte de test non personnel.
+- Implémenter et tester les traitements métier OCI/Telegram, actuellement
+  absents du squelette de phase 0.
+- Exécuter les tests fonctionnels complets, définir la sauvegarde de la base
+  et formaliser le rollback.
+
+Consigne permanente de reprise Codex
+-------------------------------------
+
+Toute action concernant Recrutement Telco & OM, la VM MDM ou le portail doit
+être consignée dans ce fichier `README.txt` avant la fin de la session. Chaque
+entrée doit indiquer la date, l'objectif, la VM et le répertoire concernés,
+les commandes ou contrôles effectués sans secret, les résultats, les fichiers
+ou services modifiés, les risques, le rollback et les points restant à faire.
+Après chaque reconnexion ou coupure Codex, relire ce journal, vérifier
+`git status --short --branch` et reprendre au dernier point documenté. Ne
+jamais consigner de secret, mot de passe, token, clé privée, contenu de `.env`
+réel ou donnée personnelle. Pour permettre la reprise après une déconnexion de
+Codex ou de SSH, consigner également le texte intégral de chaque prompt
+utilisateur, dans l'ordre de réception, avec la réponse ou l'action associée,
+en masquant tout secret ou donnée personnelle éventuelle. Si le prompt est
+long, le conserver dans une entrée dédiée du journal plutôt que le résumer.
+
+Règle d’accès permanente TDB — La VM TDB est la même VM que Revue-PDV et
+CASH-RECON : `135.125.132.51`, alias SSH `Revue-PDV`, utilisateur `debian`,
+répertoire TDB `/home/debian/TDB-TID`. Toute installation npm, synchronisation,
+mise à jour ou déploiement TDB doit être exécuté directement sur cette VM via
+cet accès ; ne pas traiter un clone local comme environnement de production.
+Si l’alias SSH échoue, vérifier la résolution ou la configuration de l’alias
+avant de conclure que la VM est inaccessible.
+
+33. Préparation publication `recrut-oci.tadgroupe.com` — 25 juillet 2026
+    - Objectif : préparer la publication du socle Recrutement Telco & OM.
+    - VM/répertoire : VM MDM `cnps`, `/home/debian/RECRUT_OM` ; aucune
+      configuration de production n'a été modifiée.
+    - Le DNS `recrut-oci.tadgroupe.com` résout vers `91.134.255.77`.
+    - Le service web local écoute sur `127.0.0.1:8090`; `/api/health` local
+      renvoie HTTP 200. Le domaine public répondait auparavant sur le vhost
+      Nginx par défaut et `/api/health` public renvoyait HTTP 404.
+    - Le modèle versionné
+      `integrations/telco-automation/deploy/nginx-recrut-oci.conf` publie
+      uniquement `127.0.0.1:8090`, force HTTPS et ajoute des en-têtes de
+      sécurité. La procédure est documentée dans
+      `integrations/telco-automation/docs/DEPLOYMENT.md`.
+    - `docker compose --env-file .env.example config --quiet` a réussi.
+      Les tests Compose n'ont pas pu démarrer, l'accès au socket Docker étant
+      indisponible dans l'environnement Codex; `pytest` n'est pas installé
+      localement. Aucune installation n'a été effectuée.
+    - Risques : publication avant fusion dans `main`, certificat ACME absent,
+      et OIDC non implémenté dans le squelette phase 0.
+    - Rollback : restaurer le vhost Nginx sauvegardé, vérifier `nginx -t` puis
+      recharger Nginx; ne supprimer aucun certificat, volume ou base.
+    - Reste à faire : revue/fusion de la branche, installation du vhost,
+      émission ACME, contrôles HTTPS, puis phase applicative OIDC et client
+      Keycloak `tad-recrut-om`.
+
+34. Publication HTTPS Recrutement OCI — 25 juillet 2026
+    - Objectif : déployer la version fusionnée et publier
+      `recrut-oci.tadgroupe.com`.
+    - VM/répertoire : VM MDM `cnps`, `/home/debian/RECRUT_OM`.
+    - Les PR Telco et portail ont été fusionnées dans `main`. L’archive du
+      commit fusionné `4bf0b11826c14f0f82d61e35aa65779192a27430` a été
+      appliquée sur la VM sans lire ni transférer le `.env` réel.
+    - Sauvegardes créées :
+      `/home/debian/RECRUT_OM.rollback-20260725182137.tar.gz` et
+      `/home/debian/nginx-recrut-oci-20260725182235.tar.gz`.
+    - Les images Compose ont été reconstruites; `api`, `web`, `worker` et
+      `db` sont actifs et sains. Les endpoints locaux `/api/health` et
+      `/api/ready` renvoient HTTP 200.
+    - Le vhost Nginx a été installé, le certificat ACME émis et Nginx
+      rechargé. Le certificat `recrut-oci.tadgroupe.com` expire le
+      23 octobre 2026; le timer Certbot est actif.
+    - Contrôles publics réussis : HTTP 301 vers HTTPS, HTTPS `/api/health`
+      HTTP 200 avec `{"status":"ok","service":"telco-api"}`, et
+      en-têtes `X-Content-Type-Options`, `X-Frame-Options`,
+      `Referrer-Policy` et `Permissions-Policy` présents.
+    - Risques restants : OIDC/Keycloak n’est pas implémenté dans la phase 0;
+      aucun parcours SSO ne doit encore être exigé.
+    - Rollback : restaurer le vhost depuis la sauvegarde, exécuter
+      `nginx -t`, recharger Nginx; pour l’application, restaurer l’archive
+      `/home/debian/RECRUT_OM.rollback-20260725182137.tar.gz` sans supprimer
+      le volume PostgreSQL ni le certificat.
+    - Reste à faire : implémenter et valider la phase applicative OIDC/
+      Keycloak et les traitements métier OCI/Telegram.
+
+35. Phase 1 validation OIDC Telco — 25 juillet 2026
+    - Objectif : ajouter la validation serveur des Bearer tokens Keycloak
+      sans déployer cette phase en production.
+    - Dépôt/branche : dépôt `RECRUT-OM`, branche `agent/oidc-phase-1`, PR #2.
+    - L’API découvre l’issuer et les JWKS depuis `OIDC_ISSUER`, accepte
+      uniquement RS256 et vérifie signature, issuer, audience, `iat`, `exp`
+      et `sub`. `/profile` est protégé; `/health` et `/ready` restent publics.
+    - Les rôles realm `realm_access.roles` peuvent être filtrés par
+      `OIDC_REQUIRED_ROLES`. Aucun secret ni contenu du `.env` réel n’a été
+      lu ou consigné.
+    - Contrôles : configuration Compose réussie, 5 tests API réussis, builds
+      API/web/worker réussis et `git diff --check` réussi.
+    - Risques/limites : le parcours navigateur Authorization Code + PKCE et
+      la création effective du client Keycloak restent à réaliser; la PR ne
+      doit pas être déployée avant revue et fusion.
+    - Rollback : ne pas déployer la PR; si elle est déployée ultérieurement,
+      restaurer l’archive applicative précédente sans supprimer le volume
+      PostgreSQL ni les certificats.
+
+36. Phase 2 SSO navigateur Telco — 25 juillet 2026
+    - Objectif : ajouter le flux navigateur Authorization Code + PKCE au
+      frontend Telco, sans déploiement production.
+    - Dépôt/branche : dépôt `RECRUT-OM`, branche `agent/oidc-phase-1`, PR #3.
+    - Le frontend utilise la découverte OIDC HTTPS, vérifie `state` et
+      `nonce`, échange le code sans secret client, appelle `/api/profile` et
+      propose le logout fournisseur. Le Bearer token reste uniquement en
+      mémoire JavaScript; les données de transaction sont temporaires dans
+      `sessionStorage`.
+    - Les paramètres publics `WEB_OIDC_ISSUER`, `WEB_OIDC_CLIENT_ID`,
+      `WEB_OIDC_REDIRECT_URI` et `WEB_OIDC_SCOPE` sont documentés. Aucun
+      secret client ni contenu du `.env` réel n’a été lu ou consigné.
+    - Contrôles : configuration Compose réussie, build frontend Vite réussi
+      et `git diff --check` réussi.
+    - Risques/limites : le client Keycloak public, ses redirect URI exactes et
+      le test SSO avec un compte non personnel restent à configurer; la PR ne
+      doit pas être déployée avant revue, fusion et recette.
+    - Rollback : ne pas déployer la PR; sinon restaurer l’image applicative
+      précédente et conserver les volumes et certificats existants.
+
+37. Registre permanent des accès et applications — 26 juillet 2026
+    - Cette section fait foi pour reprendre les opérations sans redemander les
+      hôtes déjà connus. Elle ne contient aucun mot de passe, token ou clé.
+    - VM Portail : `54.37.11.202`. Dépôt : `/srv/tad/portail`; stack pilotée
+      depuis ce répertoire avec `sudo docker compose`.
+    - VM MDM / Recrutement OCI : `91.134.255.77`, alias SSH `mdm-tad`, dépôt
+      `/home/debian/RECRUT_OM`; services Compose : `api`, `web`, `db`, `worker`.
+    - VM Revue-PDV / CASH-RECON / TDB : `135.125.132.51`, alias SSH
+      `Revue-PDV`, dépôt TDB : `/home/debian/TDB-TID`.
+    - TDB public : `https://tdb.tadgroupe.com`; santé :
+      `https://tdb.tadgroupe.com/api/health`.
+    - Keycloak : VM Portail, chemin `/auth`, realm `tad-groupe`. Client de
+      service TDB : `tad-oci-tdb-ingestion`; rôle : `TDB_INGEST`. Le secret
+      est installé uniquement sur la VM MDM dans
+      `/home/debian/tad-oci-tdb-ingestion.secret`, avec permissions restreintes.
+      Ne jamais afficher, copier dans Git ou inscrire son contenu ici.
+    - L’API TDB expose `POST /api/integrations/performances`, protégé par le
+      jeton Keycloak du client de service. OCI publie ses agrégats anonymisés
+      de Juin 2026 automatiquement depuis le résumé; une indisponibilité du
+      TDB ne bloque pas l’interface OCI.
+    - Branche TDB : `codex/oci-tdb-ingestion`, commit `9b038c5`. Tests backend,
+      validations Compose et builds TDB/OCI réussis.
+    - Reprise : vérifier `git status --short --branch`, utiliser les alias
+      `mdm-tad` et `Revue-PDV`, puis contrôler `sudo docker compose ps` et les
+      endpoints `/health`. Ne jamais chercher les secrets dans un `.env` réel.
+
+38. Synchronisation TDB multi-applications — 26 juillet 2026
+    - Un collecteur central est installé sur la VM TDB/Revue-PDV/CASH-RECON
+      (`135.125.132.51`) dans `/home/debian/tdb_sync.py`.
+    - Il lit uniquement les agrégats nécessaires dans les bases MariaDB des
+      conteneurs `pdv-prod-db` et `cash-recon-db`, sans lire les données
+      individuelles ni exposer les identifiants de base.
+    - Il obtient un jeton Keycloak `client_credentials` avec le client de
+      service `tad-oci-tdb-ingestion`, puis publie les KPI vers
+      `POST https://tdb.tadgroupe.com/api/integrations/performances`.
+    - Revue-PDV publie : PDV référencés/actifs, visites du jour, tournées
+      approuvées et tournées en attente.
+    - CASH-RECON publie : collecte totale, E-Recharge, Orange Money, besoin
+      cash, zones traitées/équilibrées et écarts détectés.
+    - Fréquence : toutes les heures, avec un premier passage 2 minutes après
+      le démarrage de la VM et rattrapage après interruption.
+    - Un verrou `flock` empêche deux synchronisations simultanées. Le service
+      est `tdb-sync.service` et le timer `tdb-sync.timer`.
+    - Chaque KPI conserve désormais les détails de collecte : source, champ,
+      agrégation, unité, période, date observée, valeur brute, horodatage et
+      requête SQL ; ces détails sont transmis dans le commentaire de la ligne.
+    - Vérification : `systemctl status tdb-sync.timer` puis
+      `sudo journalctl -u tdb-sync.service -n 30 --no-pager`.
+    - Le dernier test a publié 12 KPI : 5 Revue-PDV et 7 CASH-RECON pour
+      `2026-07`. Aucun secret n’est documenté dans ce fichier.
+
+40. Restauration fidèle de la météo issue du classeur compteur — 26 juillet 2026
+    - Objectif : remplacer la synthèse calculée générique par la météo
+      d’origine issue de la feuille `Tableau de bord` du fichier
+      `Tableau_de_Bord_Meteo_T2_2026_AVRIL_compteurs.xlsx`.
+    - Les seules données intégrées sont les 28 compteurs de cette feuille :
+      paires mensuelles/trimestrielles, seuils N1 et statuts. Les feuilles
+      nominatives du classeur n’ont pas été transférées.
+    - Dépôt/branche : TDB, `codex/restore-original-meteo-counters`, PR #12,
+      fusionnée dans `main` au commit `0643378`.
+    - Contrôles : 2 tests backend, build frontend et `git diff --check`
+      réussis. Avertissement de taille du bundle frontend non bloquant.
+    - Déploiement : stack TDB reconstruite avec Docker Compose; `/api/health`
+      HTTP 200, page HTTPS publique HTTP 200, frontend et backend actifs.
+    - Vérification du bundle actif : titre `TABLEAU DE BORD — COMPTEURS`,
+      moyenne `44,9 %`, `1 / 28`, `17` alertes et compteur trimestriel présents.
+    - Rollback : reconstruire le commit `c3d92c9` précédent, sans supprimer
+      les volumes ni les données persistantes.
+
+41. Nettoyage des tuiles applicatives et icônes VM — 26 juillet 2026
+    - Prompt utilisateur : supprimer la notion « Niveau 1 » des tuiles du
+      portail et reprendre les vraies icônes des applications depuis les VM.
+    - Cause : `integrationLevel` est un champ technique du catalogue; toutes
+      les entrées statiques sont actuellement au niveau 1 car elles ouvrent
+      des applications externes. Ce champ n'est plus affiché aux utilisateurs.
+    - Branche de travail : `codex/remove-integration-level-icons`.
+    - Icônes récupérées par SSH, sans lire de fichier `.env` : CASH-RECON et
+      TDB depuis `135.125.132.51`; Revue-PDV depuis `135.125.132.51`; GPARC,
+      MDM et Recrutement depuis `91.134.255.77`.
+    - ATF, SIRH et GED restent sur leurs assets existants faute de logo
+      applicatif identifiable dans les répertoires inspectés; aucune image
+      générique n'a été substituée.
+    - Modification : suppression du badge « Niveau N » et mise à jour des
+      chemins PNG/SVG dans `apps/portal/lib/application-icons.ts`.
+    - Contrôles : lint et tests réussis (7 tests). Typecheck et build bloqués
+      par des erreurs TypeScript préexistantes dans l'administration et
+      `catalog-db.ts`, sans erreur signalée dans les fichiers modifiés.
+
+42. Correction du build et audit Git des VM — 26 juillet 2026
+    - Prompt utilisateur : « corrige les erreurs : Le build reste bloqué par
+      des erreurs TypeScript préexistantes dans l’administration du portail.
+      verifie que les depots git sont bien à jour sur chaque vm et
+      applications ».
+    - Cause du build : les liens locaux `node_modules` utilisaient Prisma
+      6.19.0 alors que `pnpm-lock.yaml` verrouille Prisma 7.9.0. Les types
+      Prisma devenaient `any`, provoquant les erreurs implicites de
+      l’administration. Réalignement avec `pnpm install --frozen-lockfile`
+      puis `prisma generate`; aucune modification du lockfile.
+    - Contrôles portail : typecheck, lint, 7 tests et build Next.js réussis.
+    - Audit VM `135.125.132.51` : CASH-RECON a 1 modification locale et son
+      fetch GitHub est bloqué par une clé SSH configurée vers un chemin
+      inaccessible; Revue-PDV est à 0 avance/retard sur sa branche distante
+      mais possède 46 éléments locaux; TDB possède 6 éléments locaux et sa
+      branche `codex/modernize-dashboard-kpi` n'a pas de branche distante.
+    - Audit VM `91.134.255.77` : le clone Android Traccar est synchronisé et
+      propre; son clone Flutter est en retard de 99 commits et modifié
+      localement; Recrutement possède 20 éléments locaux et son remote HTTPS
+      demande une authentification non disponible. Les dépôts sans remote
+      exploitable n'ont pas été déclarés à jour par approximation.
+    - Aucun pull, reset, suppression, écrasement de fichier ou lecture de
+      secret n'a été effectué.
+
+43. Vérification des montants KPI et des alimentations applicatives — 26 juillet 2026
+    - Prompt utilisateur : « sur le portail je ne vois pas les montants dans
+      le details des kpi, pas de data CAsh-Recon ni de Gparc,.. verifie tout
+      ça ».
+    - Le portail principal (`/`) ne contient actuellement que le catalogue
+      des applications; les KPI et leur modal sont dans TDB.
+    - Vérification de la base TDB en lecture seule : CASH-RECON contient 7
+      lignes `excel_import`, réalisées mensuelles cumulées `505232586`, mise
+      à jour le `2026-07-26 17:54:44`; Revue-PDV contient 5 lignes et
+      Recrutement OCI 10 lignes. Les montants sont présents dans les champs
+      `monthly_realized` et sont rendus par le bundle publié dans la synthèse
+      et le détail des catégories.
+    - Limitation actuelle : les imports automatiques publient des objectifs
+      nuls (`monthlyTarget: null`), donc les taux et objectifs sont affichés
+      comme non renseignés; les montants réalisés restent disponibles.
+    - GPARC n'apparaît ni dans les indicateurs TDB ni dans le collecteur
+      `/home/debian/tdb_sync.py`; aucun service GPARC actif n'a été trouvé sur
+      les VM inspectées. Aucune donnée GPARC ne peut donc être affichée sans
+      définir sa source et son connecteur.
+    - Vérification publique : `https://tdb.tadgroupe.com/api/health` répond
+      HTTP 200; le bundle actif contient bien les libellés Objectif, Réalisé,
+      Écart et le détail des KPI.
+
+44. Correction d'affichage des dernières données dans les onglets TDB — 26 juillet 2026
+    - Prompt utilisateur : « recutement OCI à des data issues des fichiers
+      injecter et je ne vois rien dans Cash-recon resout le problème chaque
+      onglet doit afficher les dernières data à disposition ».
+    - PR TDB #13 fusionnée dans `main` au commit `7903df9`.
+    - Les onglets applicatifs affichent désormais un bloc `Données reçues`
+      avec total réalisé, objectif, source, date de mise à jour et les 12
+      dernières lignes disponibles; les objectifs absents ne masquent plus
+      les montants réalisés.
+    - Le rafraîchissement horaire et le choix automatique de la dernière
+      période disponible sont conservés.
+    - Déploiement frontend effectué via un worktree de livraison temporaire,
+      sans recréer ni supprimer le volume TDB; frontend et backend sont actifs.
+    - Vérifications : API health HTTP 200 et bundle public contenant le bloc
+      `Données reçues`, `Réalisé` et `Objectif`.
+    - Les fichiers Recrutement OCI ne sont toujours pas présents dans le
+      stockage de la VM source; l'onglet affiche donc la dernière publication
+      disponible tant que le dépôt effectif des fichiers n'est pas réalisé.
+
+45. Restauration des KPI métiers dans la météo TDB — 26 juillet 2026
+    - Prompt utilisateur : « sur TDB je ne retrouve plus les kpi metiers sur
+      TDB dans la meteo ».
+    - PR TDB #15 fusionnée dans `main` au commit `63724d8`.
+    - La page Météo interroge désormais l'API TDB et affiche les catégories
+      métier avec réalisé, objectif, écart, nombre de KPI et dernière mise à
+      jour, sans supprimer les compteurs météo du classeur.
+    - Rafraîchissement automatique horaire activé pour cette synthèse.
+    - Déploiement frontend effectué; bundle public `index-YgPNVT1F.js`, API
+      health HTTP 200, frontend et backend actifs.
+    - Base confirmée après déploiement : CASH-RECON 7 lignes, Recrutement OCI
+      10 lignes, Revue-PDV 5 lignes.
+
+46. Préparation intégration GParc — 27 juillet 2026
+    - Prompt utilisateur : « maintenant tu va integrer GParc sur la vm
+      51.91.102.44 dans /home/debian/gparc-prod commence par me donner les
+      commandes pour que tu puisse y acceder en ssh ».
+    - Précision utilisateur : « sur quel vm je rentre les commande et ou je
+      trouve la clef ssh ?? ».
+    - Autorisation utilisateur : « fait le pour moi ».
+    - Nouvelle consigne utilisateur : « avant liste moi en quoi consiste
+      l'integration de GParc ».
+    - Consigne de reprise : « n'oublie d'enrichir le fichier README.txt afin
+      de ne pas pendre le fil du contexte ou tu te sera arreter en cas de
+      coupure reseaux ».
+    - VM cible : `51.91.102.44`, hôte identifié `gparc`, utilisateur `debian`,
+      répertoire `/home/debian/gparc-prod` présent.
+    - Accès SSH depuis la VM portail `vps-f97dd485` validé avec la clé locale
+      `id_ed25519_tad_vm`; aucun secret ni contenu de clé privée n'a été lu,
+      affiché ou consigné.
+    - Aucun fichier, service, dépôt ou base de GParc n'a encore été modifié.
+    - Périmètre prévu : préparation Git, installation/configuration de l'agent
+      non privilégié, audit de l'application, catalogue portail, client OIDC
+      Keycloak, rôles, éventuelle alimentation KPI, déploiement, tests et
+      rollback documenté.
+    - L'installation système de Git ou de l'agent, la création d'unités
+      systemd, l'ajout d'un client Keycloak et tout déploiement nécessitent
+      une validation explicite avant exécution si une modification système ou
+      une action risquée est requise.
+    - Prochaine action : auditer sans modification `/home/debian/gparc-prod`,
+      vérifier Git, l'état du dépôt, les services, les ports, les healthchecks,
+      la procédure de déploiement et la présence éventuelle de `.env` sans
+      jamais lire ni afficher un `.env` réel.
+    - Rollback : aucune action applicative réalisée à ce stade; les contrôles
+      d'audit sont en lecture seule.
+
+47. Règle Git GParc — 27 juillet 2026
+    - Prompt utilisateur : « attention d'utiliser le git de la vm gparc et
+      pas du portail ».
+    - Toute opération Git relative à GParc doit être exécutée sur la VM
+      `51.91.102.44` (`gparc`), dans `/home/debian/gparc-prod`.
+    - Le dépôt `/srv/tad/portail` ne doit servir qu'aux modifications du
+      portail et à leur journalisation documentaire; ne pas y cloner, tirer,
+      committer ou pousser le dépôt GParc.
+    - Avant toute opération Git GParc : vérifier localement sur la VM cible
+      `git status --short --branch`, le remote et la branche active, sans lire
+      de `.env` réel.
+    - Aucun dépôt GParc n'a encore été modifié par cette reprise.
+
+48. Audit initial GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu peux maintenant demarrer l'intégration ».
+    - Audit exécuté en lecture seule sur `gparc` dans
+      `/home/debian/gparc-prod`; aucun `.env` réel n'a été lu ou affiché.
+    - GParc est actif sous Docker Compose : `api`, `db`, `nginx` et `web`
+      (avec Certbot dans le projet). MariaDB est saine; les conteneurs
+      applicatifs sont actifs depuis environ deux semaines.
+    - Les ports publics 80/443 sont liés à `51.91.102.44`; les tests directs
+      sur cette adresse renvoient HTTP 301 en HTTP et HTTP 200 en HTTPS,
+      notamment sur `/api/health`.
+    - Le dossier `/home/debian/gparc-prod/.git` existe mais est vide et ne
+      contient aucun dépôt exploitable : `git status` et `git rev-parse`
+      échouent. Aucun remote source n'a été identifié dans la documentation.
+    - Les fichiers du projet sont détenus par `root:root`; certains fichiers
+      frontend sont en permissions restreintes. Aucun changement de propriété
+      ou de permission n'a été effectué.
+    - Git est déjà installé sur la VM (`2.39.5`). Aucun agent Codex ou timer
+      d'agent GParc n'a été identifié; le dossier `.agents` est vide.
+    - Le domaine actuellement configuré par Nginx pour GParc est
+      `gparc.atf.onl`; les fichiers de configuration mentionnent aussi
+      d'autres services de la VM. Aucun changement de domaine ou de proxy
+      n'a été effectué.
+    - Blocages avant implémentation : obtenir l'URL/branche du dépôt Git
+      officiel GParc, définir le mode d'installation de l'agent et confirmer
+      si la reprise doit préserver le propriétaire `root` ou créer une copie
+      de travail contrôlée pour `debian`.
+    - Rollback : aucune modification applicative ou système réalisée pendant
+      cet audit.
+
+49. Initialisation Git et agent GParc — 27 juillet 2026
+    - Prompt utilisateur : « tu as deja toutes les infos pour creer le depot
+      git, modifier les droits des fichiers et lancé l'intégration ».
+    - Dépôt Git initialisé directement sur la VM `gparc`, dans
+      `/home/debian/gparc-prod`, avec la branche `codex/gparc-integration`.
+    - Exclusions Git ajoutées pour le `.env` réel, certificats, clés, secrets,
+      données persistantes, uploads, dépendances, sorties générées et copies
+      de sauvegarde. Seul `.env.example` est versionné.
+    - Sources et fichiers de configuration nécessaires rendus éditables par
+      `debian`; les répertoires de données, uploads, certificats et secrets
+      n'ont pas été rendus accessibles à l'agent.
+    - Le `.env` réel a été sécurisé en permissions `0600`, sans lecture,
+      affichage ou versionnement.
+    - Commit initial GParc : `f4e800f`, 226 fichiers; le dépôt reste local et
+      ne possède pas encore de remote configuré.
+    - CLI Codex présent sur GParc : version `0.142.5`.
+    - Agent installé sous l'utilisateur système non privilégié
+      `gparc-agents`, avec état dans `/srv/gparc-agents`; aucune tâche n'a été
+      exécutée et `AGENT_ALLOW_RUN=false` reste configuré.
+    - Cinq timers systemd GParc sont actifs dans `Africa/Abidjan` : démarrage
+      19 h 30, suspension 5 h 30, arrêt propre 5 h 45, arrêt forcé 6 h et
+      rapport 6 h 05. Vérifications `systemd-analyze verify` réussies.
+    - L'agent n'appartient pas au groupe Docker; le test d'accès Docker
+      échoue comme attendu. Aucun secret, base de production ou socket Docker
+      n'est fourni à l'agent.
+    - Rollback : désactiver les cinq timers, retirer les unités GParc et
+      conserver `/srv/gparc-agents` pour analyse; ne supprimer aucune donnée
+      applicative ni volume. Le dépôt initial peut être conservé comme point
+      de restauration local.
+    - Prochaine action : créer ou rattacher le remote Git officiel GParc,
+      puis implémenter l’intégration OIDC/Keycloak et le lien catalogue après
+      validation des URLs et rôles métier.
+
+50. Remote Git et socle OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Dépôt GitHub privé créé : `karelocyr7-ship-it/GParc`.
+    - Une clé de déploiement dédiée a été générée sur la VM GParc; sa clé
+      privée reste sur cette VM et n'a pas été affichée, copiée ou consignée.
+      La branche `codex/gparc-integration` est poussée et suit son remote.
+    - Le commit GParc `d0f2811` ajoute le socle OIDC serveur : découverte,
+      state, nonce, vérification JWKS/issuer/audience/expiration, session
+      `HttpOnly` et mapping de l'e-mail Keycloak vers un compte GParc actif.
+      Le login local reste disponible explicitement via `?local=1`.
+    - Le frontend utilise désormais les cookies de session et propose le
+      bouton « Se connecter avec le portail TAD ». Le logout nettoie la
+      session locale et prépare le retour fournisseur.
+    - Le build frontend GParc est réussi; l'API et Nginx ont été redémarrés
+      sans migration, suppression de base ou suppression de volume.
+    - Vérifications live : `/api/health` HTTP 200; `/api/oidc/config` HTTP
+      200 avec `enabled=false`; `/api/oidc/start` HTTP 503 tant que le client
+      Keycloak et son secret ne sont pas configurés. Aucun token n'a été
+      journalisé.
+    - Le catalogue portail relie désormais GPARC à
+      `https://gparc.atf.onl`; lint, typecheck, 7 tests, build et
+      `git diff --check` réussis. Commit portail `41b9def`.
+    - Blocage restant : créer le client Keycloak confidentiel `tad-gparc`,
+      avec callback exact `https://gparc.atf.onl/api/oidc/callback`, retour
+      post-déconnexion `https://gparc.atf.onl/`, puis déposer son secret dans
+      la configuration GParc sans l'afficher ni le versionner. Le parcours
+      navigateur SSO et le filtrage par rôle restent à tester après cette
+      configuration.
+    - Rollback : revenir au commit GParc `f4e800f`, arrêter les conteneurs
+      uniquement si nécessaire, puis restaurer la version précédente sans
+      supprimer le volume MariaDB ni les certificats.
+
+51. Activation OIDC GParc — 27 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - Client Keycloak confidentiel `tad-gparc` créé dans le realm
+      `tad-groupe`, avec callback exact
+      `https://gparc.atf.onl/api/oidc/callback`, origine web limitée à
+      `https://gparc.atf.onl` et retour post-déconnexion configuré.
+    - Un secret aléatoire a été généré et déposé directement dans le `.env`
+      réel de GParc; sa valeur n'a jamais été affichée, copiée dans Git,
+      journalisée ou inscrite dans ce fichier. Permissions `.env` vérifiées en
+      `0600`.
+    - `docker-compose.yml` transmet désormais les paramètres OIDC au service
+      API. Commit GParc `ef78492`, branche poussée sur le remote GitHub.
+    - Le conteneur API a été recréé sans migration, suppression de base ou
+      suppression de volume.
+    - Vérifications publiques réussies : page GParc HTTP 200, `/api/health`
+      HTTP 200, `/api/oidc/config` HTTP 200 avec `enabled=true`, et
+      `/api/oidc/start` HTTP 302 vers Keycloak avec le client `tad-gparc`.
+      Le bundle public contient le bouton « Se connecter avec le portail TAD ».
+    - Parcours restant : effectuer une connexion navigateur avec un compte de
+      test Keycloak dont l'e-mail existe dans la table `utilisateur`, vérifier
+      le mapping des rôles, l'accès aux écrans protégés et la déconnexion SSO.
+    - Aucun compte utilisateur réel n'a été créé ni modifié.
+
+52. Recette navigateur SSO GParc — 27 juillet 2026
+    - Un compte temporaire non personnel
+      `gparc.sso.test@example.invalid` a été créé uniquement pour la recette
+      dans GParc et Keycloak, avec un mot de passe aléatoire non affiché.
+    - Parcours automatisé réussi : démarrage OIDC, affichage du formulaire
+      Keycloak, authentification, callback GParc, création de session
+      `HttpOnly` et contrôle `/api/check` HTTP 200.
+    - Le compte temporaire a été supprimé de GParc et de Keycloak après le
+      test; aucun compte réel n'a été créé ou modifié.
+    - Les cookies et fichiers temporaires de recette ont été vidés; aucun
+      mot de passe, code d'autorisation ou token n'a été affiché ou journalisé.
+    - Le mapping validé utilise l'e-mail Keycloak vers un compte local GParc;
+      le rôle local est conservé pour les autorisations applicatives.
+    - Reste à livrer : fusionner la modification du catalogue portail qui
+      ajoute l'URL GParc, puis déployer le portail via sa procédure. Aucun
+      déploiement direct sur `main` n'a été effectué.
+
+53. Livraison portail GParc — 27 juillet 2026
+    - La branche portail `codex/remove-integration-level-icons` a été poussée
+      sur le remote GitHub.
+    - Pull Request brouillon créée : `Portail-TID#45`, titre « feat: intégrer
+      GParc au portail ».
+    - La PR contient l'URL GParc dans le catalogue et la documentation de la
+      recette; les contrôles lint, typecheck, 7 tests, build et diff-check sont
+      réussis.
+    - Aucun fichier non suivi préexistant n'a été ajouté, fusionné ou supprimé.
+      Aucun déploiement du portail ni fusion directe dans `main` n'a été fait.
+    - Prochaine action après revue : fusionner la PR, reconstruire le portail
+      selon la procédure, contrôler la tuile GParc et vérifier le retour SSO.
+
+54. Séparation des domaines GParc — 27 juillet 2026
+    - Précision utilisateur : l'accès `gparc.atf.onl` doit conserver
+      l'authentification locale; seul l'accès via le portail et le domaine
+      `gparc.tadgroupe.com` doit utiliser Keycloak.
+    - Le service API applique désormais cette séparation par hostname : sur
+      `gparc.atf.onl`, `/api/oidc/config` indique `enabled=false` et
+      `/api/oidc/start` renvoie HTTP 404; sur `gparc.tadgroupe.com`, OIDC est
+      actif et `/api/oidc/start` renvoie HTTP 302 vers Keycloak.
+    - Le client Keycloak `tad-gparc` utilise désormais exclusivement le
+      callback et le retour post-déconnexion `gparc.tadgroupe.com`.
+    - Le frontend affiche le bouton SSO uniquement sur `gparc.tadgroupe.com`;
+      le formulaire local reste l'interface de `gparc.atf.onl`.
+    - Le catalogue portail pointe désormais vers
+      `https://gparc.tadgroupe.com`; lint, typecheck, 7 tests et diff-check
+      réussis.
+    - Commit GParc : `e4b814a`, branche poussée. Le frontend a été reconstruit
+      dans le volume web et l'API recréée sans toucher à MariaDB.
+    - Réserve d'infrastructure : `gparc.tadgroupe.com` ne résout pas encore
+      publiquement. Il faut créer son DNS vers `51.91.102.44`, émettre un
+      certificat TLS couvrant ce nom et ajouter le server_name Nginx avant de
+      déclarer l'accès public final. Cette modification DNS/certificat reste
+      soumise à validation explicite.
+
+55. DNS et certificat public GParc — 27 juillet 2026
+    - Validation utilisateur reçue pour le DNS et les certificats.
+    - `gparc.tadgroupe.com` résout désormais vers `51.91.102.44`.
+    - Le challenge DNS-OVH a échoué avec HTTP 403; aucun secret OVH n'a été
+      affiché ou modifié. Un challenge HTTP-01 Let’s Encrypt a ensuite réussi.
+    - Certificat SAN émis pour `gparc.tadgroupe.com` et `gparc.atf.onl`, valide
+      jusqu'au 25 octobre 2026. Le timer système `certbot.timer` est actif.
+    - Nginx publie les deux domaines avec le certificat SAN; `nginx -t` et le
+      rechargement ont réussi. Le fichier de configuration a été sauvegardé
+      avant modification et la copie est ignorée par Git.
+    - Vérifications publiques : les deux pages et `/api/health` HTTP 200;
+      `atf.onl` conserve OIDC désactivé et `/api/oidc/start` HTTP 404;
+      `tadgroupe.com` conserve OIDC actif et `/api/oidc/start` HTTP 302.
+    - Commit GParc de configuration HTTPS : `c4c2f5a`; commit d'exclusion de
+      sauvegarde : `43a6fd0`; branche distante propre.
+
+56. Renouvellement automatique TLS GParc — 27 juillet 2026
+    - Vérification : `certbot.timer` est activé et actif; le service exécute
+      périodiquement `certbot renew`.
+    - Un hook de déploiement a été ajouté sur la VM GParc dans
+      `/etc/letsencrypt/renewal-hooks/deploy/gparc-nginx-reload.sh`.
+    - Après chaque renouvellement réussi, le hook exécute `nginx -t` puis
+      recharge le conteneur Nginx `gparc-prod-nginx-1`.
+    - Le hook est détenu par `root`, en permissions `0755`, passe `sh -n` et
+      a été exécuté avec succès; aucune donnée applicative ni certificat n'a
+      été supprimé.
+
+57. KPI et reporting GParc dans TDB — 27 juillet 2026
+    - Demande utilisateur : « ok maintenant tu ajoutes les kpi et reporting
+      dans ça page dedier dans TDB avec la synchro automatique »; précision
+      ajoutée : harmoniser export XLSX enrichi et sélecteur de périodicité.
+    - Une page dédiée TDB `/metiers/gparc` a été ajoutée avec navigation métier,
+      KPI agrégés, périodes mois/trimestre/année/personnalisée, actualisation,
+      rafraîchissement horaire et export XLSX via l'API existante.
+    - Les indicateurs prévus sont : véhicules, carburant entreprise hors prises
+      personnelles, litres, entretiens, demandes en attente, montant des
+      demandes et alertes actives. Aucune ligne nominative n'est transférée.
+    - L'API d'ingestion TDB accepte désormais `sourceSystem=gparc` et crée un
+      compte technique distinct, sans élargir la contrainte historique de
+      source SQLite. Commit TDB : `08f27f3`, puis correction des agrégations de
+      période `38bb04f`; branche poussée `codex/modernize-dashboard-kpi`.
+    - Un collecteur Python et un service/timer systemd horaires ont été
+      préparés sur la branche GParc `codex/gparc-integration`, commit `85a6dc3`.
+      Il lit seulement des agrégats MariaDB et publie vers TDB avec un compte
+      de service Keycloak dédié à configurer.
+    - Contrôles réussis : build frontend TDB, deux tests backend TDB, syntaxe
+      Node de la route d'ingestion et compilation syntaxique Python du
+      collecteur. Les modifications restent sur branches dédiées; aucun
+      déploiement production, activation de timer ou création de secret n'a
+      été effectué avant fusion et confirmation explicite conformément aux
+      règles du dépôt.
+
+58. Activation synchronisation KPI GParc — 27 juillet 2026
+    - Confirmation explicite utilisateur reçue pour l'activation.
+    - Client Keycloak de service `tad-gparc-tdb-ingestion` créé dans le realm
+      `tad-groupe`; le rôle realm `TDB_INGEST` lui est attribué. Le secret est
+      stocké uniquement dans `/home/debian/gparc-prod/.tdb-ingestion-secret`,
+      détenu par `root` en `0600`, ignoré par Git et jamais affiché.
+    - TDB accepte désormais les audiences OCI et GParc simultanément. Backend
+      et frontend TDB reconstruits puis redémarrés; `/api/health` répond HTTP
+      200 après redémarrage.
+    - Le timer `gparc-tdb-sync.timer` est activé sur la VM GParc, avec une
+      exécution horaire persistante. Le premier lancement a réussi : 7 KPI
+      agrégés publiés pour la période `2026-07`; aucune donnée nominative n'a
+      été transférée.
+    - Commits GParc : `85a6dc3`, `a339bfe`; commit TDB audiences multiples :
+      `520ec04`. Les branches distantes sont propres; les fichiers de travail
+      préexistants du dépôt TDB restent inchangés et non commités.
+
+59. Correction connexion automatique portail → GParc — 27 juillet 2026
+    - Prompt utilisateur : « la connexion automatique à GParc depuis le
+      portail ne fonctionne pas ».
+    - Cause confirmée : la tuile portail ouvrait la racine
+      `https://gparc.tadgroupe.com/`, qui affiche le formulaire local et ne
+      déclenche pas OIDC automatiquement.
+    - Correction : la tuile ouvre désormais
+      `https://gparc.tadgroupe.com/api/oidc/start`; le fallback du catalogue
+      lu depuis la base portail utilise la même URL. Keycloak réutilise alors
+      la session déjà ouverte par le portail.
+    - Contrôles : lint, typecheck, 7 tests, build et `git diff --check`
+      réussis; image portail reconstruite et conteneur redémarré.
+    - Vérifications live : portail `/health` HTTP 200 et GParc `/api/oidc/start`
+      HTTP 302 vers Keycloak avec callback `gparc.tadgroupe.com`.
+    - Commit portail : `7c364c7`, branche poussée; les fichiers non suivis
+      préexistants du workspace n'ont pas été ajoutés.
+    - Correctif complémentaire : le catalogue issu de la base force également
+      ce point d'entrée OIDC, même lorsqu'une ancienne URL GParc est déjà
+      enregistrée. Commit `f4235d4`; portail reconstruit une seconde fois.
+
+60. Auto-redirection GParc sur le domaine portail — 27 juillet 2026
+    - Après nouvelle vérification, l'écran de connexion GParc déclenche aussi
+      automatiquement `/api/oidc/start` lorsque l'hôte est
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve strictement
+      le formulaire local.
+    - Frontend GParc reconstruit, synchronisation Capacitor Android effectuée,
+      services `web`, `api` et `nginx` redémarrés; `/api/health` HTTP 200 et
+      `nginx -t` réussis.
+    - Commit GParc : `d8b9468`, branche poussée. Aucun secret n'a été ajouté
+      au dépôt.
+
+61. Icône Android GParc dans le portail — 27 juillet 2026
+    - Demande utilisateur : utiliser l'icône applicative Android présente dans
+      le dossier GParc.
+    - L'asset `GParc_android_icons/playstore/icon-512.png` (512×512 RGBA) de
+      la VM GParc a remplacé l'ancien visuel portail
+      `apps/portal/public/branding/apps/gparc.png`.
+    - Lint, typecheck, 7 tests, build et diff-check réussis; portail
+      reconstruit et redémarré. Commit `0bdc9d3`.
+
+62. Profils GParc intégrés au portail — 27 juillet 2026
+    - Demande utilisateur : récupérer les profils de GParc et les intégrer au
+      portail.
+    - Audit agrégé des rôles présents dans GParc : `ADMIN` (4), `DAF` (1),
+      `CHAUFFEUR` (22) et `CHAUFFEUR_GESTIONNAIRE` (1); le rôle
+      `GESTIONNAIRE` est également défini par l'application.
+    - Les cinq profils applicatifs ont été ajoutés/synchronisés dans
+      `ApplicationProfile` pour l'application `GPARC` : `ADMIN`, `DAF`,
+      `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - La source est tracée comme `GPARC` avec la référence
+      `backend/src/routes/auth.js:normalizeStoredRole`; les profils sont
+      actifs et ordonnés dans le portail.
+    - Aucun compte utilisateur, identifiant ou donnée nominative n'a été
+      copié. La synchronisation porte uniquement sur les définitions de
+      profils; les affectations individuelles nécessitent un mapping validé.
+    - Vérification base portail réussie : 5 profils GParc présents. Le seed
+      reproductible est également versionné dans `apps/portal/prisma/seed.ts`
+      (commit `34cac1e`).
+
+63. Nettoyage des rôles portail affichés comme profils GParc — 27 juillet 2026
+    - Vérification complémentaire demandée : l'ancien amorçage avait aussi
+      créé `PORTAL_ADMIN`, `GESTIONNAIRE_PARC` et `DIRECTION` comme profils
+      GParc, alors qu'il s'agit de rôles d'accès au catalogue du portail.
+    - Ces trois anciennes entrées sont maintenant inactives dans
+      `ApplicationProfile` (aucune suppression de données); les rôles
+      `ApplicationRole` du catalogue restent inchangés.
+    - Les seuls profils GParc actifs affichables sont désormais `ADMIN`,
+      `DAF`, `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - Le seed désactive automatiquement les profils obsolètes d'une
+      application dont les définitions sont explicitement synchronisées.
+    - Contrôles réussis après modification : lint, typecheck, 7 tests, build
+      et `git diff --check`.
+
+64. Correction session SSO et tableau de bord GParc — 28 juillet 2026
+    - Objectif : corriger l'accès au tableau de bord après une connexion depuis
+      le portail, qui échouait avec une erreur de token manquant.
+    - VM/répertoire : VM GParc `51.91.102.44`, dépôt local
+      `/home/debian/gparc-prod`, branche `codex/gparc-integration`.
+    - Diagnostic : le bundle était configuré avec une base API absolue vers le
+      domaine local ATF, alors que la session OIDC est portée par
+      `gparc.tadgroupe.com`; le cookie HttpOnly n'était donc pas transmis.
+    - Modification : le frontend utilise désormais `/api` en same-origin sur
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve son mode local.
+    - Contrôles : build Vite réussi; `git diff --check` réussi; commit GParc
+      `a24cb47` créé et poussé depuis le dépôt Git local de la VM; services
+      Docker opérationnels; santé TAD HTTP 200; démarrage OIDC TAD HTTP 302;
+      démarrage OIDC ATF HTTP 404.
+    - Aucun secret, cookie, token, compte ou donnée personnelle n'a été lu,
+      affiché, créé ou modifié. Aucun volume ni base n'a été supprimé.
+    - Risque restant : un navigateur peut conserver l'ancien bundle; effectuer
+      un rechargement forcé avant la recette navigateur.
+    - Rollback : revenir au commit GParc précédent `f1949b8`, reconstruire le
+      frontend et redémarrer le proxy, sans toucher à MariaDB ni aux volumes.
+
+65. Correctif des cookies de session OIDC GParc — 28 juillet 2026
+    - Objectif : corriger les HTTP 401 persistants sur `/api/entretiens` et
+      `/api/vehicules` après le SSO.
+    - Diagnostic : le callback assemblait les cookies avec un tableau imbriqué,
+      ce qui pouvait produire un en-tête `Set-Cookie` invalide et empêcher la
+      conservation de `gparc_session` par le navigateur.
+    - Modification : ajout d'un helper d'ajout de cookies qui normalise les
+      en-têtes existants et émet séparément la session GParc et l'effacement
+      de l'état OIDC.
+    - Contrôles : syntaxe Node, `git diff --check`, redémarrage du seul service
+      API et endpoint santé HTTP 200 réussis. Commit GParc `c0d067c` créé et
+      poussé depuis le dépôt Git local de la VM.
+    - Aucun secret, token, compte, base ou volume n'a été lu ou modifié.
+    - Action de recette : effectuer une nouvelle connexion SSO après purge ou
+      expiration de l'ancien cookie navigateur.
+    - Rollback : revenir au commit GParc `a24cb47` et redémarrer uniquement
+      l'API, sans toucher à MariaDB ni aux volumes.
+
+66. Activation du runtime central des agents — 28 juillet 2026
+    - Validation utilisateur reçue pour configurer puis activer les agents.
+    - Le runtime central du Portail utilise désormais une file dédiée par
+      agent, une concurrence maximale de un et un dispatcher sans secrets,
+      sudo, base de production ni socket Docker.
+    - Le timer `tad-agent-start.timer` est enabled/active; son premier cycle
+      après activation s’est terminé avec succès sans tâche exécutée.
+    - Les agents applicatifs confirmés sont configurés dans
+      `orchestration/runtime.yaml`; `atf-agent` reste désactivé jusqu’à
+      confirmation de sa VM et de son dépôt.
+    - Aucun service applicatif distant, dépôt distant ou base applicative n’a
+      été modifié. Aucune tâche agent n’était en attente.
+    - Rollback : désactiver le timer `tad-agent-start.timer`, restaurer l’unité
+      précédente et conserver les files pour analyse; ne supprimer aucune
+      tâche ni donnée.

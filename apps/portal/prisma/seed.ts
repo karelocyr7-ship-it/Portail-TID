@@ -81,11 +81,23 @@ const applications = [
     "Recrutement Telco & OM",
     "Recrutement Telco et OM pour Orange Côte d’Ivoire",
     "Recrutement OCI",
-    ["PORTAL_ADMIN", "RH", "DIRECTION"],
+    [
+      "PORTAL_ADMIN",
+      "RECRUT_OCI_ADMIN",
+      "RECRUT_OCI_GESTIONNAIRE",
+      "RECRUT_OCI_RO",
+      "RECRUT_OCI_SUPERVISEUR",
+      "RECRUT_OCI_DIRECTION",
+    ],
   ],
 ] as const;
 
 export { applications, categories };
+
+const initialApplicationUrls: Record<string, string> = {
+  TDB: "https://tdb.tadgroupe.com",
+  MDM: "https://mdm.tadgroupe.com",
+};
 
 const profileNames: Record<string, string> = {
   PORTAL_ADMIN: "Administrateur portail",
@@ -96,6 +108,11 @@ const profileNames: Record<string, string> = {
   GESTIONNAIRE_PARC: "Gestionnaire parc",
   RH: "Ressources humaines",
   INFORMATIQUE: "Informatique",
+  RECRUT_OCI_ADMIN: "Administrateur",
+  RECRUT_OCI_GESTIONNAIRE: "Gestionnaire",
+  RECRUT_OCI_RO: "Responsable Orange (RO)",
+  RECRUT_OCI_SUPERVISEUR: "Superviseur",
+  RECRUT_OCI_DIRECTION: "Direction",
 };
 
 type ProfileDefinition = {
@@ -107,6 +124,31 @@ type ProfileDefinition = {
 };
 
 const profileDefinitions: Record<string, ProfileDefinition[]> = {
+  RECRUTEMENT: [
+    ["RECRUT_OCI_ADMIN", "Administrateur", "Administration de Recrutement OCI"],
+    [
+      "RECRUT_OCI_GESTIONNAIRE",
+      "Gestionnaire",
+      "Gestion opérationnelle des imports OCI",
+    ],
+    [
+      "RECRUT_OCI_RO",
+      "Responsable Orange (RO)",
+      "Pilotage Orange Côte d’Ivoire",
+    ],
+    [
+      "RECRUT_OCI_SUPERVISEUR",
+      "Superviseur",
+      "Supervision des traitements et équipes",
+    ],
+    ["RECRUT_OCI_DIRECTION", "Direction", "Accès direction et pilotage"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "RECRUTEMENT",
+    sourceReference: "apps/portal/prisma/seed.ts",
+  })),
   TDB: [
     ["ADMIN", "Administrateur TDB", "Administration des comptes et données"],
     ["MANAGER", "Manager", "Pilotage des indicateurs et équipes"],
@@ -119,6 +161,19 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     description,
     sourceSystem: "TDB",
     sourceReference: "backend/src/routes/users.js:roles",
+  })),
+  GPARC: [
+    ["ADMIN", "Administrateur GParc", "Administration complète du parc et des comptes"],
+    ["DAF", "DAF GParc", "Validation financière et pilotage des dépenses du parc"],
+    ["GESTIONNAIRE", "Gestionnaire GParc", "Gestion opérationnelle du parc automobile"],
+    ["CHAUFFEUR", "Chauffeur GParc", "Suivi des véhicules, consommations et demandes"],
+    ["CHAUFFEUR_GESTIONNAIRE", "Chauffeur gestionnaire GParc", "Accès chauffeur et gestionnaire combiné"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "GPARC",
+    sourceReference: "backend/src/routes/auth.js:normalizeStoredRole",
   })),
   "REVUE-PDV": [
     ["super_admin", "Super administrateur", "Administration globale"],
@@ -177,6 +232,31 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     sourceSystem: "HMDM",
     sourceReference: "Headwind MDM Community: user roles",
   })),
+  ATF: [
+    [
+      "ADMIN",
+      "Administrateur ATF",
+      "Administration complète de la flotte et des comptes",
+    ],
+    [
+      "USER",
+      "Utilisateur ATF",
+      "Consultation et exploitation opérationnelle des appareils",
+    ],
+    ["OBSERVER", "Observateur ATF", "Consultation en lecture seule"],
+    [
+      "OBSERVER_LIMITED",
+      "Observateur restreint ATF",
+      "Consultation en lecture seule avec commandes et rapports restreints",
+    ],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "ATF",
+    sourceReference:
+      "tc_users: administrator, readonly, limitcommands, disablereports",
+  })),
 };
 
 async function main() {
@@ -207,6 +287,7 @@ async function main() {
         description,
         categoryId: categoryIds.get(categoryName)!,
         icon: code.slice(0, 1),
+        url: initialApplicationUrls[code],
         active: true,
         displayOrder: categoryIds.size,
       },
@@ -258,6 +339,19 @@ async function main() {
           sourceReference: profile.sourceReference,
           syncedAt: new Date(),
           displayOrder,
+        },
+      });
+    }
+
+    if (profileDefinitions[code]) {
+      await prisma.applicationProfile.updateMany({
+        where: {
+          applicationId: application.id,
+          key: { notIn: definitions.map((profile) => profile.key) },
+        },
+        data: {
+          active: false,
+          syncedAt: new Date(),
         },
       });
     }

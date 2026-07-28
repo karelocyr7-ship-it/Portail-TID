@@ -23,6 +23,18 @@ describe("contrôle d’accès au catalogue", () => {
     expect(hasRoleAccess(finance!, ["RH"])).toBe(false);
   });
 
+  it("réserve MDM au rôle informatique", () => {
+    const mdm = catalogApplications.find(
+      (application) => application.code === "MDM",
+    );
+    expect(mdm).toMatchObject({
+      url: "https://mdm.tadgroupe.com",
+      roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
+    });
+    expect(hasRoleAccess(mdm!, ["INFORMATIQUE"])).toBe(true);
+    expect(hasRoleAccess(mdm!, ["RH"])).toBe(false);
+  });
+
   it("donne accès à tout le catalogue à PORTAL_ADMIN", () => {
     expect(getVisibleApplications(["PORTAL_ADMIN"])).toHaveLength(
       catalogApplications.length,

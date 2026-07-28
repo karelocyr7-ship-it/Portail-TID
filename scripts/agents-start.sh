@@ -52,6 +52,11 @@ if [[ "${AGENT_ALLOW_RUN:-false}" != "true" ]]; then
 fi
 
 command -v codex >/dev/null 2>&1 || { echo "Codex CLI introuvable." >&2; exit 1; }
+task_name="$(basename "$job")"
+task_content="$(<"$job")"
+archive_dir="$agent_root/results/$job_agent/tasks"
+mkdir -p "$archive_dir"
+mv "$job" "$archive_dir/$task_name"
 workspace="$agent_root/workspaces/$job_agent/$(basename "$job" .task)"
 result_dir="$agent_root/results/$job_agent"
 log_dir="$agent_root/logs/$job_agent"
@@ -69,5 +74,5 @@ log_file="$log_dir/$(basename "$job" .task).log"
   echo "- Début : $(date --iso-8601=seconds)"
   echo
   codex exec --sandbox workspace-write --cd "$workspace" \
-    "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $(<"$job")"
+    "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $task_content"
 } > >(tee "$result_file" | tee "$log_file") 2>&1

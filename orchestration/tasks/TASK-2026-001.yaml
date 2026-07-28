@@ -6,7 +6,7 @@ requested_by: user
 created_at: 2026-07-28
 priority: high
 risk_level: 0
-status: completed
+status: deployed
 assigned_agent: portal-orchestrator
 review_agent: architecture-review-agent
 description: Audit strictement en lecture seule puis préparation locale de l’orchestration.
@@ -23,4 +23,4 @@ test_commands: []
 deployment_required: false
 human_approval_required: true
 rollback_plan: Supprimer les seuls fichiers locaux de proposition avant commit ou revenir au commit documentaire.
-result_summary: Audit lecture seule terminé; configuration et page de rapports préparées localement, non déployées.
+result_summary: Audit terminé; runtime central et page de rapports déployés. Aucun agent n’a exécuté de tâche.

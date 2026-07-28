@@ -1,0 +1,24 @@
+id: TASK-2026-004
+title: Corriger les contrôles d'authentification et de périmètre TDB
+application: tdb
+environment: development
+requested_by: portal-orchestrator
+priority: critical
+risk_level: 1
+status: pending
+assigned_agent: tdb-agent
+review_agent: security-review-agent
+description: >
+  Dans le miroir local TDB, créer une branche dédiée et corriger les constats
+  B1 à B3 de l'audit. Ne jamais lire de .env, ne pas contacter la VM et ne pas
+  modifier la base de production. Imposer les changements de mot de passe côté
+  API, supprimer les comptes/mots de passe prévisibles, centraliser le filtrage
+  par utilisateur et l'appliquer aux lectures, agrégations, doublons et exports.
+acceptance_criteria:
+  - must_change_password est refusé côté API hors routes d'authentification
+  - aucun secret ou mot de passe par défaut n'est utilisé dans le code
+  - les lectures et exports respectent le périmètre de l'utilisateur
+  - tests d'autorisation synthétiques ajoutés
+  - rollback et migration additive documentés
+deployment_required: false
+human_approval_required: true

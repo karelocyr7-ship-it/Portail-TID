@@ -1,0 +1,24 @@
+id: TASK-2026-004
+title: Corriger l'authentification et les uploads GParc
+application: gparc
+environment: development
+requested_by: portal-orchestrator
+priority: critical
+risk_level: 1
+status: pending
+assigned_agent: gparc-agent
+review_agent: security-review-agent
+description: >
+  Dans le miroir local GParc, corriger GP-01 à GP-04. Supprimer toute clé JWT
+  de secours connue et tout mot de passe initial codé en dur, corriger la
+  construction des URLs de pièces jointes et exiger une autorisation pour les
+  téléchargements. Ne pas exécuter seed.js, ne pas toucher à la base distante,
+  ne pas déployer.
+acceptance_criteria:
+  - démarrage refusé si le secret JWT requis est absent
+  - aucun mot de passe par défaut dans le chemin d'initialisation
+  - les URLs de pièces jointes sont testées sans exception
+  - les téléchargements vérifient la session et le périmètre
+  - aucun DDL destructif au démarrage; rollback documenté
+deployment_required: false
+human_approval_required: true

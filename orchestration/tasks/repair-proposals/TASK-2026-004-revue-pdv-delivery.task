@@ -1,0 +1,22 @@
+id: TASK-2026-004
+title: Restaurer la reproductibilité de Revue-PDV
+application: revue-pdv
+environment: development
+requested_by: portal-orchestrator
+priority: critical
+risk_level: 1
+status: pending
+assigned_agent: revue-pdv-agent
+review_agent: security-review-agent
+description: >
+  Dans le miroir local Revue-PDV, traiter B1 à B7 sans récupérer de données
+  personnelles. Assainir le script de test, restaurer uniquement les artefacts
+  présents dans l'historique Git si leur provenance est prouvée, corriger l'ordre
+  migration/readiness et documenter les éléments réellement absents.
+acceptance_criteria:
+  - le script de test ne contient plus d'identifiants ni de données opérationnelles
+  - les builds ou leurs blocages sont reproductibles et documentés
+  - aucune migration ne s'exécute après ouverture du service
+  - tests statiques et rollback documentés
+deployment_required: false
+human_approval_required: true

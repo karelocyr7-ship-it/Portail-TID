@@ -1,0 +1,23 @@
+id: TASK-2026-004
+title: Corriger Compose et readiness Recrutement OM & Telco
+application: recrutement-om-telco
+environment: development
+requested_by: portal-orchestrator
+priority: high
+risk_level: 1
+status: pending
+assigned_agent: recrutement-om-telco-agent
+review_agent: test-quality-agent
+description: >
+  Dans le miroir local Recrutement OM & Telco, corriger B-01 à B-03. Utiliser
+  l'URL PostgreSQL réellement compatible avec le pilote, rendre APP_PORT
+  effectif ou le supprimer, et faire dépendre les migrations et le métier d'une
+  readiness PostgreSQL réelle. Ne pas lire de .env, ne pas toucher à la VM et ne
+  pas déployer.
+acceptance_criteria:
+  - la configuration Compose est validée avec des valeurs factices
+  - le pilote Python et l'URL de base sont compatibles
+  - la readiness ne devient positive qu'après disponibilité DB
+  - tests de configuration et rollback documentés
+deployment_required: false
+human_approval_required: true

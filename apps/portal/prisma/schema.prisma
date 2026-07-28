@@ -144,3 +144,38 @@ model PortalSetting {
   value     Json
   updatedAt DateTime @updatedAt
 }
+
+model AgentReport {
+  id            String        @id @default(cuid())
+  taskId        String        @unique
+  applicationId String
+  agentId       String
+  title         String
+  summary       String
+  reportBody    String
+  status        String        @default("PENDING")
+  riskLevel     Int           @default(0)
+  proposal      Json?
+  evidence      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  actions       AgentAction[]
+
+  @@index([status, createdAt])
+  @@index([applicationId, createdAt])
+}
+
+model AgentAction {
+  id          String      @id @default(cuid())
+  reportId    String
+  action      String
+  status      String      @default("QUEUED")
+  requestedBy String
+  requestedAt DateTime    @default(now())
+  executedAt  DateTime?
+  error       String?
+  report      AgentReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([status, requestedAt])
+  @@index([reportId, requestedAt])
+}

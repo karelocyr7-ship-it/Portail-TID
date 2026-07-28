@@ -1595,6 +1595,131 @@ body {
 .applications-page .card-heading > div {
   min-width: 0;
 }
+
+.agent-queue-summary {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(4, 10, 25, 0.28);
+}
+
+.agent-queue-summary strong {
+  font-size: 2rem;
+  color: #fff;
+}
+
+.agent-queue-summary span,
+.agent-report-toolbar span {
+  color: #aebbd4;
+  font-size: 0.82rem;
+}
+
+.agent-report-toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: center;
+  margin: 24px 0;
+  padding: 18px;
+  border: 1px solid #dbe4f0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.agent-report-toolbar div {
+  display: grid;
+  gap: 3px;
+}
+
+.agent-report-toolbar strong {
+  font-size: 1.5rem;
+  color: #15233d;
+}
+
+.agent-report-toolbar p {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  color: #5f6f87;
+  font-size: 0.9rem;
+}
+
+.agent-report-list {
+  display: grid;
+  gap: 16px;
+}
+
+.agent-report-card {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border: 1px solid #dbe4f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(20, 38, 72, 0.06);
+}
+
+.agent-report-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.agent-report-heading h2 {
+  margin: 4px 0;
+  color: #15233d;
+}
+
+.agent-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.agent-report-body,
+.agent-report-evidence {
+  max-height: 360px;
+  overflow: auto;
+  margin: 12px 0 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: #101a2e;
+  color: #dce8ff;
+  white-space: pre-wrap;
+  font-size: 0.82rem;
+}
+
+.agent-report-evidence {
+  background: #f4f7fb;
+  color: #24344d;
+}
+
+.agent-report-history {
+  margin: 0;
+  color: #66758d;
+  font-size: 0.82rem;
+}
+
+.agent-empty-state {
+  margin: 24px 0;
+}
+
+@media (max-width: 720px) {
+  .agent-report-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .agent-report-toolbar p {
+    grid-column: 1 / -1;
+  }
+
+  .agent-report-heading {
+    display: grid;
+  }
+}
 .applications-page .application-card-content {
   overflow: hidden;
 }

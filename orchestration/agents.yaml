@@ -1,0 +1,75 @@
+version: 1
+mode: proposal_only
+production_deployment_requires_human_approval: true
+queue_policy:
+  approval_creates: QUEUED
+  execution_owner: portal-orchestrator
+  max_concurrent_actions: 1
+  destructive_actions: forbidden_by_default
+  secrets_available_to_agents: false
+  docker_socket_available_to_agents: false
+
+agents:
+  - id: portal-orchestrator
+    type: orchestrator
+    scope: [portal, orchestration]
+    can_execute_production: false
+  - id: tdb-agent
+    type: application
+    application: tdb
+    scope: [tdb]
+    can_execute_production: false
+  - id: cash-recon-agent
+    type: application
+    application: cash-recon
+    scope: [cash-recon]
+    can_execute_production: false
+  - id: atf-agent
+    type: application
+    application: atf
+    scope: [atf]
+    can_execute_production: false
+  - id: revue-pdv-agent
+    type: application
+    application: revue-pdv
+    scope: [revue-pdv]
+    can_execute_production: false
+  - id: gparc-agent
+    type: application
+    application: gparc
+    scope: [gparc]
+    can_execute_production: false
+  - id: mdm-agent
+    type: application
+    application: mdm
+    scope: [mdm]
+    can_execute_production: false
+  - id: recrutement-om-telco-agent
+    type: application
+    application: recrutement-om-telco
+    scope: [recrutement-om-telco]
+    can_execute_production: false
+  - id: architecture-review-agent
+    type: reviewer
+    scope: [portal, tdb, cash-recon, atf, revue-pdv, gparc, mdm, recrutement-om-telco]
+    can_execute_production: false
+  - id: security-review-agent
+    type: reviewer
+    scope: [security, all_applications]
+    can_execute_production: false
+  - id: database-review-agent
+    type: reviewer
+    scope: [databases, all_applications]
+    can_execute_production: false
+  - id: test-quality-agent
+    type: reviewer
+    scope: [tests, all_applications]
+    can_execute_production: false
+  - id: deployment-agent
+    type: operator
+    scope: [deployment, all_applications]
+    can_execute_production: false
+  - id: documentation-agent
+    type: operator
+    scope: [documentation, all_applications]
+    can_execute_production: false

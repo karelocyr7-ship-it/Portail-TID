@@ -162,6 +162,19 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     sourceSystem: "TDB",
     sourceReference: "backend/src/routes/users.js:roles",
   })),
+  GPARC: [
+    ["ADMIN", "Administrateur GParc", "Administration complète du parc et des comptes"],
+    ["DAF", "DAF GParc", "Validation financière et pilotage des dépenses du parc"],
+    ["GESTIONNAIRE", "Gestionnaire GParc", "Gestion opérationnelle du parc automobile"],
+    ["CHAUFFEUR", "Chauffeur GParc", "Suivi des véhicules, consommations et demandes"],
+    ["CHAUFFEUR_GESTIONNAIRE", "Chauffeur gestionnaire GParc", "Accès chauffeur et gestionnaire combiné"],
+  ].map(([key, name, description]) => ({
+    key,
+    name,
+    description,
+    sourceSystem: "GPARC",
+    sourceReference: "backend/src/routes/auth.js:normalizeStoredRole",
+  })),
   "REVUE-PDV": [
     ["super_admin", "Super administrateur", "Administration globale"],
     ["admin", "Administrateur", "Administration de Revue-PDV"],
@@ -326,6 +339,19 @@ async function main() {
           sourceReference: profile.sourceReference,
           syncedAt: new Date(),
           displayOrder,
+        },
+      });
+    }
+
+    if (profileDefinitions[code]) {
+      await prisma.applicationProfile.updateMany({
+        where: {
+          applicationId: application.id,
+          key: { notIn: definitions.map((profile) => profile.key) },
+        },
+        data: {
+          active: false,
+          syncedAt: new Date(),
         },
       });
     }

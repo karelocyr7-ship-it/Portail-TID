@@ -1148,3 +1148,207 @@ avant de conclure que la VM est inaccessible.
       Aucun déploiement du portail ni fusion directe dans `main` n'a été fait.
     - Prochaine action après revue : fusionner la PR, reconstruire le portail
       selon la procédure, contrôler la tuile GParc et vérifier le retour SSO.
+
+54. Séparation des domaines GParc — 27 juillet 2026
+    - Précision utilisateur : l'accès `gparc.atf.onl` doit conserver
+      l'authentification locale; seul l'accès via le portail et le domaine
+      `gparc.tadgroupe.com` doit utiliser Keycloak.
+    - Le service API applique désormais cette séparation par hostname : sur
+      `gparc.atf.onl`, `/api/oidc/config` indique `enabled=false` et
+      `/api/oidc/start` renvoie HTTP 404; sur `gparc.tadgroupe.com`, OIDC est
+      actif et `/api/oidc/start` renvoie HTTP 302 vers Keycloak.
+    - Le client Keycloak `tad-gparc` utilise désormais exclusivement le
+      callback et le retour post-déconnexion `gparc.tadgroupe.com`.
+    - Le frontend affiche le bouton SSO uniquement sur `gparc.tadgroupe.com`;
+      le formulaire local reste l'interface de `gparc.atf.onl`.
+    - Le catalogue portail pointe désormais vers
+      `https://gparc.tadgroupe.com`; lint, typecheck, 7 tests et diff-check
+      réussis.
+    - Commit GParc : `e4b814a`, branche poussée. Le frontend a été reconstruit
+      dans le volume web et l'API recréée sans toucher à MariaDB.
+    - Réserve d'infrastructure : `gparc.tadgroupe.com` ne résout pas encore
+      publiquement. Il faut créer son DNS vers `51.91.102.44`, émettre un
+      certificat TLS couvrant ce nom et ajouter le server_name Nginx avant de
+      déclarer l'accès public final. Cette modification DNS/certificat reste
+      soumise à validation explicite.
+
+55. DNS et certificat public GParc — 27 juillet 2026
+    - Validation utilisateur reçue pour le DNS et les certificats.
+    - `gparc.tadgroupe.com` résout désormais vers `51.91.102.44`.
+    - Le challenge DNS-OVH a échoué avec HTTP 403; aucun secret OVH n'a été
+      affiché ou modifié. Un challenge HTTP-01 Let’s Encrypt a ensuite réussi.
+    - Certificat SAN émis pour `gparc.tadgroupe.com` et `gparc.atf.onl`, valide
+      jusqu'au 25 octobre 2026. Le timer système `certbot.timer` est actif.
+    - Nginx publie les deux domaines avec le certificat SAN; `nginx -t` et le
+      rechargement ont réussi. Le fichier de configuration a été sauvegardé
+      avant modification et la copie est ignorée par Git.
+    - Vérifications publiques : les deux pages et `/api/health` HTTP 200;
+      `atf.onl` conserve OIDC désactivé et `/api/oidc/start` HTTP 404;
+      `tadgroupe.com` conserve OIDC actif et `/api/oidc/start` HTTP 302.
+    - Commit GParc de configuration HTTPS : `c4c2f5a`; commit d'exclusion de
+      sauvegarde : `43a6fd0`; branche distante propre.
+
+56. Renouvellement automatique TLS GParc — 27 juillet 2026
+    - Vérification : `certbot.timer` est activé et actif; le service exécute
+      périodiquement `certbot renew`.
+    - Un hook de déploiement a été ajouté sur la VM GParc dans
+      `/etc/letsencrypt/renewal-hooks/deploy/gparc-nginx-reload.sh`.
+    - Après chaque renouvellement réussi, le hook exécute `nginx -t` puis
+      recharge le conteneur Nginx `gparc-prod-nginx-1`.
+    - Le hook est détenu par `root`, en permissions `0755`, passe `sh -n` et
+      a été exécuté avec succès; aucune donnée applicative ni certificat n'a
+      été supprimé.
+
+57. KPI et reporting GParc dans TDB — 27 juillet 2026
+    - Demande utilisateur : « ok maintenant tu ajoutes les kpi et reporting
+      dans ça page dedier dans TDB avec la synchro automatique »; précision
+      ajoutée : harmoniser export XLSX enrichi et sélecteur de périodicité.
+    - Une page dédiée TDB `/metiers/gparc` a été ajoutée avec navigation métier,
+      KPI agrégés, périodes mois/trimestre/année/personnalisée, actualisation,
+      rafraîchissement horaire et export XLSX via l'API existante.
+    - Les indicateurs prévus sont : véhicules, carburant entreprise hors prises
+      personnelles, litres, entretiens, demandes en attente, montant des
+      demandes et alertes actives. Aucune ligne nominative n'est transférée.
+    - L'API d'ingestion TDB accepte désormais `sourceSystem=gparc` et crée un
+      compte technique distinct, sans élargir la contrainte historique de
+      source SQLite. Commit TDB : `08f27f3`, puis correction des agrégations de
+      période `38bb04f`; branche poussée `codex/modernize-dashboard-kpi`.
+    - Un collecteur Python et un service/timer systemd horaires ont été
+      préparés sur la branche GParc `codex/gparc-integration`, commit `85a6dc3`.
+      Il lit seulement des agrégats MariaDB et publie vers TDB avec un compte
+      de service Keycloak dédié à configurer.
+    - Contrôles réussis : build frontend TDB, deux tests backend TDB, syntaxe
+      Node de la route d'ingestion et compilation syntaxique Python du
+      collecteur. Les modifications restent sur branches dédiées; aucun
+      déploiement production, activation de timer ou création de secret n'a
+      été effectué avant fusion et confirmation explicite conformément aux
+      règles du dépôt.
+
+58. Activation synchronisation KPI GParc — 27 juillet 2026
+    - Confirmation explicite utilisateur reçue pour l'activation.
+    - Client Keycloak de service `tad-gparc-tdb-ingestion` créé dans le realm
+      `tad-groupe`; le rôle realm `TDB_INGEST` lui est attribué. Le secret est
+      stocké uniquement dans `/home/debian/gparc-prod/.tdb-ingestion-secret`,
+      détenu par `root` en `0600`, ignoré par Git et jamais affiché.
+    - TDB accepte désormais les audiences OCI et GParc simultanément. Backend
+      et frontend TDB reconstruits puis redémarrés; `/api/health` répond HTTP
+      200 après redémarrage.
+    - Le timer `gparc-tdb-sync.timer` est activé sur la VM GParc, avec une
+      exécution horaire persistante. Le premier lancement a réussi : 7 KPI
+      agrégés publiés pour la période `2026-07`; aucune donnée nominative n'a
+      été transférée.
+    - Commits GParc : `85a6dc3`, `a339bfe`; commit TDB audiences multiples :
+      `520ec04`. Les branches distantes sont propres; les fichiers de travail
+      préexistants du dépôt TDB restent inchangés et non commités.
+
+59. Correction connexion automatique portail → GParc — 27 juillet 2026
+    - Prompt utilisateur : « la connexion automatique à GParc depuis le
+      portail ne fonctionne pas ».
+    - Cause confirmée : la tuile portail ouvrait la racine
+      `https://gparc.tadgroupe.com/`, qui affiche le formulaire local et ne
+      déclenche pas OIDC automatiquement.
+    - Correction : la tuile ouvre désormais
+      `https://gparc.tadgroupe.com/api/oidc/start`; le fallback du catalogue
+      lu depuis la base portail utilise la même URL. Keycloak réutilise alors
+      la session déjà ouverte par le portail.
+    - Contrôles : lint, typecheck, 7 tests, build et `git diff --check`
+      réussis; image portail reconstruite et conteneur redémarré.
+    - Vérifications live : portail `/health` HTTP 200 et GParc `/api/oidc/start`
+      HTTP 302 vers Keycloak avec callback `gparc.tadgroupe.com`.
+    - Commit portail : `7c364c7`, branche poussée; les fichiers non suivis
+      préexistants du workspace n'ont pas été ajoutés.
+    - Correctif complémentaire : le catalogue issu de la base force également
+      ce point d'entrée OIDC, même lorsqu'une ancienne URL GParc est déjà
+      enregistrée. Commit `f4235d4`; portail reconstruit une seconde fois.
+
+60. Auto-redirection GParc sur le domaine portail — 27 juillet 2026
+    - Après nouvelle vérification, l'écran de connexion GParc déclenche aussi
+      automatiquement `/api/oidc/start` lorsque l'hôte est
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve strictement
+      le formulaire local.
+    - Frontend GParc reconstruit, synchronisation Capacitor Android effectuée,
+      services `web`, `api` et `nginx` redémarrés; `/api/health` HTTP 200 et
+      `nginx -t` réussis.
+    - Commit GParc : `d8b9468`, branche poussée. Aucun secret n'a été ajouté
+      au dépôt.
+
+61. Icône Android GParc dans le portail — 27 juillet 2026
+    - Demande utilisateur : utiliser l'icône applicative Android présente dans
+      le dossier GParc.
+    - L'asset `GParc_android_icons/playstore/icon-512.png` (512×512 RGBA) de
+      la VM GParc a remplacé l'ancien visuel portail
+      `apps/portal/public/branding/apps/gparc.png`.
+    - Lint, typecheck, 7 tests, build et diff-check réussis; portail
+      reconstruit et redémarré. Commit `0bdc9d3`.
+
+62. Profils GParc intégrés au portail — 27 juillet 2026
+    - Demande utilisateur : récupérer les profils de GParc et les intégrer au
+      portail.
+    - Audit agrégé des rôles présents dans GParc : `ADMIN` (4), `DAF` (1),
+      `CHAUFFEUR` (22) et `CHAUFFEUR_GESTIONNAIRE` (1); le rôle
+      `GESTIONNAIRE` est également défini par l'application.
+    - Les cinq profils applicatifs ont été ajoutés/synchronisés dans
+      `ApplicationProfile` pour l'application `GPARC` : `ADMIN`, `DAF`,
+      `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - La source est tracée comme `GPARC` avec la référence
+      `backend/src/routes/auth.js:normalizeStoredRole`; les profils sont
+      actifs et ordonnés dans le portail.
+    - Aucun compte utilisateur, identifiant ou donnée nominative n'a été
+      copié. La synchronisation porte uniquement sur les définitions de
+      profils; les affectations individuelles nécessitent un mapping validé.
+    - Vérification base portail réussie : 5 profils GParc présents. Le seed
+      reproductible est également versionné dans `apps/portal/prisma/seed.ts`
+      (commit `34cac1e`).
+
+63. Nettoyage des rôles portail affichés comme profils GParc — 27 juillet 2026
+    - Vérification complémentaire demandée : l'ancien amorçage avait aussi
+      créé `PORTAL_ADMIN`, `GESTIONNAIRE_PARC` et `DIRECTION` comme profils
+      GParc, alors qu'il s'agit de rôles d'accès au catalogue du portail.
+    - Ces trois anciennes entrées sont maintenant inactives dans
+      `ApplicationProfile` (aucune suppression de données); les rôles
+      `ApplicationRole` du catalogue restent inchangés.
+    - Les seuls profils GParc actifs affichables sont désormais `ADMIN`,
+      `DAF`, `GESTIONNAIRE`, `CHAUFFEUR` et `CHAUFFEUR_GESTIONNAIRE`.
+    - Le seed désactive automatiquement les profils obsolètes d'une
+      application dont les définitions sont explicitement synchronisées.
+    - Contrôles réussis après modification : lint, typecheck, 7 tests, build
+      et `git diff --check`.
+
+64. Correction session SSO et tableau de bord GParc — 28 juillet 2026
+    - Objectif : corriger l'accès au tableau de bord après une connexion depuis
+      le portail, qui échouait avec une erreur de token manquant.
+    - VM/répertoire : VM GParc `51.91.102.44`, dépôt local
+      `/home/debian/gparc-prod`, branche `codex/gparc-integration`.
+    - Diagnostic : le bundle était configuré avec une base API absolue vers le
+      domaine local ATF, alors que la session OIDC est portée par
+      `gparc.tadgroupe.com`; le cookie HttpOnly n'était donc pas transmis.
+    - Modification : le frontend utilise désormais `/api` en same-origin sur
+      `gparc.tadgroupe.com`; le domaine `gparc.atf.onl` conserve son mode local.
+    - Contrôles : build Vite réussi; `git diff --check` réussi; commit GParc
+      `a24cb47` créé et poussé depuis le dépôt Git local de la VM; services
+      Docker opérationnels; santé TAD HTTP 200; démarrage OIDC TAD HTTP 302;
+      démarrage OIDC ATF HTTP 404.
+    - Aucun secret, cookie, token, compte ou donnée personnelle n'a été lu,
+      affiché, créé ou modifié. Aucun volume ni base n'a été supprimé.
+    - Risque restant : un navigateur peut conserver l'ancien bundle; effectuer
+      un rechargement forcé avant la recette navigateur.
+    - Rollback : revenir au commit GParc précédent `f1949b8`, reconstruire le
+      frontend et redémarrer le proxy, sans toucher à MariaDB ni aux volumes.
+
+65. Correctif des cookies de session OIDC GParc — 28 juillet 2026
+    - Objectif : corriger les HTTP 401 persistants sur `/api/entretiens` et
+      `/api/vehicules` après le SSO.
+    - Diagnostic : le callback assemblait les cookies avec un tableau imbriqué,
+      ce qui pouvait produire un en-tête `Set-Cookie` invalide et empêcher la
+      conservation de `gparc_session` par le navigateur.
+    - Modification : ajout d'un helper d'ajout de cookies qui normalise les
+      en-têtes existants et émet séparément la session GParc et l'effacement
+      de l'état OIDC.
+    - Contrôles : syntaxe Node, `git diff --check`, redémarrage du seul service
+      API et endpoint santé HTTP 200 réussis. Commit GParc `c0d067c` créé et
+      poussé depuis le dépôt Git local de la VM.
+    - Aucun secret, token, compte, base ou volume n'a été lu ou modifié.
+    - Action de recette : effectuer une nouvelle connexion SSO après purge ou
+      expiration de l'ancien cookie navigateur.
+    - Rollback : revenir au commit GParc `a24cb47` et redémarrer uniquement
+      l'API, sans toucher à MariaDB ni aux volumes.

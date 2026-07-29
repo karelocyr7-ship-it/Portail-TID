@@ -1602,3 +1602,23 @@ avant de conclure que la VM est inaccessible.
       le dernier dossier de sauvegarde, réaligner le callback Keycloak sur la
       version restaurée, puis recréer uniquement `hmdm-app`; conserver la base
       et les volumes.
+
+76. Correctif du lien portail vers MDM — 29 juillet 2026
+    - Prompt utilisateur : « 1: ça ne fonctionne pas pour MDM depuis le
+      portail ».
+    - Diagnostic : la tuile MDM du portail, y compris l'URL déjà stockée en
+      base, ouvrait la racine MDM. Le flux OIDC restauré démarre désormais sur
+      `/rest/public/auth/oidc/login`; ouvrir la racine ne lançait donc pas la
+      session Keycloak.
+    - Correctif préparé : les catalogues statique, base et seed pointent vers
+      l'entrée OIDC MDM. Le fallback du catalogue côté serveur force également
+      cette URL, même si une ancienne adresse est déjà présente en base.
+    - Contrôles réussis : lint, typecheck, 16 tests Vitest, build Next.js et
+      `git diff --check`. L'avertissement de traçage NFT dynamique Next.js est
+      connu et non bloquant.
+    - Aucune base, aucun conteneur et aucune configuration MDM n'a été modifié
+      par cette préparation. Après revue/fusion et confirmation explicite,
+      mettre à jour la valeur MDM en base puis reconstruire uniquement le
+      service `portal`.
+    - Rollback : revenir au commit portail précédent et recréer uniquement le
+      service `portal`; conserver PostgreSQL et tous les volumes.

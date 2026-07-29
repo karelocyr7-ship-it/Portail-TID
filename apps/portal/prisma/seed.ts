@@ -96,7 +96,7 @@ export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
   TDB: "https://tdb.tadgroupe.com",
-  MDM: "https://mdm.tadgroupe.com",
+  MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
 };
 
 const profileNames: Record<string, string> = {

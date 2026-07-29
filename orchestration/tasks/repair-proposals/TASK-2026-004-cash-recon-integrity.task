@@ -1,0 +1,22 @@
+id: TASK-2026-004
+title: Corriger l'intégrité transactionnelle CASH-RECON
+application: cash-recon
+environment: development
+requested_by: portal-orchestrator
+priority: critical
+risk_level: 1
+status: pending
+assigned_agent: cash-recon-agent
+review_agent: database-review-agent
+description: >
+  Dans le miroir local CASH-RECON, corriger CR-01 à CR-03 et CR-06 avec des
+  transactions explicites, une conservation de l'ancien montant, des gardes
+  d'idempotence et des GET sans écriture. Ne pas modifier la base distante,
+  n'exécuter aucune migration et ne lire aucun secret.
+acceptance_criteria:
+  - une édition administrative conserve un historique et ne perd pas le montant
+  - les notifications et clôtures sont idempotentes et traçables
+  - les routes GET restent sans effet de bord
+  - tests de régression et rollback documentés
+deployment_required: false
+human_approval_required: true

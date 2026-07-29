@@ -43,6 +43,12 @@ services:
       KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:?KEYCLOAK_CLIENT_SECRET is required}
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       SESSION_SECRET: ${SESSION_SECRET:?SESSION_SECRET is required}
+    volumes:
+      - /srv/tad/agents/results:/var/lib/tad-agent-results:ro
+      - /srv/tad/agents/queue:/var/lib/tad-agent-queue
+      - /srv/tad/agents/state:/var/lib/tad-agent-state:ro
+    group_add:
+      - "989"
     expose: ["3000"]
     networks: [tad-app, tad-identity, tad-data]
     depends_on:

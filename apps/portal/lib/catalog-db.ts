@@ -5,11 +5,12 @@ import { getPortalUserAccess } from "@/lib/portal-users";
 export async function getVisibleApplicationsFromDatabase(
   roles: readonly string[],
   subject?: string,
+  employeeId?: string,
 ): Promise<CatalogApplication[]> {
   const prisma = getPrisma();
   const isAdmin = roles.includes("PORTAL_ADMIN");
   const portalUserAccess = subject
-    ? await getPortalUserAccess(subject)
+    ? await getPortalUserAccess({ subject, employeeId })
     : { managed: false, active: false, applicationIds: [] };
   if (!canReadCatalog(roles, portalUserAccess)) return [];
   const applications = await prisma.application.findMany({
@@ -37,7 +38,7 @@ export async function getVisibleApplicationsFromDatabase(
     maintenanceMessage: application.maintenanceMessage ?? undefined,
     url:
       application.code === "RECRUTEMENT"
-        ? "https://recrut-oci.tadgroupe.com"
+        ? "https://recrut-oci.tadgroupe.com/?sso=1"
         : application.code === "GPARC"
           ? "https://gparc.tadgroupe.com/api/oidc/start"
         : application.url ??

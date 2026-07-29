@@ -1,0 +1,28 @@
+id: TASK-2026-006
+title: Durcir l'overlay OIDC MDM
+application: mdm
+environment: development
+requested_by: portal-orchestrator
+priority: critical
+risk_level: 1
+status: pending
+assigned_agent: mdm-agent
+review_agent: security-review-agent
+description: >
+  Dans une branche dédiée du miroir MDM overlay-only, traiter les constats
+  F-01 à F-05 de l'audit TASK-2026-005 : renouvellement de session après
+  callback, validation JWT/JWKS explicite, cookie de session avec attributs
+  sûrs, séparation stricte des domaines côté proxy et vérification stricte de
+  l'identité e-mail. Ne lire aucun secret, ne contacter aucune VM, ne modifier
+  aucun WAR, aucune base et ne pas ajouter de dépendance sans justification.
+  L'absence de source amont HMDM 5.38.1 doit rester documentée.
+acceptance_criteria:
+  - le callback ne réutilise pas une session avant authentification
+  - issuer, audience, nonce, signature et expiration sont contrôlés explicitement
+  - le cookie de profil n'expose aucun token et applique des attributs sûrs
+  - les domaines autorisés sont une liste explicite indépendante du Host arbitraire
+  - l'identité e-mail est comparée de façon stricte et normalisée
+  - tests statiques ou unitaires ajoutés sans données personnelles
+  - rollback documenté
+deployment_required: false
+human_approval_required: true

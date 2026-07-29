@@ -6,7 +6,11 @@ export async function GET() {
   const roles = getRoles(session);
   return Response.json(
     {
-      data: await getVisibleApplicationsFromDatabase(roles, session?.subject),
+      data: await getVisibleApplicationsFromDatabase(
+        roles,
+        session?.subject,
+        session?.employeeId,
+      ),
     },
     { headers: { "cache-control": "no-store" } },
   );

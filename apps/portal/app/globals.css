@@ -1648,15 +1648,17 @@ body {
 
 .agent-report-list {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 }
 
 .agent-report-card {
   display: grid;
+  min-width: 0;
   gap: 14px;
-  padding: 22px;
+  padding: 16px;
   border: 1px solid #dbe4f0;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #fff;
   box-shadow: 0 10px 24px rgba(20, 38, 72, 0.06);
 }
@@ -1669,8 +1671,11 @@ body {
 }
 
 .agent-report-heading h2 {
-  margin: 4px 0;
+  margin: 3px 0;
   color: #15233d;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .agent-report-actions {
@@ -1707,6 +1712,82 @@ body {
   margin: 24px 0;
 }
 
+.agent-action-ledger {
+  margin: 2rem 0;
+}
+
+.agent-action-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.agent-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--border-color, #dbe4ee);
+  border-radius: 0.8rem;
+  background: #fff;
+}
+
+.agent-action-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+}
+.agent-live-board {
+  margin: 24px 0;
+  padding: 22px;
+  border: 1px solid #d9e2ef;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+.agent-live-board .section-header small {
+  color: #61718a;
+}
+.agent-live-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.agent-live-card {
+  padding: 16px;
+  border: 1px solid #dce5f0;
+  border-radius: 14px;
+  background: #fff;
+}
+.agent-live-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.agent-live-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+}
+.agent-live-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+}
+.agent-live-card dt {
+  color: #718096;
+}
+.agent-live-card dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.error-text {
+  color: #b42318;
+}
+
 @media (max-width: 720px) {
   .agent-report-toolbar {
     grid-template-columns: 1fr 1fr;
@@ -1718,6 +1799,9 @@ body {
 
   .agent-report-heading {
     display: grid;
+  }
+  .agent-live-grid {
+    grid-template-columns: 1fr;
   }
 }
 .applications-page .application-card-content {
@@ -1768,5 +1852,175 @@ body {
     margin-top: 7px;
     padding: 7px 9px;
     font-size: 10px;
+  }
+}
+
+/* Density mode for administration and supervision pages. The Applications
+   catalogue keeps its existing layout; these rules target the taller cards
+   used by the other portal screens. */
+@media (min-width: 761px) {
+  .admin-page {
+    padding-top: 18px;
+    padding-bottom: 28px;
+  }
+
+  .admin-page .admin-hero {
+    min-height: 112px;
+    padding: 18px 24px;
+    border-radius: 14px;
+  }
+
+  .admin-page .admin-stat-grid {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .admin-page .admin-stat-card {
+    gap: 9px;
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+
+  .admin-page .admin-stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 17px;
+  }
+
+  .admin-page .admin-stat-card strong {
+    font-size: 19px;
+  }
+
+  .admin-page .admin-section-heading {
+    margin-top: 20px;
+  }
+
+  .admin-page .admin-app-grid {
+    gap: 9px;
+  }
+
+  .admin-page .admin-app-card {
+    min-height: 0;
+    padding: 12px;
+    border-radius: 11px;
+  }
+
+  .admin-page .admin-app-card-top {
+    margin-bottom: 10px;
+  }
+
+  .admin-page .admin-app-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    font-size: 21px;
+  }
+
+  .admin-page .admin-app-icon img {
+    width: 35px;
+    height: 35px;
+    border-radius: 9px;
+  }
+
+  .admin-page .admin-app-card h3 {
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+
+  .admin-page .admin-app-card .muted {
+    min-height: 0;
+    margin-bottom: 8px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+
+  .admin-page .admin-card {
+    padding: 14px;
+  }
+
+  .admin-page .user-list {
+    gap: 9px;
+    margin-top: 11px;
+  }
+
+  .admin-page .user-editor {
+    padding: 12px;
+    border-radius: 11px;
+  }
+
+  .admin-page .user-fields {
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .admin-page .profile-picker {
+    margin-top: 10px;
+    padding: 10px;
+  }
+
+  .admin-page .user-editor-footer {
+    margin-top: 10px;
+  }
+
+  .agent-reports-page .agent-action-ledger {
+    margin: 1rem 0;
+  }
+
+  .agent-reports-page .agent-action-list,
+  .agent-reports-page .agent-report-list {
+    gap: 9px;
+  }
+
+  .agent-reports-page .agent-action-row {
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 9px;
+  }
+
+  .agent-reports-page .agent-report-toolbar {
+    gap: 9px;
+    margin: 14px 0;
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .agent-reports-page .agent-report-card {
+    gap: 10px;
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .agent-reports-page .agent-report-list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .agent-reports-page .agent-report-body,
+  .agent-reports-page .agent-report-evidence {
+    max-height: 260px;
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 9px;
+    font-size: 0.76rem;
+  }
+
+  .agent-live-board {
+    margin: 14px 0;
+    padding: 14px;
+    border-radius: 13px;
+  }
+
+  .agent-live-grid {
+    gap: 8px;
+  }
+
+  .agent-live-card {
+    padding: 11px;
+    border-radius: 10px;
+  }
+
+  .agent-live-card dl {
+    gap: 5px;
+    margin-top: 9px;
   }
 }

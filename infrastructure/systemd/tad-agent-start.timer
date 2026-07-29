@@ -4,7 +4,7 @@ Description=Fenêtre de démarrage des agents Codex TAD
 [Timer]
 OnCalendar=*-*-* 19:30:00 Africa/Abidjan
 Persistent=true
-Unit=tad-agent-start.service
+Unit=tad-agent-enable.service
 
 [Install]
 WantedBy=timers.target

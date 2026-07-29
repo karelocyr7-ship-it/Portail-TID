@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
+import { normalizeEmployeeId } from "@/lib/employee-id";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -115,6 +116,8 @@ export async function updateApplicationUrl(formData: FormData) {
 export async function savePortalUser(formData: FormData) {
   const session = await requireAdmin();
   const keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
+  const employeeIdProvided = formData.has("employeeId");
+  const employeeId = normalizeEmployeeId(formData.get("employeeId"));
   const email = String(formData.get("email") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
@@ -126,6 +129,9 @@ export async function savePortalUser(formData: FormData) {
 
   if (!keycloakSubject || keycloakSubject.length > 200) {
     throw new Error("Identifiant Keycloak invalide");
+  }
+  if (formData.get("employeeId") && !employeeId) {
+    throw new Error("Matricule invalide : TID000… ou TIDP000… requis");
   }
   if (!displayName || displayName.length > 160) {
     throw new Error("Nom d’affichage invalide");
@@ -159,11 +165,20 @@ export async function savePortalUser(formData: FormData) {
     const user = userId
       ? await transaction.portalUser.update({
           where: { id: userId },
-          data: { keycloakSubject, email: email || null, displayName, active },
+          data: {
+            keycloakSubject,
+            employeeId: employeeIdProvided
+              ? employeeId ?? null
+              : before?.employeeId ?? null,
+            email: email || null,
+            displayName,
+            active,
+          },
         })
       : await transaction.portalUser.create({
           data: {
             keycloakSubject,
+            employeeId: employeeIdProvided ? employeeId ?? null : null,
             email: email || null,
             displayName,
             active,
@@ -191,6 +206,7 @@ export async function savePortalUser(formData: FormData) {
         beforeData: before
           ? {
               keycloakSubject: before.keycloakSubject,
+              employeeId: before.employeeId,
               email: before.email,
               displayName: before.displayName,
               active: before.active,
@@ -199,6 +215,7 @@ export async function savePortalUser(formData: FormData) {
           : undefined,
         afterData: {
           keycloakSubject,
+          employeeId: user.employeeId,
           email: email || null,
           displayName,
           active,
@@ -222,6 +239,7 @@ export async function saveCurrentPortalUser(formData: FormData) {
   );
   currentUser.set("email", session.email ?? session.username ?? "");
   currentUser.set("keycloakSubject", session.subject);
+  if (session.employeeId) currentUser.set("employeeId", session.employeeId);
   currentUser.set("active", "on");
   for (const profileId of formData.getAll("profileIds")) {
     if (typeof profileId === "string")

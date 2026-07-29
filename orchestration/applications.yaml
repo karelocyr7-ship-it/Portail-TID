@@ -107,12 +107,12 @@ applications:
     vm_alias: mdm-tad
     ssh_user: debian
     environment: production
-    repository_path: /opt/hmdm
-    git_remote: to_confirm
+    repository_path: /opt/hmdm (overlay miroir local: /srv/tad/agents/repositories/mdm)
+    git_remote: overlay local; source amont HMDM à confirmer
     default_branch: main
     integration_branch: develop
     deployment_method: Docker Compose / WAR HMDM
-    compose_file: to_confirm
+    compose_file: /opt/hmdm/docker-compose.yml
     healthcheck_url: https://mdm.tadgroupe.com
     agent_file: AGENTS.md
     documentation_path: docs
@@ -120,7 +120,7 @@ applications:
     criticality: critical
     contains_device_management_functions: true
     automatic_production_deployment: false
-    evidence: VM audit 2026-07-28; hmdm-app and hmdm-postgres actifs, dépôt source non confirmé
+    evidence: VM audit 2026-07-28; HMDM 5.38.1 et WAR SHA-256 487d9fae... observés; overlay OIDC versionné confirmé, source amont complète à confirmer
 
   - id: recrutement-om-telco
     name: Recrutement OM & Telco

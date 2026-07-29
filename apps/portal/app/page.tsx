@@ -11,6 +11,7 @@ export default async function ApplicationsPage() {
   const applications = await getVisibleApplicationsFromDatabase(
     roles,
     session.subject,
+    session.employeeId,
   );
 
   return (

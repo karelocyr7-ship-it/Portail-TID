@@ -1,0 +1,22 @@
+id: TASK-2026-005
+title: Auditer le miroir overlay MDM vérifié
+application: mdm
+environment: development
+requested_by: portal-orchestrator
+priority: high
+risk_level: 1
+status: pending
+assigned_agent: mdm-agent
+review_agent: security-review-agent
+description: >
+  Auditer le miroir local /srv/tad/agents/repositories/mdm, limité à l'overlay
+  OIDC versionné. Vérifier la cohérence des contrôles de state, nonce, issuer,
+  audience, JWKS, cookies et séparation des domaines. Ne contacte aucune VM,
+  ne lis aucun secret, ne modifie aucun WAR, aucune base ni configuration.
+acceptance_criteria:
+  - provenance overlay-only explicitement respectée
+  - aucune valeur secrète dans le rapport
+  - contrôles statiques exécutés et résultats documentés
+  - limites de reproductibilité du WAR amont documentées
+deployment_required: false
+human_approval_required: true

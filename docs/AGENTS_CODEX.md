@@ -11,6 +11,7 @@ Les scripts du dépôt sont idempotents :
 
 ```sh
 /srv/tad/portail/scripts/agents-start.sh
+/srv/tad/portail/scripts/agents-enable-new-tasks.sh
 /srv/tad/portail/scripts/agents-stop-new-tasks.sh
 /srv/tad/portail/scripts/agents-stop.sh
 /srv/tad/portail/scripts/daily-report.sh
@@ -26,9 +27,14 @@ AGENT_ALLOW_RUN=true codex exec --sandbox workspace-write --cd /srv/tad/agents/w
 ```
 
 Les unités et timers `infrastructure/systemd/tad-agent-*` prévoient la fenêtre
-19 h 30–6 h 00, avec suspension à 5 h 30, arrêt propre à 5 h 45, arrêt forcé
-à 6 h et rapport à 6 h 05, fuseau `Africa/Abidjan`. Ils ne doivent pas être
+19 h 30–6 h 00 : le timer de démarrage déclenche l'unité de réactivation à
+19 h 30, puis la suspension intervient à 5 h 30, l’arrêt propre à 5 h 45,
+l’arrêt forcé à 6 h et le rapport à 6 h 05, fuseau `Africa/Abidjan`. Ils ne doivent pas être
 copiés dans `/etc/systemd/system` ni activés sans validation administrateur.
+
+Les prérequis système `bubblewrap` et `ripgrep` sont installés sur la VM du
+Portail. Le service systemd autorise `AF_NETLINK`, requis par bubblewrap, sans
+accorder d’accès SSH, Docker ou base de données aux agents.
 
 ## n8n local
 

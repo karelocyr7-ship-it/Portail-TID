@@ -24,9 +24,12 @@ export async function getAdminUsers() {
   });
 }
 
-export async function getPortalUserAccess(subject: string) {
+export async function getPortalUserAccess(identity: {
+  subject: string;
+  employeeId?: string;
+}) {
   const user = await getPrisma().portalUser.findUnique({
-    where: { keycloakSubject: subject },
+    where: { keycloakSubject: identity.subject },
     include: {
       assignments: {
         where: { profile: { active: true, application: { active: true } } },
@@ -35,10 +38,24 @@ export async function getPortalUserAccess(subject: string) {
     },
   });
 
+  const resolvedUser =
+    user ??
+    (identity.employeeId
+      ? await getPrisma().portalUser.findUnique({
+          where: { employeeId: identity.employeeId },
+          include: {
+            assignments: {
+              where: { profile: { active: true, application: { active: true } } },
+              select: { profile: { select: { applicationId: true } } },
+            },
+          },
+        })
+      : null);
+
   return {
-    managed: Boolean(user),
-    active: user?.active ?? false,
+    managed: Boolean(resolvedUser),
+    active: resolvedUser?.active ?? false,
     applicationIds:
-      user?.assignments.map(({ profile }) => profile.applicationId) ?? [],
+      resolvedUser?.assignments.map(({ profile }) => profile.applicationId) ?? [],
   };
 }

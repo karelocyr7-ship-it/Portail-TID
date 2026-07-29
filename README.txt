@@ -1278,6 +1278,35 @@ avant de conclure que la VM est inaccessible.
     - L'asset `GParc_android_icons/playstore/icon-512.png` (512×512 RGBA) de
       la VM GParc a remplacé l'ancien visuel portail
       `apps/portal/public/branding/apps/gparc.png`.
+
+62. Diagnostic file agents et densité des rapports — 29 juillet 2026
+    - Prompt utilisateur : « pourquoi dans le portail j'ai encore des taches
+      agents en attente ou en fille d'attente ? rien n'a ete fait cette nuit ?
+      il faut reduire la taille des tuilles des rapports ».
+    - Contrôle VM Portail `54.37.11.202`, dépôt `/srv/tad/portail`, effectué
+      en lecture seule pour les timers, files et compteurs de base; aucun
+      secret réel n'a été lu ou affiché.
+    - Les timers ont bien déclenché le démarrage à 19 h 30 et le dispatch
+      périodique. Cependant `stop-new-tasks` créé à 05 h 30 n'est jamais retiré
+      à 19 h 30; le service de démarrage sort donc avec la suspension active.
+      Une tâche MDM du 28 juillet reste en file et aucune nouvelle tâche n'a
+      été exécutée pendant la nuit du 28 au 29 juillet. Le service d'arrêt
+      forcé est signalé en échec car `pkill` renvoie 1 lorsqu'il n'y a aucun
+      processus à arrêter; cela n'indique pas une exécution réussie.
+    - La base contient 1 action `QUEUED`, 7 `EXECUTING`, 1 `COMPLETED` et
+      16 `FAILED`; les actions `EXECUTING` correspondent à des tâches archivées
+      sans rapport de résultat final, et nécessitent un traitement séparé.
+    - Correction versionnée sur la branche de travail : ajout d'une étape
+      dédiée de réactivation à 19 h 30, sans suppression de tâche, résultat,
+      base ou volume. L'installation des nouvelles unités systemd reste à
+      valider explicitement avant copie dans `/etc/systemd/system`.
+    - L'affichage des rapports a été densifié : grille responsive, cartes plus
+      compactes, titres mieux contenus et affichage mobile conservé.
+    - Contrôles à effectuer avant livraison : syntaxe shell, `systemd-analyze
+      verify` sur les unités, lint, typecheck, tests et build du portail.
+    - Rollback : revenir au commit précédent pour l'interface et retirer la
+      nouvelle unité d'activation avant installation; aucune donnée runtime
+      ne doit être supprimée.
     - Lint, typecheck, 7 tests, build et diff-check réussis; portail
       reconstruit et redémarré. Commit `0bdc9d3`.
 

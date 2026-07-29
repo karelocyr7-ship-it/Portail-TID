@@ -6,6 +6,7 @@ import {
   verify,
 } from "node:crypto";
 import { cookies } from "next/headers";
+import { normalizeEmployeeId } from "@/lib/employee-id";
 
 const SESSION_COOKIE = "tad_portal_session";
 const STATE_COOKIE = "tad_oidc_state";
@@ -22,6 +23,7 @@ type OidcConfiguration = {
 
 export type PortalSession = {
   subject: string;
+  employeeId?: string;
   name?: string;
   email?: string;
   username?: string;
@@ -128,7 +130,7 @@ export async function exchangeCode(
 export async function verifyApplicationIdToken(
   token: string,
   applicationCode: string,
-): Promise<{ subject: string; email?: string }> {
+): Promise<{ subject: string; employeeId?: string; email?: string }> {
   const oidc = await configuration();
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid application ID token");
@@ -159,6 +161,12 @@ export async function verifyApplicationIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
+  const employeeId = normalizeEmployeeId(
+    claims.employee_id ??
+      claims.employeeId ??
+      claims.matricule ??
+      claims.preferred_username,
+  );
   const audiences = Array.isArray(claims.aud)
     ? claims.aud.filter((aud): aud is string => typeof aud === "string")
     : typeof claims.aud === "string"
@@ -167,7 +175,7 @@ export async function verifyApplicationIdToken(
   const clientIds = Object.fromEntries(
     (
       process.env.APPLICATION_OIDC_CLIENT_IDS ??
-      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf"
+      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf,RECRUTEMENT=tad-recrut-om"
     )
       .split(",")
       .map((entry) => entry.split("=", 2).map((value) => value.trim()))
@@ -187,7 +195,13 @@ export async function verifyApplicationIdToken(
   }
   return {
     subject: claims.sub,
-    email: typeof claims.email === "string" ? claims.email : undefined,
+    employeeId,
+    email:
+      typeof claims.email === "string"
+        ? claims.email
+        : typeof claims.preferred_username === "string"
+          ? claims.preferred_username
+          : undefined,
   };
 }
 
@@ -222,6 +236,12 @@ async function verifyIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
+  const employeeId = normalizeEmployeeId(
+    claims.employee_id ??
+      claims.employeeId ??
+      claims.matricule ??
+      claims.preferred_username,
+  );
   const clientId = required("KEYCLOAK_CLIENT_ID");
   const audiences = Array.isArray(claims.aud)
     ? claims.aud.filter((aud): aud is string => typeof aud === "string")
@@ -242,6 +262,7 @@ async function verifyIdToken(
     ?.roles ?? []) as unknown[];
   return {
     subject: String(claims.sub ?? ""),
+    employeeId,
     name: typeof claims.name === "string" ? claims.name : undefined,
     email: typeof claims.email === "string" ? claims.email : undefined,
     username:

@@ -1467,3 +1467,28 @@ avant de conclure que la VM est inaccessible.
       locaux à préserver.
     - Rollback : reconstruire le commit portail précédent; aucune donnée
       persistante ni unité systemd ne doit être supprimée.
+
+70. Correction transactionnelle CASH-RECON — 29 juillet 2026
+    - Prompt utilisateur : « fait le », puis validation explicite de
+      l'installation des dépendances de test et de la réparation des
+      permissions Git.
+    - La correction isolée renforce l'atomicité des saisies et des clôtures,
+      évite que les consultations GET créent des journées, et rend les
+      envois/confirmations de missions idempotents. Les montants Canal+ et
+      autres produits sont conservés lors des éditions administratives.
+    - `npm ci` a été exécuté uniquement dans l'espace de travail isolé de
+      l'agent; les 22 tests API, `git diff --check` et la syntaxe JavaScript
+      sont réussis. `npm audit` signale 2 vulnérabilités transitives (1 faible,
+      1 modérée), non corrigées automatiquement.
+    - Des sous-répertoires `.git/objects` appartenant à `root` empêchaient le
+      compte `debian` de créer des objets Git. Leur propriétaire a été rétabli
+      à `debian:debian`, uniquement après validation utilisateur.
+    - Le commit testé `7a53324` est présent sur la branche distante locale
+      `codex/fix-cash-transactional-integrity`. Le fichier
+      `web/public/build-version.json`, déjà modifié avant l'intervention,
+      reste intact et hors de la correction.
+    - Blocage de publication : GitHub CLI (`gh`) est absent de la VM, donc la
+      branche n'a pas été poussée et aucune PR/déploiement n'a été créé.
+    - Rollback : annuler le commit `7a53324` sur la branche dédiée; aucune
+      migration, donnée métier, base, volume ou conteneur applicatif n'a été
+      modifié.

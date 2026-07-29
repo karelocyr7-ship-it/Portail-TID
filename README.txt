@@ -1513,3 +1513,112 @@ avant de conclure que la VM est inaccessible.
     - Rollback : revenir au commit `3f3f0fd`, reconstruire la stack avec la
       même procédure et réappliquer le stash uniquement après vérification;
       ne supprimer ni la base MariaDB ni les volumes.
+
+72. Correctif profil OIDC TDB — 29 juillet 2026
+    - Prompt utilisateur : « qd j'esssais me me connecter à TDB deuis le
+      portail : Profil TDB introuvable ou inactif. »
+    - Diagnostic : le portail renvoie les profils TDB actifs sous forme de
+      clés texte, alors que le callback OIDC de TDB attendait exclusivement
+      un objet comportant une clé `key`. Un profil valide était donc refusé
+      avant toute recherche du compte applicatif.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, worktree
+      isolé `/tmp/tdb-fix-profile-shape`; le répertoire de production et ses
+      modifications locales n'ont pas été modifiés.
+    - Correctif : `backend/src/oidc.js` accepte désormais les profils texte
+      actuels et l'ancien format objet, puis sélectionne uniquement un rôle
+      TDB autorisé. Branche `codex/fix-tdb-profile-shape`, commit `d5f47dd`,
+      poussée vers le remote GitHub.
+    - Contrôles : syntaxe Node, 2 tests backend, build frontend Vite et
+      `git diff --check` réussis. `npm ci` a signalé une incohérence déjà
+      présente entre `package.json` et le lockfile; les dépendances ont été
+      installées sans modifier le lockfile après autorisation utilisateur.
+    - Blocage : création de PR automatique impossible car l'authentification
+      GitHub est expirée sur les VM. Aucun token n'a été lu, affiché ou
+      contourné. Aucun déploiement n'a été exécuté.
+    - Rollback : revenir au commit TDB précédent et reconstruire uniquement
+      les services applicatifs après fusion; ne supprimer ni SQLite, volumes
+      ni données.
+
+73. Déploiement du correctif profil OIDC TDB — 29 juillet 2026
+    - Validation utilisateur reçue après fusion de la PR TDB #16 dans `main`,
+      commit `53e8b43`.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`; un
+      worktree temporaire `/tmp/tdb-deploy-53e8b43` a été utilisé afin de
+      préserver les modifications locales du checkout de production.
+    - Le backend TDB a été reconstruit et recréé seul avec le même projet
+      Compose et le volume SQLite existant. Aucune migration, suppression de
+      volume, suppression de base ni modification du frontend n'a été faite.
+    - Contrôles post-déploiement réussis : backend actif, santé locale HTTP
+      200, page HTTPS publique HTTP 200 et `/api/auth/oidc/start` HTTP 302
+      vers Keycloak. Aucun parcours utilisateur ni donnée personnelle n'a été
+      consulté.
+    - Rollback : redéployer le commit TDB précédent depuis un worktree isolé
+      et recréer uniquement le backend; conserver le volume `tdb_data`.
+
+74. Vérification SSO des autres applications — 29 juillet 2026
+    - Prompt utilisateur : « verifie pour les autres applications ».
+    - Contrôles en lecture seule, sans compte utilisateur ni secret : les
+      départs OIDC de Revue-PDV, CASH-RECON, TDB et GParc sur le domaine TAD
+      répondent HTTP 302 vers Keycloak. GParc ATF conserve volontairement le
+      mode local et renvoie HTTP 404 sur ce point d'entrée. Recrutement OCI
+      répond HTTP 200 sur sa santé mais son SSO n'est pas encore implémenté.
+    - Revue-PDV associe l'e-mail Keycloak à un compte applicatif local et ne
+      consomme pas les profils du portail. GParc applique le même modèle.
+      CASH-RECON accepte déjà les profils portail texte et objet ; il n'est
+      pas affecté par le défaut corrigé dans TDB.
+    - Anomalie : MDM `mdm.tadgroupe.com` renvoie HTTP 404 sur
+      `/rest/public/oidc/config` et `/rest/public/oidc/start`, alors que le
+      conteneur HMDM est actif. Il s'agit vraisemblablement d'une régression
+      du WAR ou de son routage, à diagnostiquer dans une tâche dédiée avant
+      toute modification. Aucun changement n'a été appliqué.
+    - Rollback : aucun, contrôles uniquement.
+
+75. Rétablissement OIDC MDM — 29 juillet 2026
+    - Prompt utilisateur : « regle le problème de MDM », puis « reprend ».
+    - Diagnostic : le conteneur `hmdm-app` avait été recréé avec le WAR
+      Headwind standard; les routes OIDC avaient donc disparu et renvoyaient
+      HTTP 404. La configuration Keycloak conservait aussi une URI de callback
+      antérieure au chemin actuel du WAR OIDC.
+    - VM/répertoire : VM MDM `91.134.255.77`, source
+      `/home/debian/FLOTTE/hmdm-server`, configuration `/opt/hmdm`.
+    - Correctif : le WAR OIDC est désormais monté en lecture seule par Compose
+      depuis `/opt/hmdm/hmdm-oidc.war`, de sorte qu'une recréation de conteneur
+      ne le remplace plus. Le client Keycloak `tad-mdm` et le runtime pointent
+      vers `/rest/public/auth/oidc/callback`. Le source est versionné localement
+      sur `codex/mdm-oidc-runtime-fix`, commit `f3e3d98`.
+    - Correctifs complémentaires : `auth/options` force JSON afin d'éviter
+      le HTTP 500, et le callback émet un profil utilisateur encodé sans
+      `authToken`; le jeton OIDC reste côté serveur.
+    - Sauvegardes créées sous
+      `/opt/hmdm/work/oidc-backups/20260729T165807Z`,
+      `/opt/hmdm/work/oidc-backups/20260729T170018Z` et
+      `/opt/hmdm/work/oidc-backups/20260729T170307Z`. Aucune base PostgreSQL,
+      volume, certificat ni compte utilisateur n'a été modifié.
+    - Contrôles réussis : compilation Maven Java 17, tests serveur, accueil
+      MDM HTTP 200, `auth/options` HTTP 200 sur les domaines TAD et ATF,
+      démarrage OIDC TAD HTTP 302, endpoint historique HTTP 404 attendu et
+      conteneur `hmdm-app` actif.
+    - Rollback : restaurer le WAR et `docker-compose.yml` sauvegardés depuis
+      le dernier dossier de sauvegarde, réaligner le callback Keycloak sur la
+      version restaurée, puis recréer uniquement `hmdm-app`; conserver la base
+      et les volumes.
+
+76. Correctif du lien portail vers MDM — 29 juillet 2026
+    - Prompt utilisateur : « 1: ça ne fonctionne pas pour MDM depuis le
+      portail ».
+    - Diagnostic : la tuile MDM du portail, y compris l'URL déjà stockée en
+      base, ouvrait la racine MDM. Le flux OIDC restauré démarre désormais sur
+      `/rest/public/auth/oidc/login`; ouvrir la racine ne lançait donc pas la
+      session Keycloak.
+    - Correctif préparé : les catalogues statique, base et seed pointent vers
+      l'entrée OIDC MDM. Le fallback du catalogue côté serveur force également
+      cette URL, même si une ancienne adresse est déjà présente en base.
+    - Contrôles réussis : lint, typecheck, 16 tests Vitest, build Next.js et
+      `git diff --check`. L'avertissement de traçage NFT dynamique Next.js est
+      connu et non bloquant.
+    - Aucune base, aucun conteneur et aucune configuration MDM n'a été modifié
+      par cette préparation. Après revue/fusion et confirmation explicite,
+      mettre à jour la valeur MDM en base puis reconstruire uniquement le
+      service `portal`.
+    - Rollback : revenir au commit portail précédent et recréer uniquement le
+      service `portal`; conserver PostgreSQL et tous les volumes.

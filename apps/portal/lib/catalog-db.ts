@@ -41,7 +41,9 @@ export async function getVisibleApplicationsFromDatabase(
         ? "https://recrut-oci.tadgroupe.com/?sso=1"
         : application.code === "GPARC"
           ? "https://gparc.tadgroupe.com/api/oidc/start"
-        : application.url ??
+          : application.code === "MDM"
+            ? "https://mdm.tadgroupe.com/rest/public/auth/oidc/login"
+          : application.url ??
           (application.code === "TDB"
             ? "https://tdb.tadgroupe.com"
             : undefined),

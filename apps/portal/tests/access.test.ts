@@ -28,7 +28,7 @@ describe("contrôle d’accès au catalogue", () => {
       (application) => application.code === "MDM",
     );
     expect(mdm).toMatchObject({
-      url: "https://mdm.tadgroupe.com",
+      url: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
       roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
     });
     expect(hasRoleAccess(mdm!, ["INFORMATIQUE"])).toBe(true);

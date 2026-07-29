@@ -104,7 +104,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "⌘",
     integrationLevel: 1,
     active: true,
-    url: "https://mdm.tadgroupe.com",
+    url: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
     roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
   },
   {

@@ -1681,3 +1681,17 @@ avant de conclure que la VM est inaccessible.
     - Rollback : recopier le WAR sauvegardé depuis le dossier indiqué vers
       `/opt/hmdm/hmdm-oidc.war`, puis recréer uniquement `hmdm-app`; conserver
       la base et les volumes.
+
+80. Compte de recette SSO MDM — 29 juillet 2026
+    - Prompt utilisateur : « creer le compte ».
+    - Un compte de recette non personnel `mdm.sso.test@example.invalid` a été
+      créé dans Keycloak et dans HMDM pour valider le SSO MDM. Le mot de passe
+      est aléatoire, non affiché, non consigné et réservé à la recette.
+    - Le compte Keycloak possède uniquement le rôle `INFORMATIQUE`, nécessaire
+      pour voir la tuile MDM dans le portail. Le compte HMDM associé est au
+      rôle `OBSERVER`, sans accès global aux appareils ni aux configurations.
+    - Aucun compte réel, donnée personnelle, mot de passe réel, volume ou
+      configuration applicative n'a été modifié. Le compte de recette devra
+      être supprimé après validation du parcours navigateur complet.
+    - Rollback : supprimer ce seul utilisateur de Keycloak et de la table
+      `users` HMDM, sans modifier aucun autre compte.

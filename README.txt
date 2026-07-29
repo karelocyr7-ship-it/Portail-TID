@@ -1446,3 +1446,24 @@ avant de conclure que la VM est inaccessible.
       secret, base, volume ou VM applicative n’a été modifié.
     - Rollback : revenir au commit portail précédent et reconstruire seulement
       le service `portal`; les journaux agents privés restent conservés.
+
+69. Livraison des rapports assainis et correction CI — 29 juillet 2026
+    - La PR portail #50 a été fusionnée dans `main` au commit `c24d969` après
+      succès des contrôles GitHub build, qualité et vérification dépôt.
+    - Le workflow qualité était initialement bloqué par deux YAML invalides :
+      une valeur MDM contenant `:` non quotée et une clé d’exécution indentée
+      dans une liste. Les fichiers ont été corrigés et les fichiers suivis
+      signalés par Prettier ont été formatés sans changement fonctionnel.
+    - Le portail a été reconstruit puis seul le service `portal` a été recréé.
+      Tous les conteneurs sont actifs, `/health` répond HTTP 200 en HTTPS, le
+      manifeste PWA et l’icône 512 du pack TAD Groupe répondent HTTP 200.
+    - Les fichiers non suivis, l’archive d’icônes source, les données locales
+      et tout `.env` réel ont été laissés intacts et non lus.
+    - Risques restants : l’avertissement OpenSSL/Prisma et l’avertissement de
+      traçage NFT dynamique Next.js sont non bloquants mais à traiter dans des
+      tâches dédiées. Les correctifs applicatifs TDB, CASH-RECON, GParc,
+      Revue-PDV et Recrutement exigent des branches isolées dans leurs dépôts
+      respectifs; leurs répertoires de production contiennent déjà des travaux
+      locaux à préserver.
+    - Rollback : reconstruire le commit portail précédent; aucune donnée
+      persistante ni unité systemd ne doit être supprimée.

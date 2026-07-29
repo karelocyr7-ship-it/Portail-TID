@@ -1648,15 +1648,17 @@ body {
 
 .agent-report-list {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
 }
 
 .agent-report-card {
   display: grid;
+  min-width: 0;
   gap: 14px;
-  padding: 22px;
+  padding: 16px;
   border: 1px solid #dbe4f0;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #fff;
   box-shadow: 0 10px 24px rgba(20, 38, 72, 0.06);
 }
@@ -1669,8 +1671,11 @@ body {
 }
 
 .agent-report-heading h2 {
-  margin: 4px 0;
+  margin: 3px 0;
   color: #15233d;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .agent-report-actions {
@@ -1984,6 +1989,10 @@ body {
     gap: 10px;
     padding: 14px;
     border-radius: 12px;
+  }
+
+  .agent-reports-page .agent-report-list {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
 
   .agent-reports-page .agent-report-body,

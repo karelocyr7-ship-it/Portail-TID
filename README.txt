@@ -1495,3 +1495,21 @@ avant de conclure que la VM est inaccessible.
     - Rollback : annuler le commit `7a53324` sur la branche dédiée; aucune
       migration, donnée métier, base, volume ou conteneur applicatif n'a été
       modifié.
+
+71. Déploiement CASH-RECON — 29 juillet 2026
+    - Validation utilisateur explicite reçue après la fusion de la PR
+      CASH-RECON #7 dans `main` (commit de fusion `551afd7`).
+    - La branche locale a été basculée sur `main`; le fichier généré
+      `web/public/build-version.json`, préexistant, a été placé dans un stash
+      nommé avant la mise à jour afin de le conserver sans le versionner.
+    - Les tests complets API ont réussi sur le `main` exact à déployer
+      (`npm test`, code retour 0).
+    - Déploiement exécuté selon la procédure documentée :
+      `sudo docker compose up -d --build`. Les services API et web ont été
+      reconstruits; MariaDB et le relais SMS sont restés sains.
+    - Contrôles post-déploiement : les quatre conteneurs sont healthy et les
+      URL `http://127.0.0.1:8088/` et `https://cash.atf.onl/` répondent HTTP
+      200.
+    - Rollback : revenir au commit `3f3f0fd`, reconstruire la stack avec la
+      même procédure et réappliquer le stash uniquement après vérification;
+      ne supprimer ni la base MariaDB ni les volumes.

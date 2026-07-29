@@ -1725,3 +1725,26 @@ avant de conclure que la VM est inaccessible.
     - Les connecteurs existants devront être mis en conformité progressivement;
       MDM est le premier chantier identifié. Toute nouvelle application devra
       implémenter ce contrat avant son activation dans le catalogue.
+
+83. Socle d’autorité applicative du portail — 29 juillet 2026
+    - Autorisation utilisateur reçue pour implémenter, fusionner et déployer
+      le socle commun. PR #55 fusionnée dans `main` au commit `842e4b0`.
+    - Le contrat `docs/APPLICATION_AUTHORITY_CONTRACT.md` définit l’identité,
+      le statut, les profils, le rapprochement non ambigu et les obligations
+      de synchronisation pour toutes les applications actuelles et futures.
+    - L’endpoint portail `POST /api/authorization/profiles` retourne désormais
+      l’identité de rapprochement, le statut actif, la décision
+      `authorized`, les profils et une révision. Le client OIDC MDM est inclus
+      dans la configuration par défaut des clients applicatifs reconnus.
+    - Contrôles réussis avant fusion : lint, typecheck, 16 tests Vitest, build
+      Next.js et contrôle de diff. Déploiement effectué depuis le commit de
+      fusion : seule l’image et le conteneur `portal` ont été recréés; santé
+      HTTPS finale HTTP 200. Aucun volume, base, certificat ou secret n’a été
+      modifié.
+    - Limite constatée : les sources accessibles couvrent MDM et Recrutement;
+      les dépôts ou services TDB, GParc, Revue-PDV et CASH-RECON ne sont pas
+      présents dans l’infrastructure inspectée. Ils ne peuvent pas être
+      déclarés conformes ni déployés sans leurs dépôts/procédures propres.
+    - Rollback : redéployer l’image portail construite depuis le commit `main`
+      antérieur, puis recréer uniquement le conteneur `portal`; conserver les
+      données persistantes.

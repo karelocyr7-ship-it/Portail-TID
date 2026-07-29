@@ -1640,3 +1640,22 @@ avant de conclure que la VM est inaccessible.
     - Rollback : remettre l'ancienne URL racine MDM dans la ligne catalogue,
       reconstruire le commit portail précédent puis recréer uniquement
       `portal`; ne supprimer aucune donnée persistante.
+
+78. Publication Git de la source MDM — 29 juillet 2026
+    - Autorisation utilisateur reçue pour créer le dépôt privé et publier la
+      branche de correctif MDM.
+    - Dépôt privé créé : `karelocyr7-ship-it/HMDM`. Une clé de déploiement
+      dédiée, limitée à ce dépôt, est installée uniquement sur la VM MDM; sa
+      partie privée n'a pas été affichée, copiée ou consignée.
+    - La source locale MDM était un clone incomplet dont un parent Git avait
+      disparu. Un import autonome des seuls fichiers suivis a été créé dans
+      un espace temporaire, sans `.env`, secret ni artefact généré.
+    - La branche de base `main` référence l'import OIDC initial sans push
+      direct sur `main`. La branche `codex/mdm-oidc-runtime-fix` contient le
+      correctif runtime; PR brouillon #1 ouverte dans le dépôt HMDM.
+    - Le remote local antérieur est conservé sous le nom `upstream-audit`.
+      Aucun service MDM, conteneur, base, volume ou certificat n'a été modifié
+      pendant cette publication.
+    - Reprise : après revue et fusion de la PR #1, reconstruire le WAR depuis
+      `main` et appliquer la procédure de déploiement documentée; conserver
+      les sauvegardes existantes avant tout remplacement.

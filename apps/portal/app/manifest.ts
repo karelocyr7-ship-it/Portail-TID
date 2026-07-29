@@ -2,19 +2,25 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Portail TID",
-    short_name: "Portail TID",
+    name: "TAD Groupe – Portail applicatif",
+    short_name: "TAD Groupe",
     description: "Portail des applications métiers de TID / TAD Groupe",
     start_url: "/",
     display: "standalone",
-    background_color: "#f5f8fc",
-    theme_color: "#062f70",
+    background_color: "#0A2A5C",
+    theme_color: "#0A2A5C",
     lang: "fr",
     icons: [
       {
-        src: "/branding/tid-logo.png",
-        sizes: "216x87",
+        src: "/icons/icon-192x192.png",
+        sizes: "192x192",
         type: "image/png",
+      },
+      {
+        src: "/icons/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   };

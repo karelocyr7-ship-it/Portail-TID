@@ -122,14 +122,32 @@ trap cleanup EXIT
 
 result_file="$result_dir/$(basename "$job" .task).md"
 log_file="$log_dir/$(basename "$job" .task).log"
-{
-  echo "# Rapport — $job_agent"
-  echo
-  echo "- Tâche : $(basename "$job")"
-  echo "- Début : $(date --iso-8601=seconds)"
-  echo
-  if ! codex exec --skip-git-repo-check --sandbox workspace-write --cd "$workspace" \
-    "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $task_content"; then
-    runtime_status="FAILED"
-  fi
-} > >(tee "$result_file" | tee "$log_file") 2>&1
+final_report="$workspace/RESULT_REPORT.md"
+
+if ! codex exec --skip-git-repo-check --sandbox workspace-write --cd "$workspace" \
+  "Tu es l’agent $job_agent. Limite strictement ton travail au périmètre de cette application. Ne déploie rien, ne lis aucun secret et ne modifie aucune base. $task_content
+
+À la fin, écris obligatoirement RESULT_REPORT.md dans le workspace. Il doit
+être concis et ne contenir que : résultat, fichiers modifiés, contrôles,
+risques, rollback et blocages. N'y inclus jamais de journaux bruts, sortie de
+commande, valeurs de configuration, identifiants, secrets, tokens ou données
+personnelles." >"$log_file" 2>&1; then
+  runtime_status="FAILED"
+fi
+
+if [[ -f "$final_report" ]]; then
+  install -m 0640 "$final_report" "$result_file"
+else
+  runtime_status="FAILED"
+  {
+    echo "# Rapport — $job_agent"
+    echo
+    echo "- Tâche : $task_name"
+    echo "- Début : $started_at"
+    echo "- État : rapport final absent"
+    echo
+    echo "L'agent n'a pas produit RESULT_REPORT.md. Le journal brut reste privé"
+    echo "dans l'espace des agents et n'est pas publié dans le portail."
+  } > "$result_file"
+  chmod 0640 "$result_file"
+fi

@@ -1487,8 +1487,11 @@ avant de conclure que la VM est inaccessible.
       `codex/fix-cash-transactional-integrity`. Le fichier
       `web/public/build-version.json`, déjà modifié avant l'intervention,
       reste intact et hors de la correction.
-    - Blocage de publication : GitHub CLI (`gh`) est absent de la VM, donc la
-      branche n'a pas été poussée et aucune PR/déploiement n'a été créé.
+    - GitHub CLI a été installé sur la VM après validation utilisateur. Son
+      compte local n'étant pas configuré, la branche a été poussée avec la
+      clé Git déjà configurée sous `root`, sans lecture ni copie de celle-ci;
+      la PR brouillon CASH-RECON #7 a ensuite été créée depuis le portail.
+      Aucun déploiement n'a été créé.
     - Rollback : annuler le commit `7a53324` sur la branche dédiée; aucune
       migration, donnée métier, base, volume ou conteneur applicatif n'a été
       modifié.

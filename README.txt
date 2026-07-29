@@ -1622,3 +1622,21 @@ avant de conclure que la VM est inaccessible.
       service `portal`.
     - Rollback : revenir au commit portail précédent et recréer uniquement le
       service `portal`; conserver PostgreSQL et tous les volumes.
+
+77. Déploiement du lien SSO portail vers MDM — 29 juillet 2026
+    - Validation utilisateur reçue par « déploie » après fusion de la PR
+      portail #54 dans `main` (commit de fusion `2b0e369`).
+    - Déploiement depuis le worktree temporaire
+      `/tmp/portail-deploy-2b0e369`, afin de préserver les fichiers non suivis
+      de l'espace de travail. La configuration Compose a été validée sans
+      afficher le `.env` réel.
+    - La seule donnée modifiée en PostgreSQL est l'URL de l'application MDM,
+      désormais `https://mdm.tadgroupe.com/rest/public/auth/oidc/login`.
+      Le service `portal` a été reconstruit depuis `main` et recréé seul;
+      aucun autre conteneur, volume, base ou certificat n'a été modifié.
+    - Contrôles réussis : build Docker, conteneur portail sain, endpoint
+      HTTPS `/health` HTTP 200 et URL MDM lue en base conforme à l'entrée
+      OIDC.
+    - Rollback : remettre l'ancienne URL racine MDM dans la ligne catalogue,
+      reconstruire le commit portail précédent puis recréer uniquement
+      `portal`; ne supprimer aucune donnée persistante.

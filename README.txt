@@ -1397,3 +1397,30 @@ avant de conclure que la VM est inaccessible.
     - Rollback : désactiver le timer `tad-agent-start.timer`, restaurer l’unité
       précédente et conserver les files pour analyse; ne supprimer aucune
       tâche ni donnée.
+
+67. Livraison du correctif agents et tuiles rapports — 29 juillet 2026
+    - Prompt utilisateur : « fait le ».
+    - VM/répertoire : VM Portail `54.37.11.202`, `/srv/tad/portail`.
+    - La correction a été publiée par PR #48 puis fusionnée dans `main` au
+      commit `e5c876e`. Les fichiers non suivis préexistants ont été laissés
+      hors du commit.
+    - L’unité `tad-agent-enable.service` a été installée et le timer de
+      démarrage reconfiguré pour retirer le marqueur de suspension à 19 h 30.
+      `tad-agent-start.timer` est enabled/active; aucune tâche ni donnée n’a
+      été supprimée.
+    - Un second blocage de permissions a été corrigé sur la file : les
+      répertoires héritent désormais du groupe `tad-agents` et la tâche MDM
+      existante est lisible par l’agent. Aucun contenu de tâche ni secret n’a
+      été affiché.
+    - La tâche MDM en file a été exécutée avec succès à 08 h 19; la file est
+      vide et un rapport final a été produit sous le répertoire de résultats.
+    - Le portail a été reconstruit avec `sudo docker compose build portal`,
+      puis seul le service `portal` a été recréé. Les six conteneurs sont
+      actifs; `https://portail.tadgroupe.com/health` répond HTTP 200.
+    - Les tuiles de rapports sont compactes et responsives; la règle CSS est
+      présente dans le bundle public actif. Aucun volume, base ou certificat
+      n’a été supprimé ou modifié.
+    - Avertissements non bloquants : Prisma signale la détection OpenSSL et
+      Next.js signale le traçage NFT dynamique de la route runtime.
+    - Rollback : reconstruire le commit précédent du portail; pour systemd,
+      restaurer l’unité et le timer précédents, puis exécuter `daemon-reload`.

@@ -21,6 +21,7 @@ const applicationByAgent: Record<string, string> = {
 const resultsRoot =
   process.env.AGENT_RESULTS_DIR ?? "/var/lib/tad-agent-results";
 const queueRoot = process.env.AGENT_QUEUE_DIR ?? "/var/lib/tad-agent-queue";
+const maxExecutionAgeMs = 12 * 60 * 60 * 1000;
 
 function extractTaskId(body: string, fileName: string) {
   return (
@@ -176,9 +177,18 @@ export async function syncAgentActionStatuses() {
         },
       });
     } else if (await pathExists(archivePath)) {
+      const ageMs = Date.now() - action.requestedAt.getTime();
       await prisma.agentAction.update({
         where: { id: action.id },
-        data: { status: "EXECUTING" },
+        data:
+          ageMs > maxExecutionAgeMs
+            ? {
+                status: "FAILED",
+                executedAt: new Date(),
+                error:
+                  "Rapport final absent après le délai maximal d'exécution.",
+              }
+            : { status: "EXECUTING" },
       });
     }
   }

@@ -10,7 +10,11 @@ export const metadata: Metadata = {
   title: "Portail TID",
   description:
     "Portail centralisé des applications métiers de TID / TAD Groupe",
-  applicationName: "Portail TID",
+  applicationName: "TAD Groupe",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({

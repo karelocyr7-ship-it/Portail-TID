@@ -17,7 +17,8 @@ acceptance_criteria:
   - Aucune VM n’est modifiée.
   - Les validations d’agents sont mises en file et non exécutées directement.
 dependencies: []
-related_applications: [tdb, cash-recon, atf, revue-pdv, gparc, mdm, recrutement-om-telco]
+related_applications:
+  [tdb, cash-recon, atf, revue-pdv, gparc, mdm, recrutement-om-telco]
 branch: codex/remove-integration-level-icons
 test_commands: []
 deployment_required: false

@@ -163,11 +163,31 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     sourceReference: "backend/src/routes/users.js:roles",
   })),
   GPARC: [
-    ["ADMIN", "Administrateur GParc", "Administration complète du parc et des comptes"],
-    ["DAF", "DAF GParc", "Validation financière et pilotage des dépenses du parc"],
-    ["GESTIONNAIRE", "Gestionnaire GParc", "Gestion opérationnelle du parc automobile"],
-    ["CHAUFFEUR", "Chauffeur GParc", "Suivi des véhicules, consommations et demandes"],
-    ["CHAUFFEUR_GESTIONNAIRE", "Chauffeur gestionnaire GParc", "Accès chauffeur et gestionnaire combiné"],
+    [
+      "ADMIN",
+      "Administrateur GParc",
+      "Administration complète du parc et des comptes",
+    ],
+    [
+      "DAF",
+      "DAF GParc",
+      "Validation financière et pilotage des dépenses du parc",
+    ],
+    [
+      "GESTIONNAIRE",
+      "Gestionnaire GParc",
+      "Gestion opérationnelle du parc automobile",
+    ],
+    [
+      "CHAUFFEUR",
+      "Chauffeur GParc",
+      "Suivi des véhicules, consommations et demandes",
+    ],
+    [
+      "CHAUFFEUR_GESTIONNAIRE",
+      "Chauffeur gestionnaire GParc",
+      "Accès chauffeur et gestionnaire combiné",
+    ],
   ].map(([key, name, description]) => ({
     key,
     name,

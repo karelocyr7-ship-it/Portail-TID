@@ -45,7 +45,9 @@ export async function getPortalUserAccess(identity: {
           where: { employeeId: identity.employeeId },
           include: {
             assignments: {
-              where: { profile: { active: true, application: { active: true } } },
+              where: {
+                profile: { active: true, application: { active: true } },
+              },
               select: { profile: { select: { applicationId: true } } },
             },
           },
@@ -56,6 +58,7 @@ export async function getPortalUserAccess(identity: {
     managed: Boolean(resolvedUser),
     active: resolvedUser?.active ?? false,
     applicationIds:
-      resolvedUser?.assignments.map(({ profile }) => profile.applicationId) ?? [],
+      resolvedUser?.assignments.map(({ profile }) => profile.applicationId) ??
+      [],
   };
 }

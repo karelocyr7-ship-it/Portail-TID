@@ -14,15 +14,15 @@ n'est pas modifié implicitement.
 
 ## Périmètre des applications
 
-| Application | Flux contrôlé | Même défaut constaté | Action |
-|---|---|---:|---|
-| TDB | Appel de `/api/authorization/profiles` | Oui | Corrigé côté portail |
-| CASH-RECON | Utilisateur local recherché par e-mail après validation OIDC | Non | Aucune modification |
-| Revue-PDV | Utilisateur local recherché par e-mail après validation OIDC | Non | Aucune modification |
-| GParc | Utilisateur local recherché par e-mail après validation OIDC | Non | Aucune modification |
-| MDM | Utilisateur local recherché par e-mail après validation OIDC | Non | Aucune modification |
-| ATF | Aucun flux OIDC comparable trouvé dans le dépôt audité | Non déterminé | À confirmer |
-| Recrutement OM & Telco | Aucun flux OIDC comparable trouvé dans le dépôt audité | Non déterminé | À confirmer |
+| Application            | Flux contrôlé                                                | Même défaut constaté | Action               |
+| ---------------------- | ------------------------------------------------------------ | -------------------: | -------------------- |
+| TDB                    | Appel de `/api/authorization/profiles`                       |                  Oui | Corrigé côté portail |
+| CASH-RECON             | Utilisateur local recherché par e-mail après validation OIDC |                  Non | Aucune modification  |
+| Revue-PDV              | Utilisateur local recherché par e-mail après validation OIDC |                  Non | Aucune modification  |
+| GParc                  | Utilisateur local recherché par e-mail après validation OIDC |                  Non | Aucune modification  |
+| MDM                    | Utilisateur local recherché par e-mail après validation OIDC |                  Non | Aucune modification  |
+| ATF                    | Aucun flux OIDC comparable trouvé dans le dépôt audité       |        Non déterminé | À confirmer          |
+| Recrutement OM & Telco | Aucun flux OIDC comparable trouvé dans le dépôt audité       |        Non déterminé | À confirmer          |
 
 ## Contrôles exécutés
 
@@ -42,4 +42,3 @@ n'est pas modifié implicitement.
 Le correctif portail est fusionné dans `main`, reconstruit et déployé. Le
 conteneur portail est sain et `https://portail.tadgroupe.com/health` répond avec
 `{"status":"ok","service":"portal"}`.
-

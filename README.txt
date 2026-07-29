@@ -1424,3 +1424,25 @@ avant de conclure que la VM est inaccessible.
       Next.js signale le traçage NFT dynamique de la route runtime.
     - Rollback : reconstruire le commit précédent du portail; pour systemd,
       restaurer l’unité et le timer précédents, puis exécuter `daemon-reload`.
+
+68. Assainissement des rapports agents et icônes TAD Groupe — 29 juillet 2026
+    - Prompt utilisateur : « consulte les rapports des agents et corriges le
+      problèmes et points bloquand », puis indication d’utiliser le pack
+      d’icônes TAD Groupe à la racine du projet.
+    - Audit des rapports : les journaux bruts des agents étaient publiés comme
+      rapports dans le portail; ils sont volumineux et peuvent contenir des
+      détails techniques inutiles. Les actions archivées sans rapport final
+      restaient aussi indéfiniment en état `EXECUTING`.
+    - Correction portail préparée : le journal brut reste uniquement dans
+      l’espace privé des agents; seul `RESULT_REPORT.md`, explicitement limité
+      aux résultats, contrôles, risques, rollback et blocages, est publié.
+      L’absence de rapport final rend l’action en échec, et les archives sans
+      résultat expirent après 12 heures avec un motif explicite.
+    - Le pack local `Pack_Icones_TADGroupe_Option5.zip` fournit désormais les
+      icônes PWA 192/512, Apple Touch et favicon du portail. L’archive source
+      non suivie reste intacte et n’est pas versionnée.
+    - Contrôles réussis : syntaxe shell, lint, typecheck, 16 tests, build et
+      diff-check. Avertissement Next.js NFT dynamique connu; aucun `.env`,
+      secret, base, volume ou VM applicative n’a été modifié.
+    - Rollback : revenir au commit portail précédent et reconstruire seulement
+      le service `portal`; les journaux agents privés restent conservés.

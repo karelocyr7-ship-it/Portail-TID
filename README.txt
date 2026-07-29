@@ -1695,3 +1695,21 @@ avant de conclure que la VM est inaccessible.
       être supprimé après validation du parcours navigateur complet.
     - Rollback : supprimer ce seul utilisateur de Keycloak et de la table
       `users` HMDM, sans modifier aucun autre compte.
+
+81. Exigences de provisioning MDM piloté par le portail — 29 juillet 2026
+    - Règle confirmée : le portail est la source d’autorité. À la connexion,
+      MDM doit rapprocher l’identité par matricule, e-mail, puis nom/prénom
+      exact non ambigu; appliquer le profil MDM du portail en priorité sur le
+      profil local; et créer le compte local lorsqu’aucun rapprochement fiable
+      n’existe.
+    - Une désactivation ou un changement de profil dans le portail doit aussi
+      être propagé automatiquement à MDM, y compris pour les comptes déjà
+      créés. L’endpoint portail existant de consultation des profils vérifie
+      déjà le jeton d’application, mais le connecteur MDM et le canal de
+      synchronisation continue restent à implémenter et à soumettre en PR.
+    - La recette a confirmé que l’authentification Keycloak est acceptée après
+      complétion du profil non personnel. Le compte de recette et tous les
+      fichiers temporaires ont ensuite été supprimés de Keycloak, HMDM et de
+      la VM. Aucun compte réel ni donnée métier n’a été modifié.
+    - Aucun déploiement n’a été effectué pour ces exigences; rollback : non
+      applicable tant qu’aucune modification applicative n’est fusionnée.

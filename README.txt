@@ -1659,3 +1659,25 @@ avant de conclure que la VM est inaccessible.
     - Reprise : après revue et fusion de la PR #1, reconstruire le WAR depuis
       `main` et appliquer la procédure de déploiement documentée; conserver
       les sauvegardes existantes avant tout remplacement.
+
+79. Déploiement du WAR MDM depuis GitHub `main` — 29 juillet 2026
+    - Confirmation utilisateur reçue après fusion de la PR HMDM #1; fusion
+      confirmée dans `main` au commit `461f646`.
+    - Le worktree GitHub autonome requiert un fichier `build.properties`
+      ignoré et son installation frontend historique échoue sur `grunt resolve`.
+      Les deux fichiers modifiés ont été comparés octet par octet avec la
+      source opérationnelle MDM : ils correspondent à `main`.
+    - Les tests Maven Java 17 et le build du WAR ont donc été relancés depuis
+      cette source opérationnelle, avec sa configuration de build locale non
+      versionnée; aucun secret n'a été affiché ou transféré. WAR produit :
+      SHA-256 `e3d1112240a1c798cf19891b7dd8e54ab8d7d79f9fb5aa57bfb6b42991aa86ed`.
+    - Le WAR monté a été remplacé, puis seul `hmdm-app` a été recréé. Sauvegarde
+      du WAR précédent :
+      `/opt/hmdm/work/oidc-backups/20260729T175441Z`.
+    - Contrôles réussis : accueil TAD HTTP 200, `auth/options` HTTP 200 sur
+      les domaines TAD et ATF, démarrage OIDC TAD HTTP 302 et conteneur actif.
+      PostgreSQL, volumes, certificats et comptes utilisateurs n'ont pas été
+      modifiés.
+    - Rollback : recopier le WAR sauvegardé depuis le dossier indiqué vers
+      `/opt/hmdm/hmdm-oidc.war`, puis recréer uniquement `hmdm-app`; conserver
+      la base et les volumes.

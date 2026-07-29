@@ -107,7 +107,7 @@ applications:
     vm_alias: mdm-tad
     ssh_user: debian
     environment: production
-    repository_path: /opt/hmdm (overlay miroir local: /srv/tad/agents/repositories/mdm)
+    repository_path: "/opt/hmdm (overlay miroir local: /srv/tad/agents/repositories/mdm)"
     git_remote: overlay local; source amont HMDM à confirmer
     default_branch: main
     integration_branch: develop

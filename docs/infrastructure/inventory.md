@@ -8,12 +8,12 @@ lu, aucun service n’a été redémarré et aucun paquet n’a été installé.
 
 ## VM et accès SSH détectés
 
-| VM | Alias / utilisateur | Système | Applications rattachées |
-|---|---|---|---|
-| `54.37.11.202` | Portail / à confirmer | à confirmer dans cette passe | Portail |
-| `135.125.132.51` | `Revue-PDV` / `debian` | Debian 12 | TDB, CASH-RECON, Revue-PDV |
-| `51.91.102.44` | `gparc` / `debian` | Debian 12 | GParc |
-| `91.134.255.77` | `mdm-tad` / `debian` | Debian 13.6 | MDM, Recrutement OM & Telco |
+| VM               | Alias / utilisateur    | Système                      | Applications rattachées     |
+| ---------------- | ---------------------- | ---------------------------- | --------------------------- |
+| `54.37.11.202`   | Portail / à confirmer  | à confirmer dans cette passe | Portail                     |
+| `135.125.132.51` | `Revue-PDV` / `debian` | Debian 12                    | TDB, CASH-RECON, Revue-PDV  |
+| `51.91.102.44`   | `gparc` / `debian`     | Debian 12                    | GParc                       |
+| `91.134.255.77`  | `mdm-tad` / `debian`   | Debian 13.6                  | MDM, Recrutement OM & Telco |
 
 ATF n’a pas pu être rattachée à une VM, un dépôt ou un service avec une
 preuve suffisante ; elle reste `to_confirm`.

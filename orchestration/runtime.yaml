@@ -54,7 +54,8 @@ review_agents:
   - test-quality-agent
   - deployment-agent
   - documentation-agent
-  execution: queued-after-independent-review
+
+review_execution: queued-after-independent-review
 
 activation:
   enabled_agents:

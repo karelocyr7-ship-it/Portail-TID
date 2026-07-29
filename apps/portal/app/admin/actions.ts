@@ -168,8 +168,8 @@ export async function savePortalUser(formData: FormData) {
           data: {
             keycloakSubject,
             employeeId: employeeIdProvided
-              ? employeeId ?? null
-              : before?.employeeId ?? null,
+              ? (employeeId ?? null)
+              : (before?.employeeId ?? null),
             email: email || null,
             displayName,
             active,
@@ -178,7 +178,7 @@ export async function savePortalUser(formData: FormData) {
       : await transaction.portalUser.create({
           data: {
             keycloakSubject,
-            employeeId: employeeIdProvided ? employeeId ?? null : null,
+            employeeId: employeeIdProvided ? (employeeId ?? null) : null,
             email: email || null,
             displayName,
             active,

@@ -180,13 +180,15 @@ export async function syncAgentActionStatuses() {
       const ageMs = Date.now() - action.requestedAt.getTime();
       await prisma.agentAction.update({
         where: { id: action.id },
-        data: ageMs > maxExecutionAgeMs
-          ? {
-              status: "FAILED",
-              executedAt: new Date(),
-              error: "Rapport final absent après le délai maximal d'exécution.",
-            }
-          : { status: "EXECUTING" },
+        data:
+          ageMs > maxExecutionAgeMs
+            ? {
+                status: "FAILED",
+                executedAt: new Date(),
+                error:
+                  "Rapport final absent après le délai maximal d'exécution.",
+              }
+            : { status: "EXECUTING" },
       });
     }
   }

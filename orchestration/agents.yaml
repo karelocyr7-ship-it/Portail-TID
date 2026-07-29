@@ -51,7 +51,17 @@ agents:
     can_execute_production: false
   - id: architecture-review-agent
     type: reviewer
-    scope: [portal, tdb, cash-recon, atf, revue-pdv, gparc, mdm, recrutement-om-telco]
+    scope:
+      [
+        portal,
+        tdb,
+        cash-recon,
+        atf,
+        revue-pdv,
+        gparc,
+        mdm,
+        recrutement-om-telco,
+      ]
     can_execute_production: false
   - id: security-review-agent
     type: reviewer

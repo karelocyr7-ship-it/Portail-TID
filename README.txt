@@ -1713,3 +1713,15 @@ avant de conclure que la VM est inaccessible.
       la VM. Aucun compte réel ni donnée métier n’a été modifié.
     - Aucun déploiement n’a été effectué pour ces exigences; rollback : non
       applicable tant qu’aucune modification applicative n’est fusionnée.
+
+82. Autorité centralisée du portail — 29 juillet 2026
+    - Correction utilisateur : le portail est la source d’autorité unique pour
+      toutes les applications du portail, présentes et futures, et non pour
+      MDM seulement.
+    - Le contrat d’intégration commun doit couvrir l’identité de référence,
+      l’état actif/inactif, les profils applicatifs et leur propagation. Une
+      application ne doit conserver qu’une projection locale technique et ne
+      doit pas être l’autorité de ses droits.
+    - Les connecteurs existants devront être mis en conformité progressivement;
+      MDM est le premier chantier identifié. Toute nouvelle application devra
+      implémenter ce contrat avant son activation dans le catalogue.

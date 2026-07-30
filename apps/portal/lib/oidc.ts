@@ -85,7 +85,9 @@ export function callbackUrl(): string {
   return `${publicUrl()}/api/auth/callback`;
 }
 
-export async function authorizationUrl(): Promise<{
+export async function authorizationUrl(options?: {
+  prompt?: "login";
+}): Promise<{
   url: string;
   state: string;
   nonce: string;
@@ -100,6 +102,7 @@ export async function authorizationUrl(): Promise<{
   url.searchParams.set("redirect_uri", callbackUrl());
   url.searchParams.set("state", state);
   url.searchParams.set("nonce", nonce);
+  if (options?.prompt) url.searchParams.set("prompt", options.prompt);
   return { url: url.toString(), state, nonce };
 }
 

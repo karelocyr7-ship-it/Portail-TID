@@ -1748,3 +1748,32 @@ avant de conclure que la VM est inaccessible.
     - Rollback : redéployer l’image portail construite depuis le commit `main`
       antérieur, puis recréer uniquement le conteneur `portal`; conserver les
       données persistantes.
+
+84. Correction de l’alimentation GParc dans TDB — 30 juillet 2026
+    - Prompts utilisateur reçus : « pourquoi dans le TDB je ne vois toujours
+      pas de data dans les TDB applicatifs ? » ; « je ne parle pas de RH je
+      parle des onglet applicatif de TDB : GParc, Revue-PDV,.. » ; « c'est la
+      meme vm que cash-recon tu à deja les clef ssh » ; « 1: l'ongle GParc est
+      bien présent, verifie et fait le reste » ; « fait le et authentifie gh »
+      ; « c'est validé ».
+    - Diagnostic en lecture seule : l’onglet GParc et ses six KPI sont bien
+      présents dans le code TDB. Le timer `gparc-tdb-sync.timer` était actif,
+      mais la publication échouait en HTTP 401. Le jeton de service portait le
+      rôle requis ; le backend TDB déployé n’acceptait que l’audience OCI et
+      rejetait l’audience GParc.
+    - La branche TDB `codex/modernize-dashboard-kpi`, déjà préparée, a été
+      publiée et la PR #17 a été créée, puis fusionnée dans `main` au commit
+      `596b44d` (`feat: intégrer les KPI GParc dans TDB`). GitHub CLI a été
+      authentifié sur le compte autorisé sans afficher ni versionner de token.
+    - Les tests backend (2), le build frontend et `git diff --check` ont réussi.
+      Depuis un worktree temporaire du commit fusionné, seuls les conteneurs
+      TDB `backend` et `frontend` ont été reconstruits et recréés. La santé
+      publique TDB répond HTTP 200 ; les audiences OCI et GParc sont actives
+      dans le runtime.
+    - Une synchronisation GParc immédiate a ensuite réussi et publié 7 KPI
+      agrégés pour la période `2026-07`. Aucune donnée nominative, secret,
+      volume SQLite ou base n’a été supprimé ou affiché.
+    - Risque restant : le navigateur peut conserver un ancien bundle ; forcer
+      un rechargement si l’onglet reste visuellement vide. Rollback :
+      reconstruire uniquement backend et frontend depuis le commit `main`
+      précédent, puis conserver le volume SQLite et le timer GParc.

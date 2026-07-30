@@ -1926,3 +1926,29 @@ avant de conclure que la VM est inaccessible.
       erreur Nginx détectée.
     - Aucun volume, secret ou donnée métier n’a été modifié. Rollback :
       redéployer uniquement le frontend depuis `7f0fec7`.
+
+93. Montants Objectif et Résultat des KPI Météo — 30 juillet 2026
+    - L’importeur T3 récupère désormais les objectifs et résultats mensuels
+      réels dans l’onglet `BASE`, au lieu d’enregistrer ces deux champs sous
+      forme d’indices base 100. Un contrôle bloque l’import si le R/O recalculé
+      depuis les montants diverge du taux de référence.
+    - Les trois lignes « À date », « M-1 » et « Année-1 » affichent directement
+      Objectif, Résultat, Écart et R/O. Les KPI monétaires E-Recharge, Cash-in,
+      Cash-out et Chiffre d’affaires Orange Money sont libellés et formatés en
+      FCFA ; les KPI de volume restent correctement indiqués en unités.
+    - Le dry-run a validé les 15 KPI, l’import transactionnel a réussi sur une
+      base SQLite isolée, les deux tests backend et le build Vite ont réussi.
+      PR TDB #29 fusionnée dans `main` au commit `e240524`.
+    - Avant l’écriture en production, une sauvegarde cohérente et intègre a été
+      créée :
+      `/app/data/backups/tdb-perf-before-kpi-cfa-20260730T113926Z.sqlite`
+      (2 838 528 octets).
+    - Les 15 KPI de juillet 2026 ont été réimportés depuis le classeur T3. Le
+      contrôle post-import confirme notamment Cash-in à 30 551 843 721 FCFA
+      d’objectif et 22 070 070 198 FCFA de résultat, ainsi que le chiffre
+      d’affaires à 54 470 713 381 / 42 893 974 803 FCFA.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-Cc8etCBL.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200 et aucune erreur frontend/backend.
+    - Rollback : restaurer la sauvegarde SQLite ci-dessus puis redéployer
+      uniquement le frontend depuis `1066658`.

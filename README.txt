@@ -1997,3 +1997,28 @@ avant de conclure que la VM est inaccessible.
       `assets/index-CK0J1r_C.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
       200 et aucune erreur Nginx.
     - Rollback : redéployer uniquement le frontend depuis `f33aa32`.
+
+97. Rétablissement du SSO Portail vers TDB sur mobile — 30 juillet 2026
+    - Symptôme signalé en navigation privée sur smartphone : l’ouverture de
+      TDB depuis le portail déclenchait le SSO automatiquement, puis affichait
+      « Profil TDB introuvable ou inactif » avant toute action utile sur
+      l’écran de connexion.
+    - Diagnostic : le correctif de la PR TDB #16 était bien présent dans
+      `main`, mais le backend de production utilisait encore une image
+      construite avant ce correctif. Cette ancienne image attendait uniquement
+      un profil objet `{ key }` et rejetait les clés texte actuellement
+      renvoyées par le portail.
+    - Le backend a été reconstruit depuis le `main` courant `e5d1024` puis
+      recréé sans modification du volume SQLite. L’image active
+      `sha256:e89e6d81c030433bdaf490e58443091c24131e8b42439f8157a73212cb0f9a86`
+      contient bien la compatibilité profil texte / ancien format objet.
+    - Le frontend a ensuite été recréé sans reconstruction afin que Nginx
+      résolve la nouvelle adresse interne du backend ; le 502 transitoire
+      observé juste après le remplacement du backend a ainsi été supprimé.
+    - Contrôles réussis : deux tests backend, build Docker backend, santé HTTPS,
+      configuration OIDC active, redirection Keycloak HTTP 302, cookie d’état
+      `Secure; SameSite=Lax` et aucune erreur backend/frontend.
+    - Aucun secret, volume ou donnée métier n’a été modifié. Rollback :
+      réactiver l’ancienne image backend
+      `sha256:ca5049f43c07c9e5e3b131f4be38d533a688a2ea088b32af96ddc58fdd01a386`,
+      puis recréer le backend et le frontend.

@@ -1791,3 +1791,22 @@ avant de conclure que la VM est inaccessible.
       bundle public `assets/index-BJtbDWJi.js`.
     - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
       reconstruire uniquement le frontend depuis le commit `main` précédent.
+
+86. Refonte enrichie de la Météo directionnelle TDB — 30 juillet 2026
+    - La présentation a été reconstruite en s’inspirant de la version
+      sauvegardée, tout en conservant l’alimentation dynamique de l’API.
+    - La vue affiche une synthèse compacte (R/O global, objectifs, réalisés,
+      écarts et alertes), des cartes par domaine et un tableau comparatif
+      regroupant dans chaque KPI la période courante, M-1 et N-1. Les données
+      N-1 absentes restent explicitement marquées « À injecter ».
+    - Un clic sur un KPI ouvre le détail complet de ses valeurs et de son
+      historique. La mise en page est responsive et utilise une feuille de
+      style isolée.
+    - PR TDB #21 fusionnée dans `main` au commit `5542e48`. Le build Vite et
+      le build Docker ont réussi ; seul le conteneur frontend TDB a été
+      recréé depuis un worktree propre.
+    - Contrôles production réussis : API HTTPS en bonne santé, assets
+      JavaScript et CSS en HTTP 200, nouveau bundle public
+      `assets/index-ecDyf0ih.js`, sans erreur Nginx au démarrage.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      reconstruire et redéployer uniquement le frontend depuis `6b0a204`.

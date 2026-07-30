@@ -26,6 +26,7 @@ export type PortalSession = {
   employeeId?: string;
   name?: string;
   email?: string;
+  emailVerified?: boolean;
   username?: string;
   roles: string[];
   groups: string[];
@@ -265,6 +266,7 @@ async function verifyIdToken(
     employeeId,
     name: typeof claims.name === "string" ? claims.name : undefined,
     email: typeof claims.email === "string" ? claims.email : undefined,
+    emailVerified: claims.email_verified === true,
     username:
       typeof claims.preferred_username === "string"
         ? claims.preferred_username

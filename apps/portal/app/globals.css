@@ -729,6 +729,13 @@ p {
 .admin-tool-strip p {
   margin-bottom: 0;
 }
+.admin-tool-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .admin-card {
   position: relative;
   padding: 22px;
@@ -816,6 +823,12 @@ p {
   .admin-tool-strip {
     align-items: start;
     flex-direction: column;
+  }
+  .admin-tool-actions {
+    width: 100%;
+  }
+  .admin-tool-actions .button {
+    flex: 1 1 190px;
   }
   .section-header {
     align-items: start;

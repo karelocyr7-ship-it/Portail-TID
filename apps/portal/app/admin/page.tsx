@@ -409,9 +409,19 @@ export default async function AdminPage({
               : "Activez une application ou signalez sa mise en maintenance. Chaque action est enregistrée dans l’audit du portail."}
           </p>
         </div>
-        <Link className="button secondary" href="/">
-          Retour au tableau de bord
-        </Link>
+        <div className="admin-tool-actions">
+          <a
+            className="button primary"
+            href="/auth/admin/tad-groupe/console/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Administrer Keycloak
+          </a>
+          <Link className="button secondary" href="/">
+            Retour au tableau de bord
+          </Link>
+        </div>
       </section>
     </div>
   );

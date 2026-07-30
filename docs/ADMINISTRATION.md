@@ -7,7 +7,13 @@ L’espace `/admin` permet aux utilisateurs portant le rôle Keycloak
 - activer ou désactiver ce compte sans stocker de mot de passe ;
 - sélectionner, application par application, les profils déclarés dans le
   catalogue ;
-- consulter et modifier les habilitations enregistrées.
+- consulter et modifier les habilitations enregistrées ;
+- ouvrir la console d’administration du realm Keycloak `tad-groupe`.
+
+Le bouton **Administrer Keycloak** est rendu uniquement dans l’espace protégé
+`/admin` et ouvre la console dans un nouvel onglet. Il ne délègue aucun
+privilège : Keycloak contrôle encore la session et les rôles d’administration
+requis pour créer un utilisateur, définir un mot de passe ou modifier un rôle.
 
 La section **Comptes et profils applicatifs** affiche un répertoire filtrable
 par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un

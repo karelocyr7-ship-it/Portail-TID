@@ -1862,3 +1862,29 @@ avant de conclure que la VM est inaccessible.
       présents et aucune erreur Nginx détectée.
     - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
       redéployer uniquement le frontend depuis `71df182`.
+
+90. Import des données Météo T3 — 30 juillet 2026
+    - Le classeur `Tableau de Bord Météo T3 2026 JUILLET.xlsx` a été analysé :
+      les taux mensuels et trimestriels de référence sont portés par l’onglet
+      `NOUVEAU TABLEAU`, tandis que les mois futurs du premier onglet sont
+      encore à zéro. Aucun montant absent n’a été inventé.
+    - Un importeur transactionnel avec dry-run, archivage, historique et audit
+      a été ajouté. PR TDB #25 fusionnée dans `main` au commit `628d888`.
+      Validation réussie sur une base SQLite temporaire, deux tests backend
+      réussis, build frontend réussi et contrôle de diff propre.
+    - Avant l’écriture, une sauvegarde SQLite cohérente a été créée dans le
+      volume TDB :
+      `/app/data/backups/tdb-perf-before-meteo-t3-20260730T105410Z.sqlite`
+      (2 801 664 octets).
+    - L’import de juillet 2026 a réussi : 15 KPI Météo, objectifs indexés base
+      100, taux mensuels et trimestriels extraits du classeur, et performance
+      mensuelle consolidée de 84,08 %.
+    - Cinq références ont été créées : Packs au cash, Packs à crédit,
+      ABO SAT à 120 %, M+1 à 100 % et M+1 à 120 %. L’historique d’import et
+      l’audit de production sont présents ; l’API HTTPS reste en bonne santé
+      et les logs backend ne signalent aucune erreur.
+    - Les données Revue-PDV, CASH-RECON et GParc de la même période restent
+      indépendantes et sont exclues des calculs de la Synthèse Météo.
+    - Rollback : arrêter les écritures, restaurer la sauvegarde SQLite
+      ci-dessus via l’API `better-sqlite3` puis redémarrer uniquement le
+      backend ; aucun rollback frontend n’est requis.

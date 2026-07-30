@@ -1825,3 +1825,20 @@ avant de conclure que la VM est inaccessible.
       et aucune erreur Nginx détectée.
     - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
       redéployer uniquement le frontend depuis `5542e48`.
+
+88. Restauration exacte de la Météo originale isolée — 30 juillet 2026
+    - La sauvegarde `MeteoPage.legacy.jsx` réactivée précédemment contenait à
+      tort le bloc ajouté ensuite pour les KPI applicatifs. L’historique Git a
+      permis d’identifier `ac76f20` comme la dernière version originale issue
+      uniquement du classeur Météo.
+    - Le composant de `ac76f20` a été restauré octet pour octet : son hash Git
+      `59dc52368f745bb3b452a1c19f06be6ad246e9c7` correspond exactement à
+      l’original. Il ne contient aucune référence à Revue-PDV, CASH-RECON,
+      GParc, aux KPI applicatifs ou à l’API `/dashboard`.
+    - PR TDB #23 fusionnée dans `main` au commit `71df182`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-DRdNKerA.js` en HTTP 200, libellés caractéristiques de la
+      Météo originale présents et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `eb413ca`.

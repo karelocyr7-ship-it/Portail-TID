@@ -1888,3 +1888,25 @@ avant de conclure que la VM est inaccessible.
     - Rollback : arrêter les écritures, restaurer la sauvegarde SQLite
       ci-dessus via l’API `better-sqlite3` puis redémarrer uniquement le
       backend ; aucun rollback frontend n’est requis.
+
+91. Détail comparatif des KPI et filtres Météo alignés — 30 juillet 2026
+    - Le détail de chaque KPI affiche désormais trois cartes : période
+      actuelle, à date M-1 et à date N-1. Chaque période présente l’objectif,
+      le réalisé, l’écart, le R/O et l’évolution du réalisé lorsqu’elle est
+      calculable.
+    - Les périodes absentes sont explicitement affichées « À injecter ». Pour
+      juillet 2026, les valeurs T3 sont identifiées comme des indices base 100
+      afin de ne pas les présenter comme des montants bruts inexistants.
+    - PR TDB #26 fusionnée dans `main` au commit `3c103d6`. Build Vite et build
+      Docker réussis ; seul le frontend a été recréé.
+    - Les filtres de la Synthèse Météo sont maintenant sur la même ligne que
+      « Performance de juillet 2026 » et son sous-titre en affichage desktop.
+      Ils repassent sous le titre sous 980 px. Les onglets applicatifs gardent
+      leur disposition.
+    - PR TDB #27 fusionnée dans `main` au commit `7f0fec7`. Contrôles
+      production réussis : API saine, bundle `assets/index-Co9QgrOx.js`, CSS
+      `assets/index-DDGW74yc.css`, assets HTTP 200 et aucune erreur Nginx.
+    - Aucun volume, secret ou donnée métier n’a été modifié par ces deux
+      livraisons frontend. Rollback : redéployer uniquement le frontend depuis
+      `628d888` pour retirer les deux évolutions, ou depuis `3c103d6` pour
+      retirer seulement l’alignement des filtres.

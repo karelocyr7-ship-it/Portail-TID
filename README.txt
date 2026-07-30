@@ -1981,3 +1981,19 @@ avant de conclure que la VM est inaccessible.
       `assets/index-K2PjIXK6.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
       200, libellé d’objectif présent et aucune erreur Nginx.
     - Rollback : redéployer uniquement le frontend depuis `7deee4b`.
+
+96. Lisibilité des graduations verticales du graphique — 30 juillet 2026
+    - La marge gauche négative du graphique « Performance globale par
+      indicateur » a été remplacée par une marge positive de 8 px et un
+      espacement de 6 px a été ajouté entre l’axe et ses libellés.
+    - La zone de tracé est ainsi légèrement réduite afin que les graduations à
+      trois chiffres, notamment 100 %, 125 % et 150 %, ne soient plus
+      tronquées.
+    - PR TDB #32 fusionnée dans `main` au commit `e5d1024`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-CK0J1r_C.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200 et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `f33aa32`.

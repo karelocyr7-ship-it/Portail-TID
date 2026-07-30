@@ -2046,3 +2046,31 @@ avant de conclure que la VM est inaccessible.
     - Rollback : réactiver l’image portail précédente
       `sha256:d139f6577fe7c6252ac32cb2f0a8e0f617eaddc2db6deed76b3987300c038825`
       puis recréer uniquement le service portail.
+
+99. Synchronisation automatique du `sub` Keycloak — 30 juillet 2026
+    - Lorsqu’une fiche portail est préparée avant la création du compte
+      Keycloak avec l’e-mail comme `sub` provisoire, le portail remplace
+      désormais automatiquement ce placeholder par l’UUID signé lors de la
+      première connexion réussie.
+    - La réconciliation est limitée à une fiche unique dont l’e-mail et le
+      placeholder correspondent exactement au nom d’utilisateur Keycloak, ou
+      à un e-mail OIDC vérifié. Elle refuse les doublons, les conflits de
+      `sub` et les fiches contenant déjà un véritable identifiant.
+    - La mise à jour est transactionnelle et crée l’événement d’audit
+      `PORTAL_USER_SUBJECT_RECONCILED`.
+    - PR Portail-TID #57 fusionnée dans `main` au commit `a718fee`.
+      Validations réussies : Prettier, ESLint, TypeScript, build Next.js,
+      `git diff --check`, 21 tests Vitest dont 5 scénarios de réconciliation,
+      et les trois contrôles GitHub `quality`, `build` et
+      `repository-check`.
+    - L’image de production active est
+      `sha256:6f974d6e4254269ee3455baabe7bd81e37d33163fec1d65d57b35eee0333e720`.
+      Seul le service portail a été recréé ; PostgreSQL, Keycloak, Caddy et les
+      volumes sont restés inchangés.
+    - Contrôles production réussis : portail `healthy`, `/health` en HTTP 200,
+      `/admin` protégé par redirection OIDC, logique d’audit présente dans le
+      conteneur et aucun log d’erreur.
+    - Rollback : réactiver l’image portail précédente
+      `sha256:868bc82d9869075d7b2414c20b893929ad76dda12b5af0d0b897f94ae12698ee`
+      puis recréer uniquement le service portail. Les UUID déjà réconciliés
+      restent valides et ne nécessitent aucune annulation.

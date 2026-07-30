@@ -1810,3 +1810,18 @@ avant de conclure que la VM est inaccessible.
       `assets/index-ecDyf0ih.js`, sans erreur Nginx au démarrage.
     - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
       reconstruire et redéployer uniquement le frontend depuis `6b0a204`.
+
+87. Restauration de la synthèse Météo sauvegardée — 30 juillet 2026
+    - À la demande de l’utilisateur, la refonte directionnelle précédente a
+      été retirée et `MeteoPage.legacy.jsx`, conservée comme sauvegarde, est
+      redevenue la vue Météo active.
+    - La restauration remet les cartes « Synthèse par catégorie », les
+      compteurs mensuels et trimestriels, les filtres de période et les
+      fenêtres de détail de la version sauvegardée.
+    - PR TDB #22 fusionnée dans `main` au commit `eb413ca`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-Cpn0XQxK.js` en HTTP 200, libellés de la sauvegarde présents
+      et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `5542e48`.

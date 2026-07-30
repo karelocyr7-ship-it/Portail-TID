@@ -61,18 +61,25 @@ export default async function RootLayout({
                     .slice(0, 1)
                     .toUpperCase()}
                 </span>
-                <span>
+                <span className="user-identity">
                   <strong>
                     {session?.name ?? session?.username ?? "Visiteur"}
                   </strong>
                   <small>{session ? "Session Keycloak" : "Non connecté"}</small>
                 </span>
-                <a
-                  className="auth-link"
-                  href={session ? "/api/auth/logout" : "/api/auth/login"}
-                >
-                  {session ? "Se déconnecter" : "Se connecter"}
-                </a>
+                <span className="auth-actions">
+                  {session && (
+                    <a className="auth-link" href="/api/auth/switch">
+                      Changer de compte
+                    </a>
+                  )}
+                  <a
+                    className="auth-link"
+                    href={session ? "/api/auth/logout" : "/api/auth/login"}
+                  >
+                    {session ? "Se déconnecter" : "Se connecter"}
+                  </a>
+                </span>
               </div>
             </header>
             {children}

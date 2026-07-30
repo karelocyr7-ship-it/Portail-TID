@@ -1777,3 +1777,17 @@ avant de conclure que la VM est inaccessible.
       un rechargement si l’onglet reste visuellement vide. Rollback :
       reconstruire uniquement backend et frontend depuis le commit `main`
       précédent, puis conserver le volume SQLite et le timer GParc.
+
+85. Correctif écran blanc de la Météo TDB — 30 juillet 2026
+    - Le bundle de la nouvelle vue comparative levait l’erreur React #310 :
+      `useMemo` était appelé après les retours conditionnels de chargement et
+      d’erreur, ce qui changeait l’ordre des hooks entre deux rendus.
+    - Le calcul des KPI a été rendu synchrone, sans hook conditionnel. Le
+      correctif a été validé par un build frontend réussi (2 308 modules).
+    - PR TDB #20 fusionnée dans `main` au commit `6b0a204`. L’image frontend a
+      été construite depuis ce commit et seul le conteneur frontend TDB a été
+      recréé.
+    - Contrôles production réussis : frontend actif, API HTTPS HTTP 200 et
+      bundle public `assets/index-BJtbDWJi.js`.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      reconstruire uniquement le frontend depuis le commit `main` précédent.

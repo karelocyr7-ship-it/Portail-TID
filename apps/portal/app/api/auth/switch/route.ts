@@ -1,8 +1,4 @@
-import {
-  authorizationUrl,
-  clearSession,
-  setOidcCookies,
-} from "@/lib/oidc";
+import { authorizationUrl, clearSession, setOidcCookies } from "@/lib/oidc";
 
 export const runtime = "nodejs";
 

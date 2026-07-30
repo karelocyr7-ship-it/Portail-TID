@@ -2022,3 +2022,27 @@ avant de conclure que la VM est inaccessible.
       réactiver l’ancienne image backend
       `sha256:ca5049f43c07c9e5e3b131f4be38d533a688a2ea088b32af96ddc58fdd01a386`,
       puis recréer le backend et le frontend.
+
+98. Accès à l’administration Keycloak depuis le portail — 30 juillet 2026
+    - Le bandeau « Actions disponibles » de `/admin` propose désormais un
+      bouton « Administrer Keycloak », qui ouvre dans un nouvel onglet la
+      console du realm `tad-groupe`.
+    - Le bouton n’est rendu que dans la page déjà protégée côté serveur par le
+      rôle `PORTAL_ADMIN`. Il ne délègue aucun privilège : Keycloak continue
+      d’exiger ses propres droits d’administration.
+    - L’affichage est responsive : les boutons Keycloak et retour au tableau
+      de bord occupent proprement la largeur disponible sur smartphone.
+    - PR Portail-TID #56 fusionnée dans `main` au commit `2ba16ff`.
+      Validations réussies : Prettier, ESLint, TypeScript, 16 tests Vitest,
+      build Next.js, `git diff --check` et les trois contrôles GitHub
+      `quality`, `build` et `repository-check`.
+    - L’image de production active est
+      `sha256:868bc82d9869075d7b2414c20b893929ad76dda12b5af0d0b897f94ae12698ee`.
+      Seul le service portail a été recréé ; PostgreSQL, Keycloak, Caddy et les
+      volumes sont restés inchangés.
+    - Contrôles production réussis : portail `healthy`, `/health` en HTTP 200,
+      `/admin` protégé par redirection OIDC, console Keycloak en HTTP 200,
+      libellé du bouton présent dans le conteneur et aucun log d’erreur.
+    - Rollback : réactiver l’image portail précédente
+      `sha256:d139f6577fe7c6252ac32cb2f0a8e0f617eaddc2db6deed76b3987300c038825`
+      puis recréer uniquement le service portail.

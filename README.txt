@@ -2074,3 +2074,38 @@ avant de conclure que la VM est inaccessible.
       `sha256:868bc82d9869075d7b2414c20b893929ad76dda12b5af0d0b897f94ae12698ee`
       puis recréer uniquement le service portail. Les UUID déjà réconciliés
       restent valides et ne nécessitent aucune annulation.
+
+100. Provisionnement TDB et changement de compte SSO — 30 juillet 2026
+    - Cause du refus TDB après authentification : Keycloak, le portail et le
+      profil TDB étaient valides, mais TDB exigeait encore qu’un administrateur
+      crée manuellement un compte local actif portant le même e-mail.
+    - TDB provisionne désormais ce compte à la première connexion SSO
+      autorisée. Le compte est créé sans mot de passe local et reçoit
+      exclusivement le rôle TDB renvoyé par le portail. Un compte local
+      désactivé n’est jamais réactivé automatiquement.
+    - Le provisionnement et la connexion sont journalisés séparément. Les
+      connexions suivantes synchronisent le rôle du compte existant.
+    - PR TDB #33 fusionnée dans `main` au commit `c12b133`. Cinq tests backend
+      et le build frontend ont réussi. L’image backend active est
+      `sha256:a70131cdcb5428863429dfd0dafa70ba54c1182d77b91e969a1021997a1fb8e8`.
+      L’API et la page publique répondent correctement.
+    - Le portail propose maintenant « Changer de compte ». Cette action
+      supprime la session locale puis relance Keycloak avec `prompt=login`, ce
+      qui permet de saisir une autre identité sans fenêtre de navigation
+      privée. La barre utilisateur reste compacte sur smartphone.
+    - PR Portail-TID #58 fusionnée dans `main` au commit `9b0d8a0`.
+      Validations réussies : Prettier, ESLint, TypeScript, 21 tests Vitest,
+      build Docker et contrôles GitHub `quality`, `build` et
+      `repository-check`.
+    - L’image portail active est
+      `sha256:9053f79377d27a3c9072aecd3f9ab0ca0c9e7d1c4793a74140f4b7d34a4cd06b`.
+      Le portail est `healthy`, `/health` répond en HTTP 200 et la nouvelle
+      route redirige vers Keycloak avec `prompt=login`.
+    - Aucun secret, mot de passe, volume ou donnée métier n’a été modifié.
+      Rollback : réactiver l’image TDB
+      `sha256:e89e6d81c030433bdaf490e58443091c24131e8b42439f8157a73212cb0f9a86`
+      et/ou l’image portail
+      `sha256:6f974d6e4254269ee3455baabe7bd81e37d33163fec1d65d57b35eee0333e720`,
+      puis recréer uniquement les services concernés. Un compte TDB déjà
+      provisionné peut rester présent sans permettre une connexion locale,
+      puisqu’il ne possède pas de mot de passe.

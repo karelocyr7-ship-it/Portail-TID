@@ -1965,3 +1965,19 @@ avant de conclure que la VM est inaccessible.
       `assets/index-B2f741GK.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
       200, deux libellés présents et aucune erreur Nginx.
     - Rollback : redéployer uniquement le frontend depuis `e240524`.
+
+95. Alignement de l’axe du graphique sur 100 % — 30 juillet 2026
+    - L’axe vertical du graphique « Performance globale par indicateur » utilise
+      désormais des graduations fixes par pas de 25 %, avec une graduation
+      explicite à 100 %.
+    - La ligne pointillée est fixée sur cette graduation et porte le libellé
+      « Objectif 100 % ». La borne supérieure reste dynamique afin d’afficher
+      sans écrêtage les KPI qui dépassent l’objectif.
+    - PR TDB #31 fusionnée dans `main` au commit `f33aa32`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-K2PjIXK6.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, libellé d’objectif présent et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `7deee4b`.

@@ -15,6 +15,13 @@ Le bouton **Administrer Keycloak** est rendu uniquement dans l’espace protég�
 privilège : Keycloak contrôle encore la session et les rôles d’administration
 requis pour créer un utilisateur, définir un mot de passe ou modifier un rôle.
 
+Lorsqu’un administrateur prépare une fiche avant la création du compte
+Keycloak, il peut utiliser l’adresse e-mail comme valeur provisoire du champ
+`sub`. À la première connexion réussie, le portail remplace automatiquement ce
+placeholder par l’UUID `sub` signé par Keycloak si une seule fiche correspond
+et si le nom d’utilisateur est le même e-mail, ou si l’e-mail OIDC est vérifié.
+Cette réconciliation est transactionnelle et inscrite dans le journal d’audit.
+
 La section **Comptes et profils applicatifs** affiche un répertoire filtrable
 par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un
 clic sur une fiche ouvre directement son formulaire d’édition et affiche le

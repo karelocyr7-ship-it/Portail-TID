@@ -1952,3 +1952,16 @@ avant de conclure que la VM est inaccessible.
       200 et aucune erreur frontend/backend.
     - Rollback : restaurer la sauvegarde SQLite ci-dessus puis redéployer
       uniquement le frontend depuis `1066658`.
+
+94. Nature du ratio R/O dans les détails Météo — 30 juillet 2026
+    - Le ratio des trois lignes comparatives précise désormais sa nature :
+      « R/O Montants » pour les KPI monétaires et « R/O Unités » pour les KPI
+      de volume.
+    - PR TDB #30 fusionnée dans `main` au commit `7deee4b`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-B2f741GK.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, deux libellés présents et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `e240524`.

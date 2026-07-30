@@ -1842,3 +1842,23 @@ avant de conclure que la VM est inaccessible.
       Météo originale présents et aucune erreur Nginx détectée.
     - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
       redéployer uniquement le frontend depuis `eb413ca`.
+
+89. Alignement de la Synthèse Météo sur `Meteo_originale.jpeg` — 30 juillet 2026
+    - La capture fournie a permis d’identifier la vue réellement attendue :
+      cinq tuiles de synthèse, puis quatre grandes cartes avec barres de
+      pourcentage (« Performance globale », « Secteur leader », « Meilleur
+      KPI », « Point critique »), suivies des KPI par secteur.
+    - La route Météo utilise désormais cette structure et masque le bloc
+      « Dernières données » ajouté ultérieurement, afin de conserver l’ordre
+      visuel de la capture.
+    - Les calculs et cartes Météo sont strictement limités aux secteurs
+      historiques Recharge, Canal & Franchises, DOBB, Orange Money et
+      Acquisition. Revue-PDV, CASH-RECON et GParc restent dans leurs onglets
+      applicatifs et n’influencent plus les pourcentages de la Météo.
+    - PR TDB #24 fusionnée dans `main` au commit `99c098c`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-B3BeivVK.js` en HTTP 200, quatre libellés des cartes
+      présents et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `71df182`.

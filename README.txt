@@ -1910,3 +1910,19 @@ avant de conclure que la VM est inaccessible.
       livraisons frontend. Rollback : redéployer uniquement le frontend depuis
       `628d888` pour retirer les deux évolutions, ou depuis `3c103d6` pour
       retirer seulement l’alignement des filtres.
+
+92. Comparaisons intégrées dans chaque tuile KPI — 30 juillet 2026
+    - Le bouton « Voir les montants et comparer » et la fenêtre comparative
+      secondaire ont été supprimés.
+    - Chaque tuile de détail KPI contient directement trois lignes compactes :
+      « À date », « M-1 » et « Année-1 ». Chaque ligne présente l’objectif, le
+      réalisé, l’écart et le R/O ; une période non encore alimentée reste
+      explicitement marquée « À injecter ».
+    - PR TDB #28 fusionnée dans `main` au commit `1066658`. Le build Vite et le
+      build Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-8OpaMfKw.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, libellés des trois périodes présents, ancien bouton absent et aucune
+      erreur Nginx détectée.
+    - Aucun volume, secret ou donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `7f0fec7`.

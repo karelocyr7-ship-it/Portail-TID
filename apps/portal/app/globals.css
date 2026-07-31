@@ -1787,6 +1787,16 @@ body {
 .agent-live-board .section-header small {
   color: #61718a;
 }
+.agent-runtime-notice {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  color: #8a4b08;
+  border: 1px solid #f4c76b;
+  border-radius: 10px;
+  background: #fff8e6;
+  font-size: 13px;
+  font-weight: 700;
+}
 .agent-live-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

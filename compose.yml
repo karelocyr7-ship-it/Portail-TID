@@ -88,6 +88,31 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
 
+  agent-dispatch-worker:
+    image: tad-portal:0.1.0
+    command: ["node", "apps/portal/.worker-dist/agents/worker-entry.js"]
+    restart: unless-stopped
+    env_file:
+      - /srv/tad/secrets/portal.env
+    environment:
+      NODE_ENV: production
+      TZ: ${TZ:-Africa/Abidjan}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    volumes:
+      - /srv/tad/agents/results:/var/lib/tad-agent-results:ro
+      - /srv/tad/agents/queue:/var/lib/tad-agent-queue
+    group_add:
+      - "989"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [tad-data]
+    mem_limit: 256m
+    cpus: 0.25
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
   postgres:
     image: postgres:16.10-alpine
     restart: unless-stopped

@@ -10,6 +10,7 @@
     "smtp:verify": "tsx scripts/smtp-verify.ts",
     "smtp:test": "tsx scripts/smtp-test.ts",
     "smtp:worker": "tsx scripts/mail-worker.ts",
+    "agent:worker": "tsx lib/agents/worker-entry.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

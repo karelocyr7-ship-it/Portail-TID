@@ -70,7 +70,7 @@ services:
 
   mail-worker:
     image: tad-portal:0.1.0
-    command: ["node", "apps/portal/.worker-dist/email/worker.js"]
+    command: ["node", "apps/portal/.worker-dist/email/worker-entry.js"]
     restart: unless-stopped
     env_file:
       - /srv/tad/secrets/portal.env

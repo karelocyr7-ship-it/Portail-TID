@@ -2336,3 +2336,17 @@ avant de conclure que la VM est inaccessible.
     - Seul le frontend a été recréé; backend, SQLite, volume et données
       GParc restent inchangés. Contrôles : frontend local/public et API
       `/api/health` HTTP 200, bundle GParc présent, logs nginx sans erreur.
+
+110. Déploiement du centrage des tuiles KPI de synthèse — 31 juillet 2026
+    - Prompt utilisateur : « fait tout les deploiement ».
+    - PR TDB #38 fusionnée dans `main` au commit `87fce6c`.
+    - Image frontend active :
+      `sha256:ce5ac97e8d859262a0641cfddf9484a6e5ae5f1b0af953671b76a2ac3a363bb6`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-center-kpis-20260731`.
+    - Les montants, unités, titres et atterrissages sont centrés dans les
+      tuiles de synthèse. Seul le frontend a été recréé; backend, SQLite,
+      volume et données métier inchangés.
+    - Vérifications : frontend local/public et API `/api/health` HTTP 200,
+      CSS de centrage présent dans le bundle actif et aucun log nginx en
+      erreur au démarrage.

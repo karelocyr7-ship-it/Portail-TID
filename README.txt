@@ -2109,3 +2109,42 @@ avant de conclure que la VM est inaccessible.
       puis recréer uniquement les services concernés. Un compte TDB déjà
       provisionné peut rester présent sans permettre une connexion locale,
       puisqu’il ne possède pas de mot de passe.
+
+101. KPI adaptés aux particularités applicatives TDB — 31 juillet 2026
+    - Prompt utilisateur : « Dans TDB, pour les onglets applicatif les KPI ne
+      sont pas adapté au particularitées applictives ; revoit les indicateurs
+      de chaque applications et adapte à leur particularitées ».
+    - Objectif : remplacer la lecture générique des onglets applicatifs par
+      des indicateurs propres à Revue-PDV, CASH-RECON, Recrutement OCI et
+      GParc, sans inventer d’objectif ou mélanger des unités incompatibles.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; travail isolé dans
+      `/tmp/tdb-app-kpis`, branche `codex/adapt-application-kpis`.
+    - Audit agrégé en lecture seule de la base TDB : seuls les identifiants,
+      libellés, périodes, valeurs et unités des KPI applicatifs ont été
+      consultés. Aucun compte, secret, `.env` ou donnée nominative n’a été lu.
+    - Revue-PDV présente désormais la couverture du réseau, les visites du
+      jour, les tournées approuvées, le backlog et le taux d’approbation.
+      CASH-RECON sépare collectes, mix Orange Money, besoin cash, équilibre
+      des zones et écarts détectés.
+    - Recrutement OCI sépare les flux Kits/OM/OMA, le traitement et les rejets
+      de fichiers, les First Call et le montant OMA. GParc sépare parc,
+      carburant, entretien, demandes d’achat et alertes, avec calcul du coût
+      moyen du litre lorsqu’il est possible.
+    - Les mesures de flux sont additionnées sur les périodes multiples; les
+      mesures d’état, notamment taille du parc, backlog et alertes, conservent
+      leur dernière valeur. Un ratio n’est affiché que si ses données et son
+      dénominateur sont disponibles.
+    - Contrôles réussis : 3 tests unitaires ciblés, 5 tests backend, build
+      frontend Vite de 2 309 modules et `git diff --check`. L’avertissement
+      historique de taille du bundle reste non bloquant. Aucune dépendance
+      n’a été installée et aucun lockfile n’a été modifié.
+    - Commit TDB `9c1c5f5`; branche poussée et PR brouillon TDB #34 créée.
+      Aucun conteneur, volume, base ou service de production n’a été modifié.
+    - Risque restant : les ratios métier doivent être confirmés en recette
+      fonctionnelle par les responsables applicatifs. Après revue et fusion
+      dans `main`, le déploiement du seul frontend TDB nécessite une
+      confirmation explicite de l’utilisateur.
+    - Rollback : reconstruire et recréer uniquement le frontend depuis le
+      commit `main` précédent; conserver la base SQLite et le volume
+      `tdb_data`.

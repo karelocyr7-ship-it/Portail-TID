@@ -2379,3 +2379,17 @@ avant de conclure que la VM est inaccessible.
       `tdb-tid-frontend:rollback-pre-landing-last-date-20260731`.
     - Seul le frontend a été recréé; backend, SQLite, volume et données
       métier inchangés. Frontend local/public et API `/api/health` HTTP 200.
+
+113. Déploiement de l’export HTML/PDF coloré — 31 juillet 2026
+    - Prompt utilisateur : « je ne vois pas de changement pour l'export html
+      et pdf » puis « fait le ».
+    - PR TDB #41 fusionnée dans `main` au commit `b9a5027`.
+    - Le rapport exporté contient désormais une hiérarchie colorée et place
+      E‑Recharge puis Orange Money en tête des secteurs.
+    - Image frontend active :
+      `sha256:5ffd41198a22d2230c40497709eb7f3660089a4ef9641310911d41121eb93449`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-export-color-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      métier inchangés. Site local/public et API `/api/health` HTTP 200;
+      libellé E‑Recharge et style Orange Money présents dans le bundle actif.

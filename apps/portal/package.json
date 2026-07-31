@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:worker": "tsc --project tsconfig.worker.json",
     "start": "next start",
+    "smtp:verify": "tsx scripts/smtp-verify.ts",
+    "smtp:test": "tsx scripts/smtp-test.ts",
+    "smtp:worker": "tsx scripts/mail-worker.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -15,6 +19,7 @@
     "@prisma/adapter-pg": "7.9.0",
     "@prisma/client": "7.9.0",
     "next": "16.2.11",
+    "nodemailer": "7.0.10",
     "pg": "8.16.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -23,13 +28,17 @@
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "@types/node": "26.1.1",
+    "@types/nodemailer": "7.0.0",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
+    "@types/nodemailer": "7.0.0",
     "dotenv": "17.4.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.2.11",
     "prisma": "7.9.0",
+    "tsx": "4.20.3",
     "typescript": "5.9.3",
+    "tsx": "4.20.3",
     "vitest": "4.1.10"
   }
 }

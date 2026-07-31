@@ -1622,3 +1622,774 @@ avant de conclure que la VM est inaccessible.
       service `portal`.
     - Rollback : revenir au commit portail précédent et recréer uniquement le
       service `portal`; conserver PostgreSQL et tous les volumes.
+
+77. Déploiement du lien SSO portail vers MDM — 29 juillet 2026
+    - Validation utilisateur reçue par « déploie » après fusion de la PR
+      portail #54 dans `main` (commit de fusion `2b0e369`).
+    - Déploiement depuis le worktree temporaire
+      `/tmp/portail-deploy-2b0e369`, afin de préserver les fichiers non suivis
+      de l'espace de travail. La configuration Compose a été validée sans
+      afficher le `.env` réel.
+    - La seule donnée modifiée en PostgreSQL est l'URL de l'application MDM,
+      désormais `https://mdm.tadgroupe.com/rest/public/auth/oidc/login`.
+      Le service `portal` a été reconstruit depuis `main` et recréé seul;
+      aucun autre conteneur, volume, base ou certificat n'a été modifié.
+    - Contrôles réussis : build Docker, conteneur portail sain, endpoint
+      HTTPS `/health` HTTP 200 et URL MDM lue en base conforme à l'entrée
+      OIDC.
+    - Rollback : remettre l'ancienne URL racine MDM dans la ligne catalogue,
+      reconstruire le commit portail précédent puis recréer uniquement
+      `portal`; ne supprimer aucune donnée persistante.
+
+78. Publication Git de la source MDM — 29 juillet 2026
+    - Autorisation utilisateur reçue pour créer le dépôt privé et publier la
+      branche de correctif MDM.
+    - Dépôt privé créé : `karelocyr7-ship-it/HMDM`. Une clé de déploiement
+      dédiée, limitée à ce dépôt, est installée uniquement sur la VM MDM; sa
+      partie privée n'a pas été affichée, copiée ou consignée.
+    - La source locale MDM était un clone incomplet dont un parent Git avait
+      disparu. Un import autonome des seuls fichiers suivis a été créé dans
+      un espace temporaire, sans `.env`, secret ni artefact généré.
+    - La branche de base `main` référence l'import OIDC initial sans push
+      direct sur `main`. La branche `codex/mdm-oidc-runtime-fix` contient le
+      correctif runtime; PR brouillon #1 ouverte dans le dépôt HMDM.
+    - Le remote local antérieur est conservé sous le nom `upstream-audit`.
+      Aucun service MDM, conteneur, base, volume ou certificat n'a été modifié
+      pendant cette publication.
+    - Reprise : après revue et fusion de la PR #1, reconstruire le WAR depuis
+      `main` et appliquer la procédure de déploiement documentée; conserver
+      les sauvegardes existantes avant tout remplacement.
+
+79. Déploiement du WAR MDM depuis GitHub `main` — 29 juillet 2026
+    - Confirmation utilisateur reçue après fusion de la PR HMDM #1; fusion
+      confirmée dans `main` au commit `461f646`.
+    - Le worktree GitHub autonome requiert un fichier `build.properties`
+      ignoré et son installation frontend historique échoue sur `grunt resolve`.
+      Les deux fichiers modifiés ont été comparés octet par octet avec la
+      source opérationnelle MDM : ils correspondent à `main`.
+    - Les tests Maven Java 17 et le build du WAR ont donc été relancés depuis
+      cette source opérationnelle, avec sa configuration de build locale non
+      versionnée; aucun secret n'a été affiché ou transféré. WAR produit :
+      SHA-256 `e3d1112240a1c798cf19891b7dd8e54ab8d7d79f9fb5aa57bfb6b42991aa86ed`.
+    - Le WAR monté a été remplacé, puis seul `hmdm-app` a été recréé. Sauvegarde
+      du WAR précédent :
+      `/opt/hmdm/work/oidc-backups/20260729T175441Z`.
+    - Contrôles réussis : accueil TAD HTTP 200, `auth/options` HTTP 200 sur
+      les domaines TAD et ATF, démarrage OIDC TAD HTTP 302 et conteneur actif.
+      PostgreSQL, volumes, certificats et comptes utilisateurs n'ont pas été
+      modifiés.
+    - Rollback : recopier le WAR sauvegardé depuis le dossier indiqué vers
+      `/opt/hmdm/hmdm-oidc.war`, puis recréer uniquement `hmdm-app`; conserver
+      la base et les volumes.
+
+80. Compte de recette SSO MDM — 29 juillet 2026
+    - Prompt utilisateur : « creer le compte ».
+    - Un compte de recette non personnel `mdm.sso.test@example.invalid` a été
+      créé dans Keycloak et dans HMDM pour valider le SSO MDM. Le mot de passe
+      est aléatoire, non affiché, non consigné et réservé à la recette.
+    - Le compte Keycloak possède uniquement le rôle `INFORMATIQUE`, nécessaire
+      pour voir la tuile MDM dans le portail. Le compte HMDM associé est au
+      rôle `OBSERVER`, sans accès global aux appareils ni aux configurations.
+    - Aucun compte réel, donnée personnelle, mot de passe réel, volume ou
+      configuration applicative n'a été modifié. Le compte de recette devra
+      être supprimé après validation du parcours navigateur complet.
+    - Rollback : supprimer ce seul utilisateur de Keycloak et de la table
+      `users` HMDM, sans modifier aucun autre compte.
+
+81. Exigences de provisioning MDM piloté par le portail — 29 juillet 2026
+    - Règle confirmée : le portail est la source d’autorité. À la connexion,
+      MDM doit rapprocher l’identité par matricule, e-mail, puis nom/prénom
+      exact non ambigu; appliquer le profil MDM du portail en priorité sur le
+      profil local; et créer le compte local lorsqu’aucun rapprochement fiable
+      n’existe.
+    - Une désactivation ou un changement de profil dans le portail doit aussi
+      être propagé automatiquement à MDM, y compris pour les comptes déjà
+      créés. L’endpoint portail existant de consultation des profils vérifie
+      déjà le jeton d’application, mais le connecteur MDM et le canal de
+      synchronisation continue restent à implémenter et à soumettre en PR.
+    - La recette a confirmé que l’authentification Keycloak est acceptée après
+      complétion du profil non personnel. Le compte de recette et tous les
+      fichiers temporaires ont ensuite été supprimés de Keycloak, HMDM et de
+      la VM. Aucun compte réel ni donnée métier n’a été modifié.
+    - Aucun déploiement n’a été effectué pour ces exigences; rollback : non
+      applicable tant qu’aucune modification applicative n’est fusionnée.
+
+82. Autorité centralisée du portail — 29 juillet 2026
+    - Correction utilisateur : le portail est la source d’autorité unique pour
+      toutes les applications du portail, présentes et futures, et non pour
+      MDM seulement.
+    - Le contrat d’intégration commun doit couvrir l’identité de référence,
+      l’état actif/inactif, les profils applicatifs et leur propagation. Une
+      application ne doit conserver qu’une projection locale technique et ne
+      doit pas être l’autorité de ses droits.
+    - Les connecteurs existants devront être mis en conformité progressivement;
+      MDM est le premier chantier identifié. Toute nouvelle application devra
+      implémenter ce contrat avant son activation dans le catalogue.
+
+83. Socle d’autorité applicative du portail — 29 juillet 2026
+    - Autorisation utilisateur reçue pour implémenter, fusionner et déployer
+      le socle commun. PR #55 fusionnée dans `main` au commit `842e4b0`.
+    - Le contrat `docs/APPLICATION_AUTHORITY_CONTRACT.md` définit l’identité,
+      le statut, les profils, le rapprochement non ambigu et les obligations
+      de synchronisation pour toutes les applications actuelles et futures.
+    - L’endpoint portail `POST /api/authorization/profiles` retourne désormais
+      l’identité de rapprochement, le statut actif, la décision
+      `authorized`, les profils et une révision. Le client OIDC MDM est inclus
+      dans la configuration par défaut des clients applicatifs reconnus.
+    - Contrôles réussis avant fusion : lint, typecheck, 16 tests Vitest, build
+      Next.js et contrôle de diff. Déploiement effectué depuis le commit de
+      fusion : seule l’image et le conteneur `portal` ont été recréés; santé
+      HTTPS finale HTTP 200. Aucun volume, base, certificat ou secret n’a été
+      modifié.
+    - Limite constatée : les sources accessibles couvrent MDM et Recrutement;
+      les dépôts ou services TDB, GParc, Revue-PDV et CASH-RECON ne sont pas
+      présents dans l’infrastructure inspectée. Ils ne peuvent pas être
+      déclarés conformes ni déployés sans leurs dépôts/procédures propres.
+    - Rollback : redéployer l’image portail construite depuis le commit `main`
+      antérieur, puis recréer uniquement le conteneur `portal`; conserver les
+      données persistantes.
+
+84. Correction de l’alimentation GParc dans TDB — 30 juillet 2026
+    - Prompts utilisateur reçus : « pourquoi dans le TDB je ne vois toujours
+      pas de data dans les TDB applicatifs ? » ; « je ne parle pas de RH je
+      parle des onglet applicatif de TDB : GParc, Revue-PDV,.. » ; « c'est la
+      meme vm que cash-recon tu à deja les clef ssh » ; « 1: l'ongle GParc est
+      bien présent, verifie et fait le reste » ; « fait le et authentifie gh »
+      ; « c'est validé ».
+    - Diagnostic en lecture seule : l’onglet GParc et ses six KPI sont bien
+      présents dans le code TDB. Le timer `gparc-tdb-sync.timer` était actif,
+      mais la publication échouait en HTTP 401. Le jeton de service portait le
+      rôle requis ; le backend TDB déployé n’acceptait que l’audience OCI et
+      rejetait l’audience GParc.
+    - La branche TDB `codex/modernize-dashboard-kpi`, déjà préparée, a été
+      publiée et la PR #17 a été créée, puis fusionnée dans `main` au commit
+      `596b44d` (`feat: intégrer les KPI GParc dans TDB`). GitHub CLI a été
+      authentifié sur le compte autorisé sans afficher ni versionner de token.
+    - Les tests backend (2), le build frontend et `git diff --check` ont réussi.
+      Depuis un worktree temporaire du commit fusionné, seuls les conteneurs
+      TDB `backend` et `frontend` ont été reconstruits et recréés. La santé
+      publique TDB répond HTTP 200 ; les audiences OCI et GParc sont actives
+      dans le runtime.
+    - Une synchronisation GParc immédiate a ensuite réussi et publié 7 KPI
+      agrégés pour la période `2026-07`. Aucune donnée nominative, secret,
+      volume SQLite ou base n’a été supprimé ou affiché.
+    - Risque restant : le navigateur peut conserver un ancien bundle ; forcer
+      un rechargement si l’onglet reste visuellement vide. Rollback :
+      reconstruire uniquement backend et frontend depuis le commit `main`
+      précédent, puis conserver le volume SQLite et le timer GParc.
+
+85. Correctif écran blanc de la Météo TDB — 30 juillet 2026
+    - Le bundle de la nouvelle vue comparative levait l’erreur React #310 :
+      `useMemo` était appelé après les retours conditionnels de chargement et
+      d’erreur, ce qui changeait l’ordre des hooks entre deux rendus.
+    - Le calcul des KPI a été rendu synchrone, sans hook conditionnel. Le
+      correctif a été validé par un build frontend réussi (2 308 modules).
+    - PR TDB #20 fusionnée dans `main` au commit `6b0a204`. L’image frontend a
+      été construite depuis ce commit et seul le conteneur frontend TDB a été
+      recréé.
+    - Contrôles production réussis : frontend actif, API HTTPS HTTP 200 et
+      bundle public `assets/index-BJtbDWJi.js`.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      reconstruire uniquement le frontend depuis le commit `main` précédent.
+
+86. Refonte enrichie de la Météo directionnelle TDB — 30 juillet 2026
+    - La présentation a été reconstruite en s’inspirant de la version
+      sauvegardée, tout en conservant l’alimentation dynamique de l’API.
+    - La vue affiche une synthèse compacte (R/O global, objectifs, réalisés,
+      écarts et alertes), des cartes par domaine et un tableau comparatif
+      regroupant dans chaque KPI la période courante, M-1 et N-1. Les données
+      N-1 absentes restent explicitement marquées « À injecter ».
+    - Un clic sur un KPI ouvre le détail complet de ses valeurs et de son
+      historique. La mise en page est responsive et utilise une feuille de
+      style isolée.
+    - PR TDB #21 fusionnée dans `main` au commit `5542e48`. Le build Vite et
+      le build Docker ont réussi ; seul le conteneur frontend TDB a été
+      recréé depuis un worktree propre.
+    - Contrôles production réussis : API HTTPS en bonne santé, assets
+      JavaScript et CSS en HTTP 200, nouveau bundle public
+      `assets/index-ecDyf0ih.js`, sans erreur Nginx au démarrage.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      reconstruire et redéployer uniquement le frontend depuis `6b0a204`.
+
+87. Restauration de la synthèse Météo sauvegardée — 30 juillet 2026
+    - À la demande de l’utilisateur, la refonte directionnelle précédente a
+      été retirée et `MeteoPage.legacy.jsx`, conservée comme sauvegarde, est
+      redevenue la vue Météo active.
+    - La restauration remet les cartes « Synthèse par catégorie », les
+      compteurs mensuels et trimestriels, les filtres de période et les
+      fenêtres de détail de la version sauvegardée.
+    - PR TDB #22 fusionnée dans `main` au commit `eb413ca`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-Cpn0XQxK.js` en HTTP 200, libellés de la sauvegarde présents
+      et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `5542e48`.
+
+88. Restauration exacte de la Météo originale isolée — 30 juillet 2026
+    - La sauvegarde `MeteoPage.legacy.jsx` réactivée précédemment contenait à
+      tort le bloc ajouté ensuite pour les KPI applicatifs. L’historique Git a
+      permis d’identifier `ac76f20` comme la dernière version originale issue
+      uniquement du classeur Météo.
+    - Le composant de `ac76f20` a été restauré octet pour octet : son hash Git
+      `59dc52368f745bb3b452a1c19f06be6ad246e9c7` correspond exactement à
+      l’original. Il ne contient aucune référence à Revue-PDV, CASH-RECON,
+      GParc, aux KPI applicatifs ou à l’API `/dashboard`.
+    - PR TDB #23 fusionnée dans `main` au commit `71df182`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-DRdNKerA.js` en HTTP 200, libellés caractéristiques de la
+      Météo originale présents et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `eb413ca`.
+
+89. Alignement de la Synthèse Météo sur `Meteo_originale.jpeg` — 30 juillet 2026
+    - La capture fournie a permis d’identifier la vue réellement attendue :
+      cinq tuiles de synthèse, puis quatre grandes cartes avec barres de
+      pourcentage (« Performance globale », « Secteur leader », « Meilleur
+      KPI », « Point critique »), suivies des KPI par secteur.
+    - La route Météo utilise désormais cette structure et masque le bloc
+      « Dernières données » ajouté ultérieurement, afin de conserver l’ordre
+      visuel de la capture.
+    - Les calculs et cartes Météo sont strictement limités aux secteurs
+      historiques Recharge, Canal & Franchises, DOBB, Orange Money et
+      Acquisition. Revue-PDV, CASH-RECON et GParc restent dans leurs onglets
+      applicatifs et n’influencent plus les pourcentages de la Météo.
+    - PR TDB #24 fusionnée dans `main` au commit `99c098c`. Les builds Vite et
+      Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API HTTPS en bonne santé, bundle public
+      `assets/index-B3BeivVK.js` en HTTP 200, quatre libellés des cartes
+      présents et aucune erreur Nginx détectée.
+    - Aucun volume, base, secret ni donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `71df182`.
+
+90. Import des données Météo T3 — 30 juillet 2026
+    - Le classeur `Tableau de Bord Météo T3 2026 JUILLET.xlsx` a été analysé :
+      les taux mensuels et trimestriels de référence sont portés par l’onglet
+      `NOUVEAU TABLEAU`, tandis que les mois futurs du premier onglet sont
+      encore à zéro. Aucun montant absent n’a été inventé.
+    - Un importeur transactionnel avec dry-run, archivage, historique et audit
+      a été ajouté. PR TDB #25 fusionnée dans `main` au commit `628d888`.
+      Validation réussie sur une base SQLite temporaire, deux tests backend
+      réussis, build frontend réussi et contrôle de diff propre.
+    - Avant l’écriture, une sauvegarde SQLite cohérente a été créée dans le
+      volume TDB :
+      `/app/data/backups/tdb-perf-before-meteo-t3-20260730T105410Z.sqlite`
+      (2 801 664 octets).
+    - L’import de juillet 2026 a réussi : 15 KPI Météo, objectifs indexés base
+      100, taux mensuels et trimestriels extraits du classeur, et performance
+      mensuelle consolidée de 84,08 %.
+    - Cinq références ont été créées : Packs au cash, Packs à crédit,
+      ABO SAT à 120 %, M+1 à 100 % et M+1 à 120 %. L’historique d’import et
+      l’audit de production sont présents ; l’API HTTPS reste en bonne santé
+      et les logs backend ne signalent aucune erreur.
+    - Les données Revue-PDV, CASH-RECON et GParc de la même période restent
+      indépendantes et sont exclues des calculs de la Synthèse Météo.
+    - Rollback : arrêter les écritures, restaurer la sauvegarde SQLite
+      ci-dessus via l’API `better-sqlite3` puis redémarrer uniquement le
+      backend ; aucun rollback frontend n’est requis.
+
+91. Détail comparatif des KPI et filtres Météo alignés — 30 juillet 2026
+    - Le détail de chaque KPI affiche désormais trois cartes : période
+      actuelle, à date M-1 et à date N-1. Chaque période présente l’objectif,
+      le réalisé, l’écart, le R/O et l’évolution du réalisé lorsqu’elle est
+      calculable.
+    - Les périodes absentes sont explicitement affichées « À injecter ». Pour
+      juillet 2026, les valeurs T3 sont identifiées comme des indices base 100
+      afin de ne pas les présenter comme des montants bruts inexistants.
+    - PR TDB #26 fusionnée dans `main` au commit `3c103d6`. Build Vite et build
+      Docker réussis ; seul le frontend a été recréé.
+    - Les filtres de la Synthèse Météo sont maintenant sur la même ligne que
+      « Performance de juillet 2026 » et son sous-titre en affichage desktop.
+      Ils repassent sous le titre sous 980 px. Les onglets applicatifs gardent
+      leur disposition.
+    - PR TDB #27 fusionnée dans `main` au commit `7f0fec7`. Contrôles
+      production réussis : API saine, bundle `assets/index-Co9QgrOx.js`, CSS
+      `assets/index-DDGW74yc.css`, assets HTTP 200 et aucune erreur Nginx.
+    - Aucun volume, secret ou donnée métier n’a été modifié par ces deux
+      livraisons frontend. Rollback : redéployer uniquement le frontend depuis
+      `628d888` pour retirer les deux évolutions, ou depuis `3c103d6` pour
+      retirer seulement l’alignement des filtres.
+
+92. Comparaisons intégrées dans chaque tuile KPI — 30 juillet 2026
+    - Le bouton « Voir les montants et comparer » et la fenêtre comparative
+      secondaire ont été supprimés.
+    - Chaque tuile de détail KPI contient directement trois lignes compactes :
+      « À date », « M-1 » et « Année-1 ». Chaque ligne présente l’objectif, le
+      réalisé, l’écart et le R/O ; une période non encore alimentée reste
+      explicitement marquée « À injecter ».
+    - PR TDB #28 fusionnée dans `main` au commit `1066658`. Le build Vite et le
+      build Docker ont réussi ; seul le conteneur frontend a été recréé.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-8OpaMfKw.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, libellés des trois périodes présents, ancien bouton absent et aucune
+      erreur Nginx détectée.
+    - Aucun volume, secret ou donnée métier n’a été modifié. Rollback :
+      redéployer uniquement le frontend depuis `7f0fec7`.
+
+93. Montants Objectif et Résultat des KPI Météo — 30 juillet 2026
+    - L’importeur T3 récupère désormais les objectifs et résultats mensuels
+      réels dans l’onglet `BASE`, au lieu d’enregistrer ces deux champs sous
+      forme d’indices base 100. Un contrôle bloque l’import si le R/O recalculé
+      depuis les montants diverge du taux de référence.
+    - Les trois lignes « À date », « M-1 » et « Année-1 » affichent directement
+      Objectif, Résultat, Écart et R/O. Les KPI monétaires E-Recharge, Cash-in,
+      Cash-out et Chiffre d’affaires Orange Money sont libellés et formatés en
+      FCFA ; les KPI de volume restent correctement indiqués en unités.
+    - Le dry-run a validé les 15 KPI, l’import transactionnel a réussi sur une
+      base SQLite isolée, les deux tests backend et le build Vite ont réussi.
+      PR TDB #29 fusionnée dans `main` au commit `e240524`.
+    - Avant l’écriture en production, une sauvegarde cohérente et intègre a été
+      créée :
+      `/app/data/backups/tdb-perf-before-kpi-cfa-20260730T113926Z.sqlite`
+      (2 838 528 octets).
+    - Les 15 KPI de juillet 2026 ont été réimportés depuis le classeur T3. Le
+      contrôle post-import confirme notamment Cash-in à 30 551 843 721 FCFA
+      d’objectif et 22 070 070 198 FCFA de résultat, ainsi que le chiffre
+      d’affaires à 54 470 713 381 / 42 893 974 803 FCFA.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-Cc8etCBL.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200 et aucune erreur frontend/backend.
+    - Rollback : restaurer la sauvegarde SQLite ci-dessus puis redéployer
+      uniquement le frontend depuis `1066658`.
+
+94. Nature du ratio R/O dans les détails Météo — 30 juillet 2026
+    - Le ratio des trois lignes comparatives précise désormais sa nature :
+      « R/O Montants » pour les KPI monétaires et « R/O Unités » pour les KPI
+      de volume.
+    - PR TDB #30 fusionnée dans `main` au commit `7deee4b`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-B2f741GK.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, deux libellés présents et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `e240524`.
+
+95. Alignement de l’axe du graphique sur 100 % — 30 juillet 2026
+    - L’axe vertical du graphique « Performance globale par indicateur » utilise
+      désormais des graduations fixes par pas de 25 %, avec une graduation
+      explicite à 100 %.
+    - La ligne pointillée est fixée sur cette graduation et porte le libellé
+      « Objectif 100 % ». La borne supérieure reste dynamique afin d’afficher
+      sans écrêtage les KPI qui dépassent l’objectif.
+    - PR TDB #31 fusionnée dans `main` au commit `f33aa32`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-K2PjIXK6.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200, libellé d’objectif présent et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `7deee4b`.
+
+96. Lisibilité des graduations verticales du graphique — 30 juillet 2026
+    - La marge gauche négative du graphique « Performance globale par
+      indicateur » a été remplacée par une marge positive de 8 px et un
+      espacement de 6 px a été ajouté entre l’axe et ses libellés.
+    - La zone de tracé est ainsi légèrement réduite afin que les graduations à
+      trois chiffres, notamment 100 %, 125 % et 150 %, ne soient plus
+      tronquées.
+    - PR TDB #32 fusionnée dans `main` au commit `e5d1024`. Les deux tests
+      backend, le build Vite et le build Docker ont réussi.
+    - Seul le frontend a été recréé ; aucune donnée métier ni base n’a été
+      modifiée.
+    - Contrôles production réussis : API saine, bundle public
+      `assets/index-CK0J1r_C.js`, CSS `assets/index-Coihj-zK.css`, assets HTTP
+      200 et aucune erreur Nginx.
+    - Rollback : redéployer uniquement le frontend depuis `f33aa32`.
+
+97. Rétablissement du SSO Portail vers TDB sur mobile — 30 juillet 2026
+    - Symptôme signalé en navigation privée sur smartphone : l’ouverture de
+      TDB depuis le portail déclenchait le SSO automatiquement, puis affichait
+      « Profil TDB introuvable ou inactif » avant toute action utile sur
+      l’écran de connexion.
+    - Diagnostic : le correctif de la PR TDB #16 était bien présent dans
+      `main`, mais le backend de production utilisait encore une image
+      construite avant ce correctif. Cette ancienne image attendait uniquement
+      un profil objet `{ key }` et rejetait les clés texte actuellement
+      renvoyées par le portail.
+    - Le backend a été reconstruit depuis le `main` courant `e5d1024` puis
+      recréé sans modification du volume SQLite. L’image active
+      `sha256:e89e6d81c030433bdaf490e58443091c24131e8b42439f8157a73212cb0f9a86`
+      contient bien la compatibilité profil texte / ancien format objet.
+    - Le frontend a ensuite été recréé sans reconstruction afin que Nginx
+      résolve la nouvelle adresse interne du backend ; le 502 transitoire
+      observé juste après le remplacement du backend a ainsi été supprimé.
+    - Contrôles réussis : deux tests backend, build Docker backend, santé HTTPS,
+      configuration OIDC active, redirection Keycloak HTTP 302, cookie d’état
+      `Secure; SameSite=Lax` et aucune erreur backend/frontend.
+    - Aucun secret, volume ou donnée métier n’a été modifié. Rollback :
+      réactiver l’ancienne image backend
+      `sha256:ca5049f43c07c9e5e3b131f4be38d533a688a2ea088b32af96ddc58fdd01a386`,
+      puis recréer le backend et le frontend.
+
+98. Accès à l’administration Keycloak depuis le portail — 30 juillet 2026
+    - Le bandeau « Actions disponibles » de `/admin` propose désormais un
+      bouton « Administrer Keycloak », qui ouvre dans un nouvel onglet la
+      console du realm `tad-groupe`.
+    - Le bouton n’est rendu que dans la page déjà protégée côté serveur par le
+      rôle `PORTAL_ADMIN`. Il ne délègue aucun privilège : Keycloak continue
+      d’exiger ses propres droits d’administration.
+    - L’affichage est responsive : les boutons Keycloak et retour au tableau
+      de bord occupent proprement la largeur disponible sur smartphone.
+    - PR Portail-TID #56 fusionnée dans `main` au commit `2ba16ff`.
+      Validations réussies : Prettier, ESLint, TypeScript, 16 tests Vitest,
+      build Next.js, `git diff --check` et les trois contrôles GitHub
+      `quality`, `build` et `repository-check`.
+    - L’image de production active est
+      `sha256:868bc82d9869075d7b2414c20b893929ad76dda12b5af0d0b897f94ae12698ee`.
+      Seul le service portail a été recréé ; PostgreSQL, Keycloak, Caddy et les
+      volumes sont restés inchangés.
+    - Contrôles production réussis : portail `healthy`, `/health` en HTTP 200,
+      `/admin` protégé par redirection OIDC, console Keycloak en HTTP 200,
+      libellé du bouton présent dans le conteneur et aucun log d’erreur.
+    - Rollback : réactiver l’image portail précédente
+      `sha256:d139f6577fe7c6252ac32cb2f0a8e0f617eaddc2db6deed76b3987300c038825`
+      puis recréer uniquement le service portail.
+
+99. Synchronisation automatique du `sub` Keycloak — 30 juillet 2026
+    - Lorsqu’une fiche portail est préparée avant la création du compte
+      Keycloak avec l’e-mail comme `sub` provisoire, le portail remplace
+      désormais automatiquement ce placeholder par l’UUID signé lors de la
+      première connexion réussie.
+    - La réconciliation est limitée à une fiche unique dont l’e-mail et le
+      placeholder correspondent exactement au nom d’utilisateur Keycloak, ou
+      à un e-mail OIDC vérifié. Elle refuse les doublons, les conflits de
+      `sub` et les fiches contenant déjà un véritable identifiant.
+    - La mise à jour est transactionnelle et crée l’événement d’audit
+      `PORTAL_USER_SUBJECT_RECONCILED`.
+    - PR Portail-TID #57 fusionnée dans `main` au commit `a718fee`.
+      Validations réussies : Prettier, ESLint, TypeScript, build Next.js,
+      `git diff --check`, 21 tests Vitest dont 5 scénarios de réconciliation,
+      et les trois contrôles GitHub `quality`, `build` et
+      `repository-check`.
+    - L’image de production active est
+      `sha256:6f974d6e4254269ee3455baabe7bd81e37d33163fec1d65d57b35eee0333e720`.
+      Seul le service portail a été recréé ; PostgreSQL, Keycloak, Caddy et les
+      volumes sont restés inchangés.
+    - Contrôles production réussis : portail `healthy`, `/health` en HTTP 200,
+      `/admin` protégé par redirection OIDC, logique d’audit présente dans le
+      conteneur et aucun log d’erreur.
+    - Rollback : réactiver l’image portail précédente
+      `sha256:868bc82d9869075d7b2414c20b893929ad76dda12b5af0d0b897f94ae12698ee`
+      puis recréer uniquement le service portail. Les UUID déjà réconciliés
+      restent valides et ne nécessitent aucune annulation.
+
+100. Provisionnement TDB et changement de compte SSO — 30 juillet 2026
+    - Cause du refus TDB après authentification : Keycloak, le portail et le
+      profil TDB étaient valides, mais TDB exigeait encore qu’un administrateur
+      crée manuellement un compte local actif portant le même e-mail.
+    - TDB provisionne désormais ce compte à la première connexion SSO
+      autorisée. Le compte est créé sans mot de passe local et reçoit
+      exclusivement le rôle TDB renvoyé par le portail. Un compte local
+      désactivé n’est jamais réactivé automatiquement.
+    - Le provisionnement et la connexion sont journalisés séparément. Les
+      connexions suivantes synchronisent le rôle du compte existant.
+    - PR TDB #33 fusionnée dans `main` au commit `c12b133`. Cinq tests backend
+      et le build frontend ont réussi. L’image backend active est
+      `sha256:a70131cdcb5428863429dfd0dafa70ba54c1182d77b91e969a1021997a1fb8e8`.
+      L’API et la page publique répondent correctement.
+    - Le portail propose maintenant « Changer de compte ». Cette action
+      supprime la session locale puis relance Keycloak avec `prompt=login`, ce
+      qui permet de saisir une autre identité sans fenêtre de navigation
+      privée. La barre utilisateur reste compacte sur smartphone.
+    - PR Portail-TID #58 fusionnée dans `main` au commit `9b0d8a0`.
+      Validations réussies : Prettier, ESLint, TypeScript, 21 tests Vitest,
+      build Docker et contrôles GitHub `quality`, `build` et
+      `repository-check`.
+    - L’image portail active est
+      `sha256:9053f79377d27a3c9072aecd3f9ab0ca0c9e7d1c4793a74140f4b7d34a4cd06b`.
+      Le portail est `healthy`, `/health` répond en HTTP 200 et la nouvelle
+      route redirige vers Keycloak avec `prompt=login`.
+    - Aucun secret, mot de passe, volume ou donnée métier n’a été modifié.
+      Rollback : réactiver l’image TDB
+      `sha256:e89e6d81c030433bdaf490e58443091c24131e8b42439f8157a73212cb0f9a86`
+      et/ou l’image portail
+      `sha256:6f974d6e4254269ee3455baabe7bd81e37d33163fec1d65d57b35eee0333e720`,
+      puis recréer uniquement les services concernés. Un compte TDB déjà
+      provisionné peut rester présent sans permettre une connexion locale,
+      puisqu’il ne possède pas de mot de passe.
+
+101. KPI adaptés aux particularités applicatives TDB — 31 juillet 2026
+    - Prompt utilisateur : « Dans TDB, pour les onglets applicatif les KPI ne
+      sont pas adapté au particularitées applictives ; revoit les indicateurs
+      de chaque applications et adapte à leur particularitées ».
+    - Objectif : remplacer la lecture générique des onglets applicatifs par
+      des indicateurs propres à Revue-PDV, CASH-RECON, Recrutement OCI et
+      GParc, sans inventer d’objectif ou mélanger des unités incompatibles.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; travail isolé dans
+      `/tmp/tdb-app-kpis`, branche `codex/adapt-application-kpis`.
+    - Audit agrégé en lecture seule de la base TDB : seuls les identifiants,
+      libellés, périodes, valeurs et unités des KPI applicatifs ont été
+      consultés. Aucun compte, secret, `.env` ou donnée nominative n’a été lu.
+    - Revue-PDV présente désormais la couverture du réseau, les visites du
+      jour, les tournées approuvées, le backlog et le taux d’approbation.
+      CASH-RECON sépare collectes, mix Orange Money, besoin cash, équilibre
+      des zones et écarts détectés.
+    - Recrutement OCI sépare les flux Kits/OM/OMA, le traitement et les rejets
+      de fichiers, les First Call et le montant OMA. GParc sépare parc,
+      carburant, entretien, demandes d’achat et alertes, avec calcul du coût
+      moyen du litre lorsqu’il est possible.
+    - Les mesures de flux sont additionnées sur les périodes multiples; les
+      mesures d’état, notamment taille du parc, backlog et alertes, conservent
+      leur dernière valeur. Un ratio n’est affiché que si ses données et son
+      dénominateur sont disponibles.
+    - Contrôles réussis : 3 tests unitaires ciblés, 5 tests backend, build
+      frontend Vite de 2 309 modules et `git diff --check`. L’avertissement
+      historique de taille du bundle reste non bloquant. Aucune dépendance
+      n’a été installée et aucun lockfile n’a été modifié.
+    - Commit TDB `9c1c5f5`; branche poussée et PR brouillon TDB #34 créée.
+      Aucun conteneur, volume, base ou service de production n’a été modifié.
+    - Risque restant : les ratios métier doivent être confirmés en recette
+      fonctionnelle par les responsables applicatifs. Après revue et fusion
+      dans `main`, le déploiement du seul frontend TDB nécessite une
+      confirmation explicite de l’utilisateur.
+    - Rollback : reconstruire et recréer uniquement le frontend depuis le
+      commit `main` précédent; conserver la base SQLite et le volume
+      `tdb_data`.
+
+102. Déploiement des KPI applicatifs TDB — 31 juillet 2026
+    - Prompt utilisateur : « je confirme ».
+    - La confirmation autorise la livraison préparée dans la PR TDB #34. La
+      PR était déjà fusionnée dans `main` au commit
+      `a23cbace290d94aa210e756c72493bee84e52d62`.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; construction depuis le worktree propre
+      `/tmp/tdb-deploy-a23cbac`, sans utiliser les modifications locales du
+      checkout de production.
+    - Le commit fusionné a été revalidé avant livraison : 3 tests unitaires
+      des KPI applicatifs, 5 tests backend, build frontend Vite et
+      `git diff --check` réussis. L’avertissement de taille du bundle reste
+      connu et non bloquant.
+    - L’image frontend précédente
+      `sha256:d6299413b64dce3faede5a79f8b542fb55eccc7be716b8eba4f7292bb1d1a2a9`
+      est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-app-kpis-20260731`.
+    - Nouvelle image frontend active :
+      `sha256:855f701d75e6c9ee6da86b9decc06420578191e8d4dff63c93b0941e2e301b3f`.
+      Seul le conteneur `frontend` a été recréé; le backend est resté actif
+      sur son image et son démarrage antérieurs. La base SQLite, le volume
+      `tdb_data`, les secrets et les données métier n’ont pas été modifiés.
+    - Contrôles production réussis : frontend local HTTP 200, page publique
+      `https://tdb.tadgroupe.com/` HTTP 200, API `/api/health` HTTP 200,
+      libellés spécifiques Revue-PDV, CASH-RECON, Recrutement OCI et GParc
+      présents dans le bundle actif, et aucun log d’erreur au démarrage.
+    - Risque restant : la pertinence fonctionnelle des ratios doit être
+      confirmée par les responsables applicatifs lors de leur utilisation.
+    - Rollback : retaguer l’image
+      `tdb-tid-frontend:rollback-pre-app-kpis-20260731` comme image frontend
+      active, puis recréer uniquement `frontend`; ne toucher ni au backend,
+      ni à la base SQLite, ni au volume `tdb_data`.
+
+103. Nettoyage de la synthèse Météo TDB — 31 juillet 2026
+    - Prompts utilisateur : « dans TDB synthése, supprime les 2 1ère lignes
+      de tuille générique qui ne sont pas pertinent, garde uniquement
+      "Dernière mise à jour" à positioner entre "Performance de juillet 2026"
+      et le selecteur de date » ; « renome le KPI "Recharge" par
+      "E-REcharge" » ; « pour le KPI Orange Money, fait en sorte que le
+      montant tienne sur une ligne, par de retour à la ligne pour une meilleur
+      lecture des montants ».
+    - Objectif : alléger la synthèse Météo uniquement, sans modifier les
+      onglets applicatifs ni les données historiques.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; worktree isolé
+      `/tmp/tdb-synthese-kpis`, branche
+      `codex/clean-meteo-generic-tiles`.
+    - Les deux rangées de tuiles génériques sont masquées uniquement lorsque
+      la page est la synthèse originale. « Dernière mise à jour » est déplacée
+      dans l’en-tête, entre le titre et le sélecteur de période.
+    - Le libellé d’affichage `Recharge` devient `E-Recharge`; les
+      identifiants et catégories stockés en base restent inchangés. Les
+      montants de la carte Orange Money utilisent désormais une seule ligne
+      avec une taille adaptative.
+    - Contrôles réussis : 5 tests backend, build frontend Vite de 2 309
+      modules et `git diff --check`. L’avertissement de taille du bundle
+      reste non bloquant.
+    - Commit TDB `971c99d`; branche poussée et PR brouillon TDB #35 créée.
+      Aucun conteneur, volume, base ou service de production n’a été modifié.
+    - Déploiement en attente d’une fusion dans `main` et d’une confirmation
+      explicite. Rollback prévu : redéployer l’image frontend précédente,
+      sans toucher à SQLite ni au volume `tdb_data`.
+
+104. Atterrissage des KPI dans la synthèse TDB — 31 juillet 2026
+    - Prompt utilisateur : « pour chaque KPI tu doit afficher
+      "L'Attérissage" si un seul KPI dans le KPI principale, si plusieur
+      KPI/secteur d'activité mettre l'Attérissage dans le modal de détail ».
+    - L’atterrissage est calculé comme une projection de fin de période :
+      réalisé à date extrapolé sur la durée du mois en cours; pour une
+      période clôturée, il correspond au réalisé disponible. Le taux
+      d’atterrissage est affiché uniquement lorsqu’un objectif existe.
+    - Pour un secteur contenant un seul KPI, l’atterrissage est visible
+      directement sur la tuile principale. Pour un secteur multi-KPI, il est
+      présenté par KPI dans le modal, avec un atterrissage moyen de synthèse
+      sans additionner des unités incompatibles.
+    - Commit TDB `1617e39`, ajouté à la PR brouillon TDB #35. Contrôles :
+      5 tests backend, build Vite frontend de 2 309 modules et
+      `git diff --check` réussis; avertissement de taille du bundle
+      non bloquant.
+    - Aucun conteneur, volume, base ou service de production n’a été modifié.
+      Le déploiement reste soumis à fusion dans `main` et confirmation
+      explicite.
+
+105. Vue exportable de la synthèse TDB — 31 juillet 2026
+    - Prompt utilisateur : « maintenant tu doit preparer une vue html et ou
+      pdf pour export et ou transfert par email, à terme, chaque jour la
+      syntèse sera envoyer par email à la direction de TID/TID+ ».
+    - Objectif : préparer une vue direction autonome, exportable en HTML et
+      imprimable en PDF, réutilisable ultérieurement comme corps d’e-mail.
+    - La synthèse propose désormais « Vue HTML / PDF », puis « Télécharger
+      HTML » (fichier autonome avec CSS intégré) et « Imprimer / PDF ». Le
+      document contient la période, la date de mise à jour, les indicateurs
+      globaux, les secteurs, les objectifs, les réalisés, les taux et les
+      atterrissages.
+    - Aucun destinataire, SMTP, secret ou envoi automatique n’a été configuré.
+      L’automatisation quotidienne fera l’objet d’une phase séparée après
+      validation de l’adresse de direction, du relais SMTP et de la politique
+      d’archivage.
+    - Commit TDB `f9b79d8`, ajouté à la PR brouillon TDB #35. Contrôles :
+      5 tests backend, build Vite frontend de 2 309 modules et
+      `git diff --check` réussis; avertissement de taille du bundle
+      non bloquant.
+    - Aucun conteneur, volume, base ou service de production n’a été modifié.
+      Déploiement soumis à fusion dans `main` et confirmation explicite.
+      Rollback : redéployer l’image frontend précédente sans toucher à
+      SQLite ni au volume `tdb_data`.
+
+106. Déploiement de la synthèse TDB exportable — 31 juillet 2026
+    - Prompt utilisateur : « fait le déploiement ».
+    - La PR TDB #35 a été rendue prête puis fusionnée dans `main`.
+      Commit de fusion : `af0cb6020349b034b433a776d405caabc394712c`.
+    - Image frontend construite depuis ce commit :
+      `sha256:c2fc44268defa4ba99362964686d4d85e0e8324c9eb417c88d16d84cfb87f795`.
+      L’image précédente est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-synthesis-export-20260731`.
+    - Seul le conteneur `frontend` a été recréé. Le backend, SQLite, le
+      volume `tdb_data`, les secrets et les données métier n’ont pas été
+      modifiés.
+    - Vérifications réussies : frontend local HTTP 200, page publique
+      `https://tdb.tadgroupe.com/` HTTP 200, API
+      `https://tdb.tadgroupe.com/api/health` HTTP 200, présence dans le
+      bundle actif des libellés « Vue HTML / PDF », « Télécharger HTML » et
+      « Atterrissage », et journaux de démarrage sans erreur.
+    - Aucun e-mail n’a été envoyé : la vue est prête pour un futur relais
+      SMTP et une validation des destinataires TID/TID+.
+    - Rollback : restaurer le tag
+      `tdb-tid-frontend:rollback-pre-synthesis-export-20260731` puis
+      recréer uniquement le conteneur `frontend`; ne toucher ni au backend,
+      ni à SQLite, ni au volume `tdb_data`.
+
+107. Déploiement de l’alignement des lignes KPI — 31 juillet 2026
+    - Prompt utilisateur : « fait le déploiement » après validation de la
+      capture montrant des lignes KPI à harmoniser.
+    - PR TDB #36 fusionnée dans `main`; commit de fusion :
+      `941fa19b3699f028478b4688bdd3e02036bd1764`.
+    - Image frontend construite depuis ce commit :
+      `sha256:2d00181d0b1470b6a3a6b69e97bf55a5e4b1a06825aed28e825cc18ed691cda`.
+      L’image précédente est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-right-align-20260731`.
+    - Seul le conteneur `frontend` a été recréé. Le backend reste sur
+      `sha256:a70131cdcb5428863429dfd0dafa70ba54c1182d77b91e969a1021997a1fb8e8`;
+      SQLite, `tdb_data`, les secrets et les données métier sont inchangés.
+    - Contrôles réussis : frontend local HTTP 200, site public HTTP 200, API
+      `/api/health` HTTP 200, bundle actif contenant le placeholder de hauteur
+      de ligne KPI et journaux nginx sans erreur.
+    - Rollback : retagger
+      `tdb-tid-frontend:rollback-pre-right-align-20260731` comme image
+      `tdb-tid-frontend`, puis recréer uniquement `frontend`.
+
+108. Rétablissement de l’alimentation GParc — 31 juillet 2026
+    - Prompt utilisateur : « fait le necessaire » après constat de KPI GParc
+      vides ou à zéro dans TDB.
+    - Cause confirmée : `gparc_tdb_sync.py` construisait les requêtes SQL
+      dans l’environnement du processus Python, mais ne transmettait ni
+      `DB_NAME` ni `SQL` à `docker exec`. Les requêtes MariaDB étaient donc
+      vides et publiaient silencieusement sept valeurs à zéro.
+    - Correctif GParc `2dd7a94` poussé sur la branche par défaut
+      `codex/gparc-integration` du dépôt GParc; validation Python et
+      `git diff --check` réussies. Aucun secret n’a été affiché ou versionné.
+    - Synchronisation manuelle réussie le 31 juillet à 10:21 UTC :
+      véhicules `26`, carburant `3 207 980 FCFA` et `4 455,26 L`, entretiens
+      `2 598 000 FCFA`, demandes en attente `6`, demandes d’achat
+      `2 761 000 FCFA`, alertes actives `0`.
+    - Le timer `gparc-tdb-sync.timer` reste actif; le service est terminé avec
+      succès. Contrôles : GParc `/api/health` HTTP 200 et TDB `/api/health`
+      HTTP 200. Les valeurs sont disponibles dans l’onglet GParc après
+      actualisation du navigateur.
+    - Rollback : revenir au commit GParc précédent `65d039d`, puis relancer
+      le service de synchronisation; les anciennes lignes TDB restent
+      conservées dans SQLite.
+
+109. Correction du sélecteur de période GParc — 31 juillet 2026
+    - Prompt utilisateur : « le selecteur de périodicité ne fonctionne pas
+      dans TDB/GParc » puis « deploie ce qui doit l'etre ».
+    - Cause : après chaque changement manuel de mois, l’effet React ramenait
+      la sélection à l’unique période publiée par GParc (`2026-07`).
+    - Correctif : l’initialisation peut encore choisir la première période
+      disponible au chargement, mais une période choisie ensuite est conservée
+      et la requête correspondante est exécutée.
+    - PR TDB #37 fusionnée dans `main` au commit `d1077e7`.
+      Image frontend active :
+      `sha256:2709044b4fc835b85be4faf51af0bb7f5031f7a2c3c52100a0302d52f67cc6`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-gparc-period-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      GParc restent inchangés. Contrôles : frontend local/public et API
+      `/api/health` HTTP 200, bundle GParc présent, logs nginx sans erreur.
+
+110. Déploiement du centrage des tuiles KPI de synthèse — 31 juillet 2026
+    - Prompt utilisateur : « fait tout les deploiement ».
+    - PR TDB #38 fusionnée dans `main` au commit `87fce6c`.
+    - Image frontend active :
+      `sha256:ce5ac97e8d859262a0641cfddf9484a6e5ae5f1b0af953671b76a2ac3a363bb6`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-center-kpis-20260731`.
+    - Les montants, unités, titres et atterrissages sont centrés dans les
+      tuiles de synthèse. Seul le frontend a été recréé; backend, SQLite,
+      volume et données métier inchangés.
+    - Vérifications : frontend local/public et API `/api/health` HTTP 200,
+      CSS de centrage présent dans le bundle actif et aucun log nginx en
+      erreur au démarrage.
+
+111. Déploiement des couleurs du graphique de performance — 31 juillet 2026
+    - Prompt utilisateur : « deploie » après préparation de la coloration du
+      graphique « Performance globale par indicateur ».
+    - PR TDB #39 fusionnée dans `main` au commit `556ea63`.
+    - Image frontend active :
+      `sha256:ad46325d1504e5be1271785f36753f03077962c7e49514c9722a78eb6f1ec606`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-color-bars-20260731`.
+    - Les barres sont colorées par statut : vert atteint, bleu bon, orange
+      moyen et rouge critique. Seul le frontend a été recréé; backend,
+      SQLite, volume et données métier inchangés.
+    - Vérifications : frontend local/public et API `/api/health` HTTP 200,
+      couleurs verte et rouge présentes dans le bundle actif, aucun log nginx
+      en erreur au démarrage.
+
+112. Déploiement de l’atterrissage basé sur la dernière donnée — 31 juillet 2026
+    - Prompt utilisateur : « pourtant les dernières donéées date du 30/07
+      donc je devrait avoir une légere différence à l'atterissage du 31/07 »
+      puis « deploie ».
+    - PR TDB #40 fusionnée dans `main` au commit `1c849cd`.
+    - Le calcul utilise désormais le jour de `updated_at` du KPI comme dernier
+      jour alimenté. Une donnée reçue le 30/07 est donc projetée sur le 31/07.
+    - Image frontend active :
+      `sha256:e943adee461c4b9380671f609bfa9de2bc08a9633a845a07b2006284689b8a8a`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-landing-last-date-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      métier inchangés. Frontend local/public et API `/api/health` HTTP 200.
+
+113. Déploiement de l’export HTML/PDF coloré — 31 juillet 2026
+    - Prompt utilisateur : « je ne vois pas de changement pour l'export html
+      et pdf » puis « fait le ».
+    - PR TDB #41 fusionnée dans `main` au commit `b9a5027`.
+    - Le rapport exporté contient désormais une hiérarchie colorée et place
+      E‑Recharge puis Orange Money en tête des secteurs.
+    - Image frontend active :
+      `sha256:5ffd41198a22d2230c40497709eb7f3660089a4ef9641310911d41121eb93449`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-export-color-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      métier inchangés. Site local/public et API `/api/health` HTTP 200;
+      libellé E‑Recharge et style Orange Money présents dans le bundle actif.

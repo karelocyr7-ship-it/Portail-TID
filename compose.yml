@@ -31,6 +31,8 @@ services:
       dockerfile: apps/portal/Dockerfile
     image: tad-portal:0.1.0
     restart: unless-stopped
+    env_file:
+      - /srv/tad/secrets/portal.env
     environment:
       NODE_ENV: production
       TZ: ${TZ:-Africa/Abidjan}
@@ -62,6 +64,26 @@ services:
       start_period: 20s
     mem_limit: 2g
     cpus: 1.50
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  mail-worker:
+    image: tad-portal:0.1.0
+    command: ["node", "apps/portal/.worker-dist/email/worker.js"]
+    restart: unless-stopped
+    env_file:
+      - /srv/tad/secrets/portal.env
+    environment:
+      NODE_ENV: production
+      TZ: ${TZ:-Africa/Abidjan}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [tad-app, tad-data]
+    mem_limit: 512m
+    cpus: 0.50
     logging:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}

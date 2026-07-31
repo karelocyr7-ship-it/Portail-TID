@@ -14,6 +14,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/portal/node_modules ./apps/portal/node_modules
 COPY . .
 RUN pnpm --filter portal exec prisma generate
+RUN pnpm --filter portal build:worker
 RUN pnpm --filter portal build
 
 FROM node:24.18.0-bookworm-slim AS runner
@@ -24,6 +25,7 @@ RUN groupadd --system --gid 1001 portal && useradd --system --uid 1001 --gid por
 COPY --from=builder --chown=portal:portal /app/apps/portal/.next/standalone ./
 COPY --from=builder --chown=portal:portal /app/apps/portal/.next/static ./apps/portal/.next/static
 COPY --from=builder --chown=portal:portal /app/apps/portal/public ./apps/portal/public
+COPY --from=builder --chown=portal:portal /app/apps/portal/.worker-dist ./apps/portal/.worker-dist
 USER portal
 EXPOSE 3000
 CMD ["node", "apps/portal/server.js"]

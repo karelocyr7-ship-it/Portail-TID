@@ -2297,3 +2297,25 @@ avant de conclure que la VM est inaccessible.
     - Rollback : retagger
       `tdb-tid-frontend:rollback-pre-right-align-20260731` comme image
       `tdb-tid-frontend`, puis recréer uniquement `frontend`.
+
+108. Rétablissement de l’alimentation GParc — 31 juillet 2026
+    - Prompt utilisateur : « fait le necessaire » après constat de KPI GParc
+      vides ou à zéro dans TDB.
+    - Cause confirmée : `gparc_tdb_sync.py` construisait les requêtes SQL
+      dans l’environnement du processus Python, mais ne transmettait ni
+      `DB_NAME` ni `SQL` à `docker exec`. Les requêtes MariaDB étaient donc
+      vides et publiaient silencieusement sept valeurs à zéro.
+    - Correctif GParc `2dd7a94` poussé sur la branche par défaut
+      `codex/gparc-integration` du dépôt GParc; validation Python et
+      `git diff --check` réussies. Aucun secret n’a été affiché ou versionné.
+    - Synchronisation manuelle réussie le 31 juillet à 10:21 UTC :
+      véhicules `26`, carburant `3 207 980 FCFA` et `4 455,26 L`, entretiens
+      `2 598 000 FCFA`, demandes en attente `6`, demandes d’achat
+      `2 761 000 FCFA`, alertes actives `0`.
+    - Le timer `gparc-tdb-sync.timer` reste actif; le service est terminé avec
+      succès. Contrôles : GParc `/api/health` HTTP 200 et TDB `/api/health`
+      HTTP 200. Les valeurs sont disponibles dans l’onglet GParc après
+      actualisation du navigateur.
+    - Rollback : revenir au commit GParc précédent `65d039d`, puis relancer
+      le service de synchronisation; les anciennes lignes TDB restent
+      conservées dans SQLite.

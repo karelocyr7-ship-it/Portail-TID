@@ -2211,3 +2211,23 @@ avant de conclure que la VM est inaccessible.
     - Déploiement en attente d’une fusion dans `main` et d’une confirmation
       explicite. Rollback prévu : redéployer l’image frontend précédente,
       sans toucher à SQLite ni au volume `tdb_data`.
+
+104. Atterrissage des KPI dans la synthèse TDB — 31 juillet 2026
+    - Prompt utilisateur : « pour chaque KPI tu doit afficher
+      "L'Attérissage" si un seul KPI dans le KPI principale, si plusieur
+      KPI/secteur d'activité mettre l'Attérissage dans le modal de détail ».
+    - L’atterrissage est calculé comme une projection de fin de période :
+      réalisé à date extrapolé sur la durée du mois en cours; pour une
+      période clôturée, il correspond au réalisé disponible. Le taux
+      d’atterrissage est affiché uniquement lorsqu’un objectif existe.
+    - Pour un secteur contenant un seul KPI, l’atterrissage est visible
+      directement sur la tuile principale. Pour un secteur multi-KPI, il est
+      présenté par KPI dans le modal, avec un atterrissage moyen de synthèse
+      sans additionner des unités incompatibles.
+    - Commit TDB `1617e39`, ajouté à la PR brouillon TDB #35. Contrôles :
+      5 tests backend, build Vite frontend de 2 309 modules et
+      `git diff --check` réussis; avertissement de taille du bundle
+      non bloquant.
+    - Aucun conteneur, volume, base ou service de production n’a été modifié.
+      Le déploiement reste soumis à fusion dans `main` et confirmation
+      explicite.

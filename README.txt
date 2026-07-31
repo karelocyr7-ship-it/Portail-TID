@@ -2181,3 +2181,33 @@ avant de conclure que la VM est inaccessible.
       `tdb-tid-frontend:rollback-pre-app-kpis-20260731` comme image frontend
       active, puis recréer uniquement `frontend`; ne toucher ni au backend,
       ni à la base SQLite, ni au volume `tdb_data`.
+
+103. Nettoyage de la synthèse Météo TDB — 31 juillet 2026
+    - Prompts utilisateur : « dans TDB synthése, supprime les 2 1ère lignes
+      de tuille générique qui ne sont pas pertinent, garde uniquement
+      "Dernière mise à jour" à positioner entre "Performance de juillet 2026"
+      et le selecteur de date » ; « renome le KPI "Recharge" par
+      "E-REcharge" » ; « pour le KPI Orange Money, fait en sorte que le
+      montant tienne sur une ligne, par de retour à la ligne pour une meilleur
+      lecture des montants ».
+    - Objectif : alléger la synthèse Météo uniquement, sans modifier les
+      onglets applicatifs ni les données historiques.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; worktree isolé
+      `/tmp/tdb-synthese-kpis`, branche
+      `codex/clean-meteo-generic-tiles`.
+    - Les deux rangées de tuiles génériques sont masquées uniquement lorsque
+      la page est la synthèse originale. « Dernière mise à jour » est déplacée
+      dans l’en-tête, entre le titre et le sélecteur de période.
+    - Le libellé d’affichage `Recharge` devient `E-Recharge`; les
+      identifiants et catégories stockés en base restent inchangés. Les
+      montants de la carte Orange Money utilisent désormais une seule ligne
+      avec une taille adaptative.
+    - Contrôles réussis : 5 tests backend, build frontend Vite de 2 309
+      modules et `git diff --check`. L’avertissement de taille du bundle
+      reste non bloquant.
+    - Commit TDB `971c99d`; branche poussée et PR brouillon TDB #35 créée.
+      Aucun conteneur, volume, base ou service de production n’a été modifié.
+    - Déploiement en attente d’une fusion dans `main` et d’une confirmation
+      explicite. Rollback prévu : redéployer l’image frontend précédente,
+      sans toucher à SQLite ni au volume `tdb_data`.

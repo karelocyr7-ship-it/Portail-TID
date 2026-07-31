@@ -2148,3 +2148,36 @@ avant de conclure que la VM est inaccessible.
     - Rollback : reconstruire et recréer uniquement le frontend depuis le
       commit `main` précédent; conserver la base SQLite et le volume
       `tdb_data`.
+
+102. Déploiement des KPI applicatifs TDB — 31 juillet 2026
+    - Prompt utilisateur : « je confirme ».
+    - La confirmation autorise la livraison préparée dans la PR TDB #34. La
+      PR était déjà fusionnée dans `main` au commit
+      `a23cbace290d94aa210e756c72493bee84e52d62`.
+    - VM/répertoire : VM TDB/Revue-PDV/CASH-RECON `135.125.132.51`, dépôt
+      `/home/debian/TDB-TID`; construction depuis le worktree propre
+      `/tmp/tdb-deploy-a23cbac`, sans utiliser les modifications locales du
+      checkout de production.
+    - Le commit fusionné a été revalidé avant livraison : 3 tests unitaires
+      des KPI applicatifs, 5 tests backend, build frontend Vite et
+      `git diff --check` réussis. L’avertissement de taille du bundle reste
+      connu et non bloquant.
+    - L’image frontend précédente
+      `sha256:d6299413b64dce3faede5a79f8b542fb55eccc7be716b8eba4f7292bb1d1a2a9`
+      est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-app-kpis-20260731`.
+    - Nouvelle image frontend active :
+      `sha256:855f701d75e6c9ee6da86b9decc06420578191e8d4dff63c93b0941e2e301b3f`.
+      Seul le conteneur `frontend` a été recréé; le backend est resté actif
+      sur son image et son démarrage antérieurs. La base SQLite, le volume
+      `tdb_data`, les secrets et les données métier n’ont pas été modifiés.
+    - Contrôles production réussis : frontend local HTTP 200, page publique
+      `https://tdb.tadgroupe.com/` HTTP 200, API `/api/health` HTTP 200,
+      libellés spécifiques Revue-PDV, CASH-RECON, Recrutement OCI et GParc
+      présents dans le bundle actif, et aucun log d’erreur au démarrage.
+    - Risque restant : la pertinence fonctionnelle des ratios doit être
+      confirmée par les responsables applicatifs lors de leur utilisation.
+    - Rollback : retaguer l’image
+      `tdb-tid-frontend:rollback-pre-app-kpis-20260731` comme image frontend
+      active, puis recréer uniquement `frontend`; ne toucher ni au backend,
+      ni à la base SQLite, ni au volume `tdb_data`.

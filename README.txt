@@ -2231,3 +2231,27 @@ avant de conclure que la VM est inaccessible.
     - Aucun conteneur, volume, base ou service de production n’a été modifié.
       Le déploiement reste soumis à fusion dans `main` et confirmation
       explicite.
+
+105. Vue exportable de la synthèse TDB — 31 juillet 2026
+    - Prompt utilisateur : « maintenant tu doit preparer une vue html et ou
+      pdf pour export et ou transfert par email, à terme, chaque jour la
+      syntèse sera envoyer par email à la direction de TID/TID+ ».
+    - Objectif : préparer une vue direction autonome, exportable en HTML et
+      imprimable en PDF, réutilisable ultérieurement comme corps d’e-mail.
+    - La synthèse propose désormais « Vue HTML / PDF », puis « Télécharger
+      HTML » (fichier autonome avec CSS intégré) et « Imprimer / PDF ». Le
+      document contient la période, la date de mise à jour, les indicateurs
+      globaux, les secteurs, les objectifs, les réalisés, les taux et les
+      atterrissages.
+    - Aucun destinataire, SMTP, secret ou envoi automatique n’a été configuré.
+      L’automatisation quotidienne fera l’objet d’une phase séparée après
+      validation de l’adresse de direction, du relais SMTP et de la politique
+      d’archivage.
+    - Commit TDB `f9b79d8`, ajouté à la PR brouillon TDB #35. Contrôles :
+      5 tests backend, build Vite frontend de 2 309 modules et
+      `git diff --check` réussis; avertissement de taille du bundle
+      non bloquant.
+    - Aucun conteneur, volume, base ou service de production n’a été modifié.
+      Déploiement soumis à fusion dans `main` et confirmation explicite.
+      Rollback : redéployer l’image frontend précédente sans toucher à
+      SQLite ni au volume `tdb_data`.

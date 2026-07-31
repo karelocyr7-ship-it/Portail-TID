@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".worker-dist",
+    "rootDir": "./lib",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "verbatimModuleSyntax": false
+  },
+  "include": ["lib/email/worker.ts", "lib/email/**/*.ts", "lib/prisma.ts"]
+}

@@ -34,6 +34,12 @@ export function MainNavigation({ isPortalAdmin }: { isPortalAdmin: boolean }) {
           >
             ◈ <span>Rapports agents</span>
           </Link>
+          <Link
+            className={linkClass(pathname.startsWith("/admin/email"))}
+            href="/admin/email"
+          >
+            ✉ <span>E-mails</span>
+          </Link>
         </>
       )}
     </nav>

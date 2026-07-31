@@ -180,3 +180,31 @@ model AgentAction {
   @@index([status, requestedAt])
   @@index([reportId, requestedAt])
 }
+
+model EmailOutbox {
+  id                String    @id @default(cuid())
+  idempotencyKey    String    @unique
+  eventType         String
+  recipient         String
+  subject           String
+  templateName      String
+  templatePayload   Json
+  status            String    @default("PENDING")
+  priority          Int       @default(0)
+  attempts          Int       @default(0)
+  maxAttempts       Int       @default(5)
+  nextAttemptAt     DateTime  @default(now())
+  lockedAt          DateTime?
+  lockedBy          String?
+  lastErrorCode     String?
+  lastErrorMessage  String?
+  providerMessageId String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  sentAt            DateTime?
+  failedAt          DateTime?
+
+  @@index([status, nextAttemptAt])
+  @@index([createdAt])
+  @@index([idempotencyKey])
+}

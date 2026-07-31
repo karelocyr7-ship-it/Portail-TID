@@ -2255,3 +2255,26 @@ avant de conclure que la VM est inaccessible.
       Déploiement soumis à fusion dans `main` et confirmation explicite.
       Rollback : redéployer l’image frontend précédente sans toucher à
       SQLite ni au volume `tdb_data`.
+
+106. Déploiement de la synthèse TDB exportable — 31 juillet 2026
+    - Prompt utilisateur : « fait le déploiement ».
+    - La PR TDB #35 a été rendue prête puis fusionnée dans `main`.
+      Commit de fusion : `af0cb6020349b034b433a776d405caabc394712c`.
+    - Image frontend construite depuis ce commit :
+      `sha256:c2fc44268defa4ba99362964686d4d85e0e8324c9eb417c88d16d84cfb87f795`.
+      L’image précédente est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-synthesis-export-20260731`.
+    - Seul le conteneur `frontend` a été recréé. Le backend, SQLite, le
+      volume `tdb_data`, les secrets et les données métier n’ont pas été
+      modifiés.
+    - Vérifications réussies : frontend local HTTP 200, page publique
+      `https://tdb.tadgroupe.com/` HTTP 200, API
+      `https://tdb.tadgroupe.com/api/health` HTTP 200, présence dans le
+      bundle actif des libellés « Vue HTML / PDF », « Télécharger HTML » et
+      « Atterrissage », et journaux de démarrage sans erreur.
+    - Aucun e-mail n’a été envoyé : la vue est prête pour un futur relais
+      SMTP et une validation des destinataires TID/TID+.
+    - Rollback : restaurer le tag
+      `tdb-tid-frontend:rollback-pre-synthesis-export-20260731` puis
+      recréer uniquement le conteneur `frontend`; ne toucher ni au backend,
+      ni à SQLite, ni au volume `tdb_data`.

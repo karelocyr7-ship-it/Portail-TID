@@ -2278,3 +2278,22 @@ avant de conclure que la VM est inaccessible.
       `tdb-tid-frontend:rollback-pre-synthesis-export-20260731` puis
       recréer uniquement le conteneur `frontend`; ne toucher ni au backend,
       ni à SQLite, ni au volume `tdb_data`.
+
+107. Déploiement de l’alignement des lignes KPI — 31 juillet 2026
+    - Prompt utilisateur : « fait le déploiement » après validation de la
+      capture montrant des lignes KPI à harmoniser.
+    - PR TDB #36 fusionnée dans `main`; commit de fusion :
+      `941fa19b3699f028478b4688bdd3e02036bd1764`.
+    - Image frontend construite depuis ce commit :
+      `sha256:2d00181d0b1470b6a3a6b69e97bf55a5e4b1a06825aed28e825cc18ed691cda`.
+      L’image précédente est conservée sous le tag
+      `tdb-tid-frontend:rollback-pre-right-align-20260731`.
+    - Seul le conteneur `frontend` a été recréé. Le backend reste sur
+      `sha256:a70131cdcb5428863429dfd0dafa70ba54c1182d77b91e969a1021997a1fb8e8`;
+      SQLite, `tdb_data`, les secrets et les données métier sont inchangés.
+    - Contrôles réussis : frontend local HTTP 200, site public HTTP 200, API
+      `/api/health` HTTP 200, bundle actif contenant le placeholder de hauteur
+      de ligne KPI et journaux nginx sans erreur.
+    - Rollback : retagger
+      `tdb-tid-frontend:rollback-pre-right-align-20260731` comme image
+      `tdb-tid-frontend`, puis recréer uniquement `frontend`.

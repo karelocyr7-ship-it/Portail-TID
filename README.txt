@@ -2350,3 +2350,18 @@ avant de conclure que la VM est inaccessible.
     - Vérifications : frontend local/public et API `/api/health` HTTP 200,
       CSS de centrage présent dans le bundle actif et aucun log nginx en
       erreur au démarrage.
+
+111. Déploiement des couleurs du graphique de performance — 31 juillet 2026
+    - Prompt utilisateur : « deploie » après préparation de la coloration du
+      graphique « Performance globale par indicateur ».
+    - PR TDB #39 fusionnée dans `main` au commit `556ea63`.
+    - Image frontend active :
+      `sha256:ad46325d1504e5be1271785f36753f03077962c7e49514c9722a78eb6f1ec606`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-color-bars-20260731`.
+    - Les barres sont colorées par statut : vert atteint, bleu bon, orange
+      moyen et rouge critique. Seul le frontend a été recréé; backend,
+      SQLite, volume et données métier inchangés.
+    - Vérifications : frontend local/public et API `/api/health` HTTP 200,
+      couleurs verte et rouge présentes dans le bundle actif, aucun log nginx
+      en erreur au démarrage.

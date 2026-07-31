@@ -2365,3 +2365,17 @@ avant de conclure que la VM est inaccessible.
     - Vérifications : frontend local/public et API `/api/health` HTTP 200,
       couleurs verte et rouge présentes dans le bundle actif, aucun log nginx
       en erreur au démarrage.
+
+112. Déploiement de l’atterrissage basé sur la dernière donnée — 31 juillet 2026
+    - Prompt utilisateur : « pourtant les dernières donéées date du 30/07
+      donc je devrait avoir une légere différence à l'atterissage du 31/07 »
+      puis « deploie ».
+    - PR TDB #40 fusionnée dans `main` au commit `1c849cd`.
+    - Le calcul utilise désormais le jour de `updated_at` du KPI comme dernier
+      jour alimenté. Une donnée reçue le 30/07 est donc projetée sur le 31/07.
+    - Image frontend active :
+      `sha256:e943adee461c4b9380671f609bfa9de2bc08a9633a845a07b2006284689b8a8a`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-landing-last-date-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      métier inchangés. Frontend local/public et API `/api/health` HTTP 200.

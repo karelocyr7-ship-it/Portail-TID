@@ -2319,3 +2319,20 @@ avant de conclure que la VM est inaccessible.
     - Rollback : revenir au commit GParc précédent `65d039d`, puis relancer
       le service de synchronisation; les anciennes lignes TDB restent
       conservées dans SQLite.
+
+109. Correction du sélecteur de période GParc — 31 juillet 2026
+    - Prompt utilisateur : « le selecteur de périodicité ne fonctionne pas
+      dans TDB/GParc » puis « deploie ce qui doit l'etre ».
+    - Cause : après chaque changement manuel de mois, l’effet React ramenait
+      la sélection à l’unique période publiée par GParc (`2026-07`).
+    - Correctif : l’initialisation peut encore choisir la première période
+      disponible au chargement, mais une période choisie ensuite est conservée
+      et la requête correspondante est exécutée.
+    - PR TDB #37 fusionnée dans `main` au commit `d1077e7`.
+      Image frontend active :
+      `sha256:2709044b4fc835b85be4faf51af0bb7f5031f7a2c3c52100a0302d52f67cc6`.
+      Rollback conservé sous le tag
+      `tdb-tid-frontend:rollback-pre-gparc-period-20260731`.
+    - Seul le frontend a été recréé; backend, SQLite, volume et données
+      GParc restent inchangés. Contrôles : frontend local/public et API
+      `/api/health` HTTP 200, bundle GParc présent, logs nginx sans erreur.

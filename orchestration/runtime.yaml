@@ -28,8 +28,8 @@ agents:
   - id: atf-agent
     application: atf
     enabled: false
-    blocked_reason: "VM, dépôt et environnement ATF non confirmés"
-    repository_access: blocked
+    blocked_reason: "Miroir du dépôt et exécution confinée à préparer"
+    repository_access: mirror-required
   - id: revue-pdv-agent
     application: revue-pdv
     enabled: true
@@ -74,4 +74,4 @@ activation:
     - documentation-agent
   disabled_agents:
     - id: atf-agent
-      reason: "Rattachement technique à confirmer"
+      reason: "Miroir du dépôt et confinement sans secrets à préparer"

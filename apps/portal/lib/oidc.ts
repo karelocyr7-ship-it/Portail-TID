@@ -26,6 +26,7 @@ export type PortalSession = {
   employeeId?: string;
   name?: string;
   email?: string;
+  phone?: string;
   emailVerified?: boolean;
   username?: string;
   roles: string[];
@@ -134,7 +135,13 @@ export async function exchangeCode(
 export async function verifyApplicationIdToken(
   token: string,
   applicationCode: string,
-): Promise<{ subject: string; employeeId?: string; email?: string }> {
+): Promise<{
+  subject: string;
+  employeeId?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+}> {
   const oidc = await configuration();
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid application ID token");
@@ -206,6 +213,13 @@ export async function verifyApplicationIdToken(
         : typeof claims.preferred_username === "string"
           ? claims.preferred_username
           : undefined,
+    name: typeof claims.name === "string" ? claims.name : undefined,
+    phone:
+      typeof claims.phone_number === "string"
+        ? claims.phone_number
+        : typeof claims.phone === "string"
+          ? claims.phone
+          : undefined,
   };
 }
 
@@ -269,6 +283,12 @@ async function verifyIdToken(
     employeeId,
     name: typeof claims.name === "string" ? claims.name : undefined,
     email: typeof claims.email === "string" ? claims.email : undefined,
+    phone:
+      typeof claims.phone_number === "string"
+        ? claims.phone_number
+        : typeof claims.phone === "string"
+          ? claims.phone
+          : undefined,
     emailVerified: claims.email_verified === true,
     username:
       typeof claims.preferred_username === "string"

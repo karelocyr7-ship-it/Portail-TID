@@ -119,6 +119,7 @@ export async function savePortalUser(formData: FormData) {
   const employeeIdProvided = formData.has("employeeId");
   const employeeId = normalizeEmployeeId(formData.get("employeeId"));
   const email = String(formData.get("email") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
   const active = formData.get("active") === "on";
@@ -139,6 +140,7 @@ export async function savePortalUser(formData: FormData) {
   if (email.length > 320 || (email && !email.includes("@"))) {
     throw new Error("Adresse e-mail invalide");
   }
+  if (phone.length > 128) throw new Error("Numéro de téléphone invalide");
 
   const prisma = getPrisma();
   const profiles = await prisma.applicationProfile.findMany({
@@ -171,6 +173,7 @@ export async function savePortalUser(formData: FormData) {
               ? (employeeId ?? null)
               : (before?.employeeId ?? null),
             email: email || null,
+            phone: phone || null,
             displayName,
             active,
           },
@@ -180,6 +183,7 @@ export async function savePortalUser(formData: FormData) {
             keycloakSubject,
             employeeId: employeeIdProvided ? (employeeId ?? null) : null,
             email: email || null,
+            phone: phone || null,
             displayName,
             active,
           },
@@ -208,6 +212,7 @@ export async function savePortalUser(formData: FormData) {
               keycloakSubject: before.keycloakSubject,
               employeeId: before.employeeId,
               email: before.email,
+              phone: before.phone,
               displayName: before.displayName,
               active: before.active,
               profileIds: before.assignments.map(({ profileId }) => profileId),
@@ -217,6 +222,7 @@ export async function savePortalUser(formData: FormData) {
           keycloakSubject,
           employeeId: user.employeeId,
           email: email || null,
+          phone: phone || null,
           displayName,
           active,
           profileIds: [...new Set(profileIds)],

@@ -61,7 +61,9 @@ export async function POST(request: Request) {
       subject: identity.subject,
       identity: {
         employeeId: identity.employeeId ?? null,
-        email: identity.email ?? null,
+        email: user?.email ?? identity.email ?? null,
+        name: user?.displayName ?? identity.name ?? null,
+        phone: user?.phone ?? identity.phone ?? null,
       },
       active: Boolean(user?.active),
       authorized: Boolean(user?.active) && profiles.length > 0,

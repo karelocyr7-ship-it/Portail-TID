@@ -96,7 +96,7 @@ export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
   TDB: "https://tdb.tadgroupe.com",
-  ATF: "https://atf.tadgroupe.com/",
+  ATF: "https://atf.tadgroupe.com/api/session/openid/auth",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
 };
 

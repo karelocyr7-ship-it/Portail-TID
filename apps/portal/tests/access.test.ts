@@ -41,7 +41,7 @@ describe("contrôle d’accès au catalogue", () => {
     );
     expect(atf).toMatchObject({
       integrationLevel: 2,
-      url: "https://atf.tadgroupe.com/",
+      url: "https://atf.tadgroupe.com/api/session/openid/auth",
       roles: ["PORTAL_ADMIN", "SUPERVISEUR", "DIRECTION"],
     });
     expect(hasRoleAccess(atf!, ["SUPERVISEUR"])).toBe(true);

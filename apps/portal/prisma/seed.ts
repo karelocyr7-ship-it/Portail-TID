@@ -96,6 +96,7 @@ export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
   TDB: "https://tdb.tadgroupe.com",
+  ATF: "https://atf.tadgroupe.com/rest/public/oidc",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
 };
 
@@ -300,6 +301,12 @@ async function main() {
         categoryId: categoryIds.get(categoryName)!,
         active: true,
         maintenance: false,
+        ...(code === "ATF"
+          ? {
+              url: initialApplicationUrls.ATF,
+              integrationLevel: 2,
+            }
+          : {}),
       },
       create: {
         code,
@@ -308,6 +315,7 @@ async function main() {
         categoryId: categoryIds.get(categoryName)!,
         icon: code.slice(0, 1),
         url: initialApplicationUrls[code],
+        integrationLevel: code === "ATF" ? 2 : 1,
         active: true,
         displayOrder: categoryIds.size,
       },

@@ -43,23 +43,23 @@ applications:
   - id: atf
     name: ATF
     description: Plateforme de géolocalisation et d’exploitation terrain
-    vm_alias: to_confirm
-    ssh_user: to_confirm
-    environment: to_confirm
-    repository_path: to_confirm
-    git_remote: to_confirm
+    vm_alias: atf
+    ssh_user: debian
+    environment: production
+    repository_path: /home/debian/docker/ATF/traccar-adapter-work
+    git_remote: https://github.com/traccar/traccar.git
     default_branch: main
-    integration_branch: develop
-    deployment_method: to_confirm
-    compose_file: to_confirm
-    healthcheck_url: to_confirm
+    integration_branch: agent/portal-profile-atf
+    deployment_method: Docker Compose
+    compose_file: /home/debian/docker/ATF/docker-compose.yml
+    healthcheck_url: https://atf.tadgroupe.com/rest/public/oidc
     agent_file: AGENTS.md
     documentation_path: docs
     owner_agent: atf-agent
     criticality: critical
     contains_location_data: true
     automatic_production_deployment: false
-    evidence: Aucun dépôt ou service ATF confirmé pendant l’audit
+    evidence: VM 51.178.142.237; conteneur atf; dépôt source traccar-adapter-work
 
   - id: revue-pdv
     name: Revue-PDV

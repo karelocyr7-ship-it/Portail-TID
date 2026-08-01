@@ -92,8 +92,9 @@ export const catalogApplications: CatalogApplication[] = [
     description: "Application terrain",
     category: "Terrain",
     icon: "↗",
-    integrationLevel: 1,
+    integrationLevel: 2,
     active: true,
+    url: "https://atf.tadgroupe.com/rest/public/oidc",
     roles: ["PORTAL_ADMIN", "SUPERVISEUR", "DIRECTION"],
   },
   {

@@ -246,6 +246,7 @@ export default async function AdminPage({
               id: user.id,
               displayName: user.displayName,
               email: user.email,
+              phone: user.phone,
               active: user.active,
               profileCount: user.assignments.length,
             }))}
@@ -267,6 +268,10 @@ export default async function AdminPage({
               <label>
                 E-mail de référence
                 <input name="email" type="email" maxLength={320} />
+              </label>
+              <label>
+                Téléphone de référence
+                <input name="phone" type="tel" maxLength={128} />
               </label>
               <label>
                 Matricule d’entreprise
@@ -343,6 +348,15 @@ export default async function AdminPage({
                         type="email"
                         maxLength={320}
                         defaultValue={user.email ?? ""}
+                      />
+                    </label>
+                    <label>
+                      Téléphone de référence
+                      <input
+                        name="phone"
+                        type="tel"
+                        maxLength={128}
+                        defaultValue={user.phone ?? ""}
                       />
                     </label>
                     <label>

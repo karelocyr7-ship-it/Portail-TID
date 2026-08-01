@@ -94,7 +94,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "↗",
     integrationLevel: 2,
     active: true,
-    url: "https://atf.tadgroupe.com/rest/public/oidc",
+    url: "https://atf.tadgroupe.com/",
     roles: ["PORTAL_ADMIN", "SUPERVISEUR", "DIRECTION"],
   },
   {

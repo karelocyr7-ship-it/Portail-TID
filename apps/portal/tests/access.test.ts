@@ -35,6 +35,19 @@ describe("contrôle d’accès au catalogue", () => {
     expect(hasRoleAccess(mdm!, ["RH"])).toBe(false);
   });
 
+  it("ouvre ATF via Keycloak et conserve ses profils métier", () => {
+    const atf = catalogApplications.find(
+      (application) => application.code === "ATF",
+    );
+    expect(atf).toMatchObject({
+      integrationLevel: 2,
+      url: "https://atf.tadgroupe.com/rest/public/oidc",
+      roles: ["PORTAL_ADMIN", "SUPERVISEUR", "DIRECTION"],
+    });
+    expect(hasRoleAccess(atf!, ["SUPERVISEUR"])).toBe(true);
+    expect(hasRoleAccess(atf!, ["FINANCE"])).toBe(false);
+  });
+
   it("donne accès à tout le catalogue à PORTAL_ADMIN", () => {
     expect(getVisibleApplications(["PORTAL_ADMIN"])).toHaveLength(
       catalogApplications.length,

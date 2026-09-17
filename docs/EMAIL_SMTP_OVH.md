@@ -179,4 +179,3 @@ devra être conservée.
    `smtp:test` ;
 8. déployer via PR fusionnée, avec vérification du worker et possibilité de
    retour arrière.
-

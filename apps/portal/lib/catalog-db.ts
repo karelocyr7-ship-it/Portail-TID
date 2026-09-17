@@ -28,7 +28,7 @@ export async function getVisibleApplicationsFromDatabase(
 
   return applications.map((application) => ({
     code: application.code,
-    name: application.name,
+    name: application.code === "TDB" ? "Perf-TID" : application.name,
     description: application.description,
     category: application.category.name,
     icon: application.icon,
@@ -45,7 +45,7 @@ export async function getVisibleApplicationsFromDatabase(
             ? "https://mdm.tadgroupe.com/rest/public/auth/oidc/login"
           : application.url ??
           (application.code === "TDB"
-            ? "https://tdb.tadgroupe.com"
+            ? "https://perf-tid.tadgroupe.com"
             : undefined),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
@@ -59,7 +59,7 @@ export async function getAdminApplications(): Promise<CatalogApplication[]> {
 
   return applications.map((application) => ({
     code: application.code,
-    name: application.name,
+    name: application.code === "TDB" ? "Perf-TID" : application.name,
     description: application.description,
     category: application.category.name,
     icon: application.icon,

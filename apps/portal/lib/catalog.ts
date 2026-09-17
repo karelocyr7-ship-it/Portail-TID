@@ -56,7 +56,7 @@ export const catalogApplications: CatalogApplication[] = [
   },
   {
     code: "TDB",
-    name: "TDB",
+    name: "Perf-TID",
     description: "Tableau de bord de pilotage",
     category: "Pilotage",
     icon: "▥",

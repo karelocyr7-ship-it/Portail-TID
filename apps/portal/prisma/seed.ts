@@ -29,7 +29,7 @@ const applications = [
   ],
   [
     "TDB",
-    "TDB",
+    "Perf-TID",
     "Tableau de bord de pilotage",
     "Pilotage",
     ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
@@ -95,7 +95,7 @@ const applications = [
 export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
-  TDB: "https://tdb.tadgroupe.com",
+  TDB: "https://perf-tid.tadgroupe.com",
   ATF: "https://atf.tadgroupe.com/api/session/openid/auth",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
 };

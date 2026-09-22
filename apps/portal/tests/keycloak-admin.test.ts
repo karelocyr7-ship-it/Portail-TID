@@ -66,7 +66,9 @@ describe("provisionKeycloakUser", () => {
       )
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
-    await expect(setKeycloakUserEnabled("sub-123", false)).resolves.toBeUndefined();
+    await expect(
+      setKeycloakUserEnabled("sub-123", false),
+    ).resolves.toBeUndefined();
     expect(globalThis.fetch).toHaveBeenLastCalledWith(
       "https://sso.example.test/auth/admin/realms/tad-groupe/users/sub-123",
       expect.objectContaining({

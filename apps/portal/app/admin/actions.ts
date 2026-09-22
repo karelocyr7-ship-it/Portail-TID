@@ -249,6 +249,47 @@ export async function savePortalUser(formData: FormData) {
   revalidatePath("/");
 }
 
+export async function deletePortalUser(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "").trim();
+  if (!userId) throw new Error("Compte portail invalide");
+
+  const prisma = getPrisma();
+  await prisma.$transaction(async (transaction) => {
+    const user = await transaction.portalUser.findUnique({
+      where: { id: userId },
+      include: { assignments: { select: { profileId: true } } },
+    });
+    if (!user) throw new Error("Compte portail introuvable");
+    if (user.keycloakSubject === session.subject) {
+      throw new Error(
+        "Votre propre compte administrateur ne peut pas être supprimé",
+      );
+    }
+
+    await transaction.auditLog.create({
+      data: {
+        userId: session.subject,
+        eventType: "PORTAL_USER_DELETED",
+        entityType: "PortalUser",
+        entityId: user.id,
+        beforeData: {
+          keycloakSubject: user.keycloakSubject,
+          employeeId: user.employeeId,
+          email: user.email,
+          displayName: user.displayName,
+          active: user.active,
+          profileIds: user.assignments.map(({ profileId }) => profileId),
+        },
+      },
+    });
+    await transaction.portalUser.delete({ where: { id: userId } });
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
 export async function saveCurrentPortalUser(formData: FormData) {
   const session = await requireAdmin();
   const currentUser = new FormData();

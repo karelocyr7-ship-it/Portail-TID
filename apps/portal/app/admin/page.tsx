@@ -4,10 +4,12 @@ import { getAdminApplications } from "@/lib/catalog-db";
 import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
+import { UserManagement } from "@/components/user-management";
 import { UserDirectory } from "@/components/user-directory";
 import { redirect } from "next/navigation";
 import {
   saveCurrentPortalUser,
+  deletePortalUser,
   savePortalUser,
   updateApplicationStatus,
   updateApplicationUrl,
@@ -203,6 +205,44 @@ export default async function AdminPage({
       )}
 
       {section === "users" && (
+        <>
+          <section className="admin-users-section" id="comptes">
+            <div className="section-header admin-section-heading">
+              <div>
+                <p className="eyebrow">Habilitations</p>
+                <h2>Comptes et profils applicatifs</h2>
+              </div>
+              <span className="count-badge">{users.length} comptes</span>
+            </div>
+            <p className="section-intro">
+              Consultez les utilisateurs du portail et gérez leurs accès aux
+              applications depuis une fenêtre dédiée.
+            </p>
+            <UserManagement
+              users={users.map((user) => ({
+                id: user.id,
+                displayName: user.displayName,
+                email: user.email,
+                employeeId: user.employeeId,
+                keycloakSubject: user.keycloakSubject,
+                active: user.active,
+                profileIds: user.assignments.map(({ profileId }) => profileId),
+              }))}
+              profiles={profiles.map((profile) => ({
+                id: profile.id,
+                name: profile.name,
+                key: profile.key,
+                applicationId: profile.applicationId,
+                applicationName: profile.application.name,
+              }))}
+              savePortalUser={savePortalUser}
+              deletePortalUser={deletePortalUser}
+            />
+          </section>
+        </>
+      )}
+
+      {false && section === "users" && (
         <section className="admin-users-section" id="comptes">
           <div className="section-header admin-section-heading">
             <div>

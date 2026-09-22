@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeEmployeeId } from "@/lib/employee-id";
-import { provisionKeycloakUser } from "@/lib/keycloak-admin";
+import {
+  provisionKeycloakUser,
+  setKeycloakUserEnabled,
+} from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -169,6 +172,10 @@ export async function savePortalUser(formData: FormData) {
     throw new Error("Un profil sélectionné est invalide ou inactif");
   }
 
+  // Keycloak is the authentication gate for the OIDC-enabled applications.
+  // Fail closed: do not persist a portal state that cannot be enforced there.
+  await setKeycloakUserEnabled(keycloakSubject, active);
+
   await prisma.$transaction(async (transaction) => {
     const before = userId
       ? await transaction.portalUser.findUnique({
@@ -255,17 +262,26 @@ export async function deletePortalUser(formData: FormData) {
   if (!userId) throw new Error("Compte portail invalide");
 
   const prisma = getPrisma();
+  const user = await prisma.portalUser.findUnique({
+    where: { id: userId },
+    include: { assignments: { select: { profileId: true } } },
+  });
+  if (!user) throw new Error("Compte portail introuvable");
+  if (user.keycloakSubject === session.subject) {
+    throw new Error(
+      "Votre propre compte administrateur ne peut pas être supprimé",
+    );
+  }
+
+  // Disable before removing the portal record so the user cannot keep an
+  // OIDC session or start a new one if the database operation is interrupted.
+  await setKeycloakUserEnabled(user.keycloakSubject, false);
+
   await prisma.$transaction(async (transaction) => {
-    const user = await transaction.portalUser.findUnique({
+    const current = await transaction.portalUser.findUnique({
       where: { id: userId },
-      include: { assignments: { select: { profileId: true } } },
     });
-    if (!user) throw new Error("Compte portail introuvable");
-    if (user.keycloakSubject === session.subject) {
-      throw new Error(
-        "Votre propre compte administrateur ne peut pas être supprimé",
-      );
-    }
+    if (!current) throw new Error("Compte portail introuvable");
 
     await transaction.auditLog.create({
       data: {

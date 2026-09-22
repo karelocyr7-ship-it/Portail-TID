@@ -42,3 +42,9 @@ pas modifier directement la base de production.
 
 Les URL du catalogue restent modifiables uniquement depuis l’administration ;
 aucune URL métier réelle n’est inventée dans le dépôt.
+
+L’état actif du compte est synchronisé avec l’utilisateur Keycloak : une
+désactivation ou une suppression du compte portail désactive l’authentification
+OIDC correspondante. Cette garantie s’applique aux applications qui utilisent
+Keycloak ; les comptes locaux des applications historiques nécessitent encore
+un connecteur de provisioning et de révocation propre à chaque application.

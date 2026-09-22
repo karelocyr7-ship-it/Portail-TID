@@ -212,8 +212,9 @@ export default async function AdminPage({
             <span className="count-badge">{profiles.length} profils</span>
           </div>
           <p className="section-intro">
-            Associez une identité Keycloak aux profils réels déclarés par chaque
-            application. Aucun mot de passe n’est enregistré dans le portail.
+            Créez un compte Keycloak à partir de l’e-mail et associez-le aux
+            profils réels déclarés par chaque application. Aucun mot de passe
+            n’est enregistré dans le portail.
           </p>
 
           <form
@@ -258,7 +259,7 @@ export default async function AdminPage({
                 <p className="eyebrow">Nouveau compte</p>
                 <h3>Ajouter une habilitation</h3>
               </div>
-              <span className="source-note">Source : identité Keycloak</span>
+              <span className="source-note">Création Keycloak automatique</span>
             </div>
             <div className="user-fields">
               <label>
@@ -267,7 +268,7 @@ export default async function AdminPage({
               </label>
               <label>
                 E-mail de référence
-                <input name="email" type="email" maxLength={320} />
+                <input name="email" type="email" required maxLength={320} />
               </label>
               <label>
                 Téléphone de référence
@@ -283,7 +284,12 @@ export default async function AdminPage({
               </label>
               <label className="field-wide">
                 Identifiant Keycloak (sub)
-                <input name="keycloakSubject" required maxLength={200} />
+                <input
+                  name="keycloakSubject"
+                  maxLength={200}
+                  placeholder="Généré automatiquement par Keycloak"
+                  readOnly
+                />
               </label>
             </div>
             <ProfilePicker profiles={profiles} />

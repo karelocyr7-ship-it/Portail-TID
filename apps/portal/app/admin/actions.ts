@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeEmployeeId } from "@/lib/employee-id";
+import { provisionKeycloakUser } from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -115,7 +116,7 @@ export async function updateApplicationUrl(formData: FormData) {
 
 export async function savePortalUser(formData: FormData) {
   const session = await requireAdmin();
-  const keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
+  let keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
   const employeeIdProvided = formData.has("employeeId");
   const employeeId = normalizeEmployeeId(formData.get("employeeId"));
   const email = String(formData.get("email") ?? "").trim();
@@ -128,7 +129,7 @@ export async function savePortalUser(formData: FormData) {
     .filter((value): value is string => typeof value === "string")
     .filter(Boolean);
 
-  if (!keycloakSubject || keycloakSubject.length > 200) {
+  if (keycloakSubject.length > 200) {
     throw new Error("Identifiant Keycloak invalide");
   }
   if (formData.get("employeeId") && !employeeId) {
@@ -140,6 +141,19 @@ export async function savePortalUser(formData: FormData) {
   if (email.length > 320 || (email && !email.includes("@"))) {
     throw new Error("Adresse e-mail invalide");
   }
+  if (!userId && !keycloakSubject) {
+    if (!email)
+      throw new Error(
+        "Un e-mail est requis pour créer automatiquement le compte Keycloak",
+      );
+    const provisioned = await provisionKeycloakUser({
+      email,
+      displayName,
+      employeeId,
+    });
+    keycloakSubject = provisioned.subject;
+  }
+  if (!keycloakSubject) throw new Error("Identifiant Keycloak invalide");
   if (phone.length > 128) throw new Error("Numéro de téléphone invalide");
 
   const prisma = getPrisma();

@@ -56,13 +56,13 @@ export const catalogApplications: CatalogApplication[] = [
   },
   {
     code: "TDB",
-    name: "TDB",
+    name: "Perf-TID",
     description: "Tableau de bord de pilotage",
     category: "Pilotage",
     icon: "▥",
     integrationLevel: 1,
     active: true,
-    url: "https://tdb.tadgroupe.com",
+    url: "https://perf-tid.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
   },
   {
@@ -82,8 +82,9 @@ export const catalogApplications: CatalogApplication[] = [
     description: "Revue des points de vente",
     category: "Terrain",
     icon: "⌖",
-    integrationLevel: 1,
+    integrationLevel: 2,
     active: true,
+    url: "https://pdv.tadgroupe.com/api/auth/oidc/start",
     roles: ["PORTAL_ADMIN", "SUPERVISEUR", "AGENT_TERRAIN", "DIRECTION"],
   },
   {

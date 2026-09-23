@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeEmployeeId } from "@/lib/employee-id";
+import { provisionKeycloakUser } from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -115,19 +116,19 @@ export async function updateApplicationUrl(formData: FormData) {
 
 export async function savePortalUser(formData: FormData) {
   const session = await requireAdmin();
-  const keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
+  let keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
   const employeeIdProvided = formData.has("employeeId");
   const employeeId = normalizeEmployeeId(formData.get("employeeId"));
   const email = String(formData.get("email") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
   const active = formData.get("active") === "on";
-  const profileIds = formData
+  const requestedProfileIds = formData
     .getAll("profileIds")
     .filter((value): value is string => typeof value === "string")
     .filter(Boolean);
 
-  if (!keycloakSubject || keycloakSubject.length > 200) {
+  if (keycloakSubject.length > 200) {
     throw new Error("Identifiant Keycloak invalide");
   }
   if (formData.get("employeeId") && !employeeId) {
@@ -139,19 +140,36 @@ export async function savePortalUser(formData: FormData) {
   if (email.length > 320 || (email && !email.includes("@"))) {
     throw new Error("Adresse e-mail invalide");
   }
-
   const prisma = getPrisma();
-  const profiles = await prisma.applicationProfile.findMany({
-    where: {
-      id: { in: [...new Set(profileIds)] },
-      active: true,
-      application: { active: true },
-    },
-    select: { id: true },
+  const defaultProfiles = await prisma.applicationProfile.findMany({
+    where: { isDefault: true, active: true, application: { active: true } },
+    select: { id: true, applicationId: true },
   });
-  if (profiles.length !== new Set(profileIds).size) {
-    throw new Error("Un profil sélectionné est invalide ou inactif");
+  const activeApplicationCount = await prisma.application.count({
+    where: { active: true },
+  });
+  if (
+    defaultProfiles.length !== activeApplicationCount ||
+    new Set(defaultProfiles.map(({ applicationId }) => applicationId)).size !==
+      defaultProfiles.length
+  ) {
+    throw new Error(
+      "Les profils minimaux des applications ne sont pas configurés",
+    );
   }
+  if (!userId && !keycloakSubject) {
+    if (!email)
+      throw new Error(
+        "Un e-mail est requis pour créer automatiquement le compte Keycloak",
+      );
+    const provisioned = await provisionKeycloakUser({
+      email,
+      displayName,
+      employeeId,
+    });
+    keycloakSubject = provisioned.subject;
+  }
+  if (!keycloakSubject) throw new Error("Identifiant Keycloak invalide");
 
   await prisma.$transaction(async (transaction) => {
     const before = userId
@@ -161,6 +179,23 @@ export async function savePortalUser(formData: FormData) {
         })
       : null;
     if (userId && !before) throw new Error("Compte portail introuvable");
+
+    const profileIds = userId
+      ? formData.has("profileIds")
+        ? requestedProfileIds
+        : (before?.assignments.map(({ profileId }) => profileId) ?? [])
+      : defaultProfiles.map(({ id }) => id);
+    const profiles = await transaction.applicationProfile.findMany({
+      where: {
+        id: { in: [...new Set(profileIds)] },
+        active: true,
+        application: { active: true },
+      },
+      select: { id: true, applicationId: true },
+    });
+    if (profiles.length !== new Set(profileIds).size) {
+      throw new Error("Un profil sélectionné est invalide ou inactif");
+    }
 
     const user = userId
       ? await transaction.portalUser.update({
@@ -197,6 +232,16 @@ export async function savePortalUser(formData: FormData) {
         })),
       });
     }
+    if (!userId) {
+      await transaction.applicationProvisioningOutbox.createMany({
+        data: profiles.map((profile) => ({
+          idempotencyKey: `${user.id}:${profile.applicationId}`,
+          userId: user.id,
+          applicationId: profile.applicationId,
+          profileId: profile.id,
+        })),
+      });
+    }
     await transaction.auditLog.create({
       data: {
         userId: session.subject,
@@ -223,6 +268,47 @@ export async function savePortalUser(formData: FormData) {
         },
       },
     });
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+}
+
+export async function deletePortalUser(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "").trim();
+  if (!userId) throw new Error("Compte portail invalide");
+
+  const prisma = getPrisma();
+  await prisma.$transaction(async (transaction) => {
+    const user = await transaction.portalUser.findUnique({
+      where: { id: userId },
+      include: { assignments: { select: { profileId: true } } },
+    });
+    if (!user) throw new Error("Compte portail introuvable");
+    if (user.keycloakSubject === session.subject) {
+      throw new Error(
+        "Votre propre compte administrateur ne peut pas être supprimé",
+      );
+    }
+
+    await transaction.auditLog.create({
+      data: {
+        userId: session.subject,
+        eventType: "PORTAL_USER_DELETED",
+        entityType: "PortalUser",
+        entityId: user.id,
+        beforeData: {
+          keycloakSubject: user.keycloakSubject,
+          employeeId: user.employeeId,
+          email: user.email,
+          displayName: user.displayName,
+          active: user.active,
+          profileIds: user.assignments.map(({ profileId }) => profileId),
+        },
+      },
+    });
+    await transaction.portalUser.delete({ where: { id: userId } });
   });
 
   revalidatePath("/admin");

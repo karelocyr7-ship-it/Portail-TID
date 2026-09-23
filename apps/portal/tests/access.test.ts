@@ -48,6 +48,27 @@ describe("contrôle d’accès au catalogue", () => {
     expect(hasRoleAccess(atf!, ["FINANCE"])).toBe(false);
   });
 
+  it("ouvre Revue-PDV via son entrée OIDC", () => {
+    const revuePdv = catalogApplications.find(
+      (application) => application.code === "REVUE-PDV",
+    );
+    expect(revuePdv).toMatchObject({
+      integrationLevel: 2,
+      url: "https://pdv.tadgroupe.com/api/auth/oidc/start",
+    });
+    expect(hasRoleAccess(revuePdv!, ["SUPERVISEUR"])).toBe(true);
+  });
+
+  it("expose Perf-TID avec son nouveau domaine", () => {
+    const perfTid = catalogApplications.find(
+      (application) => application.code === "TDB",
+    );
+    expect(perfTid).toMatchObject({
+      name: "Perf-TID",
+      url: "https://perf-tid.tadgroupe.com",
+    });
+  });
+
   it("donne accès à tout le catalogue à PORTAL_ADMIN", () => {
     expect(getVisibleApplications(["PORTAL_ADMIN"])).toHaveLength(
       catalogApplications.length,

@@ -4,10 +4,12 @@ import { getAdminApplications } from "@/lib/catalog-db";
 import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
+import { UserManagement } from "@/components/user-management";
 import { UserDirectory } from "@/components/user-directory";
 import { redirect } from "next/navigation";
 import {
   saveCurrentPortalUser,
+  deletePortalUser,
   savePortalUser,
   updateApplicationStatus,
   updateApplicationUrl,
@@ -203,6 +205,37 @@ export default async function AdminPage({
       )}
 
       {section === "users" && (
+        <>
+          <section className="admin-users-section" id="comptes">
+            <div className="section-header admin-section-heading">
+              <div>
+                <p className="eyebrow">Habilitations</p>
+                <h2>Comptes et profils applicatifs</h2>
+              </div>
+              <span className="count-badge">{users.length} comptes</span>
+            </div>
+            <p className="section-intro">
+              Consultez les utilisateurs du portail et gérez leurs accès aux
+              applications depuis une fenêtre dédiée.
+            </p>
+            <UserManagement
+              users={users.map((user) => ({
+                id: user.id,
+                displayName: user.displayName,
+                email: user.email,
+                employeeId: user.employeeId,
+                keycloakSubject: user.keycloakSubject,
+                active: user.active,
+                profileIds: user.assignments.map(({ profileId }) => profileId),
+              }))}
+              savePortalUser={savePortalUser}
+              deletePortalUser={deletePortalUser}
+            />
+          </section>
+        </>
+      )}
+
+      {false && section === "users" && (
         <section className="admin-users-section" id="comptes">
           <div className="section-header admin-section-heading">
             <div>
@@ -212,8 +245,9 @@ export default async function AdminPage({
             <span className="count-badge">{profiles.length} profils</span>
           </div>
           <p className="section-intro">
-            Associez une identité Keycloak aux profils réels déclarés par chaque
-            application. Aucun mot de passe n’est enregistré dans le portail.
+            Créez un compte Keycloak à partir de l’e-mail et associez-le aux
+            profils réels déclarés par chaque application. Aucun mot de passe
+            n’est enregistré dans le portail.
           </p>
 
           <form
@@ -257,7 +291,7 @@ export default async function AdminPage({
                 <p className="eyebrow">Nouveau compte</p>
                 <h3>Ajouter une habilitation</h3>
               </div>
-              <span className="source-note">Source : identité Keycloak</span>
+              <span className="source-note">Création Keycloak automatique</span>
             </div>
             <div className="user-fields">
               <label>
@@ -266,7 +300,7 @@ export default async function AdminPage({
               </label>
               <label>
                 E-mail de référence
-                <input name="email" type="email" maxLength={320} />
+                <input name="email" type="email" required maxLength={320} />
               </label>
               <label>
                 Matricule d’entreprise
@@ -278,7 +312,12 @@ export default async function AdminPage({
               </label>
               <label className="field-wide">
                 Identifiant Keycloak (sub)
-                <input name="keycloakSubject" required maxLength={200} />
+                <input
+                  name="keycloakSubject"
+                  maxLength={200}
+                  placeholder="Généré automatiquement par Keycloak"
+                  readOnly
+                />
               </label>
             </div>
             <ProfilePicker profiles={profiles} />

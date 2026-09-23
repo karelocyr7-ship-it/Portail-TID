@@ -17,8 +17,6 @@ async function main() {
 }
 
 void main().catch(() => {
-  console.error(
-    "Le worker SMTP n’a pas pu démarrer. Aucun secret n’a été affiché.",
-  );
+  console.error("Le worker SMTP n’a pas pu démarrer. Aucun secret n’a été affiché.");
   process.exitCode = 1;
 });

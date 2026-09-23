@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  provisionKeycloakUser,
-  setKeycloakUserEnabled,
-} from "@/lib/keycloak-admin";
+import { provisionKeycloakUser } from "@/lib/keycloak-admin";
 
 describe("provisionKeycloakUser", () => {
   const originalFetch = globalThis.fetch;
@@ -50,31 +47,5 @@ describe("provisionKeycloakUser", () => {
         employeeId: "TID0001",
       }),
     ).resolves.toEqual({ subject: "sub-123", created: true });
-  });
-
-  it("updates the Keycloak enabled state", async () => {
-    process.env.KEYCLOAK_ISSUER =
-      "https://sso.example.test/auth/realms/tad-groupe";
-    process.env.KEYCLOAK_ADMIN_CLIENT_ID = "portal-provisioner-test";
-    process.env.KEYCLOAK_ADMIN_CLIENT_SECRET = "test-only-secret";
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ access_token: "test-token" }), {
-          status: 200,
-        }),
-      )
-      .mockResolvedValueOnce(new Response(null, { status: 204 }));
-
-    await expect(
-      setKeycloakUserEnabled("sub-123", false),
-    ).resolves.toBeUndefined();
-    expect(globalThis.fetch).toHaveBeenLastCalledWith(
-      "https://sso.example.test/auth/admin/realms/tad-groupe/users/sub-123",
-      expect.objectContaining({
-        method: "PUT",
-        body: JSON.stringify({ enabled: false }),
-      }),
-    );
   });
 });

@@ -3,24 +3,18 @@
 L’espace `/admin` permet aux utilisateurs portant le rôle Keycloak
 `PORTAL_ADMIN` de :
 
-- référencer un compte portail par son identifiant Keycloak `sub` ;
+- créer un compte utilisateur à partir de son identité métier et de son
+  adresse e-mail ; le compte Keycloak est provisionné automatiquement ;
 - activer ou désactiver ce compte sans stocker de mot de passe ;
-- sélectionner, application par application, les profils déclarés dans le
-  catalogue ;
-- consulter et modifier les habilitations enregistrées ;
-- ouvrir la console d’administration du realm Keycloak `tad-groupe`.
+- attribuer automatiquement le profil minimal de chaque application active ;
+- consulter les habilitations enregistrées.
 
-Le bouton **Administrer Keycloak** est rendu uniquement dans l’espace protégé
-`/admin` et ouvre la console dans un nouvel onglet. Il ne délègue aucun
-privilège : Keycloak contrôle encore la session et les rôles d’administration
-requis pour créer un utilisateur, définir un mot de passe ou modifier un rôle.
-
-Lorsqu’un administrateur prépare une fiche avant la création du compte
-Keycloak, il peut utiliser l’adresse e-mail comme valeur provisoire du champ
-`sub`. À la première connexion réussie, le portail remplace automatiquement ce
-placeholder par l’UUID `sub` signé par Keycloak si une seule fiche correspond
-et si le nom d’utilisateur est le même e-mail, ou si l’e-mail OIDC est vérifié.
-Cette réconciliation est transactionnelle et inscrite dans le journal d’audit.
+Les profils minimaux sont définis dans le catalogue et ne sont pas choisis par
+le navigateur. Une demande idempotente est inscrite dans
+`ApplicationProvisioningOutbox` pour chaque application ; le connecteur de
+l’application crée ou synchronise ensuite son compte local avec ce profil.
+Les administrateurs des applications restent responsables de l’affinage des
+droits après cette création initiale.
 
 La section **Comptes et profils applicatifs** affiche un répertoire filtrable
 par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un
@@ -31,8 +25,9 @@ un accès direct à cette section via `/admin#comptes`.
 Les profils persistés dans `ApplicationProfile` sont synchronisés depuis les
 définitions de rôles versionnées des applications TDB, Revue-PDV, CASH-RECON et
 HMDM. Chaque profil conserve sa provenance (`sourceSystem`,
-`sourceReference`, `syncedAt`). Cette synchronisation ne copie ni les comptes,
-ni les mots de passe, ni les données personnelles des applications externes.
+`sourceReference`, `syncedAt`) et le profil minimal porte `isDefault=true`.
+Cette synchronisation ne copie ni les comptes, ni les mots de passe, ni les
+données personnelles des applications externes.
 Les applications externes conservent leurs propres autorisations et doivent
 continuer à valider leurs rôles côté serveur.
 
@@ -42,9 +37,3 @@ pas modifier directement la base de production.
 
 Les URL du catalogue restent modifiables uniquement depuis l’administration ;
 aucune URL métier réelle n’est inventée dans le dépôt.
-
-L’état actif du compte est synchronisé avec l’utilisateur Keycloak : une
-désactivation ou une suppression du compte portail désactive l’authentification
-OIDC correspondante. Cette garantie s’applique aux applications qui utilisent
-Keycloak ; les comptes locaux des applications historiques nécessitent encore
-un connecteur de provisioning et de révocation propre à chaque application.

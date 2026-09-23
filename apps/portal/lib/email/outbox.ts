@@ -3,15 +3,13 @@ import { getPrisma } from "../prisma";
 import { getEmailConfig } from "./config";
 import type { EmailStatus, EnqueueEmailInput } from "./types";
 
-const sensitiveKey =
-  /password|token|secret|private.?key|access.?key|refresh|identity.?number|bank|iban|credit.?card/i;
+const sensitiveKey = /password|token|secret|private.?key|access.?key|refresh|identity.?number|bank|iban|credit.?card/i;
 
 function assertSafePayload(payload: Record<string, unknown>) {
   const visit = (value: unknown) => {
     if (!value || typeof value !== "object") return;
     for (const [key, child] of Object.entries(value)) {
-      if (sensitiveKey.test(key))
-        throw new Error("Sensitive data is not allowed in email payload");
+      if (sensitiveKey.test(key)) throw new Error("Sensitive data is not allowed in email payload");
       visit(child);
     }
   };
@@ -37,15 +35,8 @@ export async function enqueueEmail(input: EnqueueEmailInput) {
       },
     });
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      (error as { code?: string }).code === "P2002"
-    ) {
-      return prisma.emailOutbox.findUniqueOrThrow({
-        where: { idempotencyKey },
-      });
+    if (typeof error === "object" && error !== null && "code" in error && (error as { code?: string }).code === "P2002") {
+      return prisma.emailOutbox.findUniqueOrThrow({ where: { idempotencyKey } });
     }
     throw error;
   }
@@ -65,30 +56,15 @@ export async function claimNextEmail(workerId: string) {
     if (!row) return null;
     return transaction.emailOutbox.update({
       where: { id: row.id },
-      data: {
-        status: "PROCESSING",
-        lockedAt: new Date(),
-        lockedBy: workerId,
-        attempts: { increment: 1 },
-      },
+      data: { status: "PROCESSING", lockedAt: new Date(), lockedBy: workerId, attempts: { increment: 1 } },
     });
   });
 }
 
-export async function markEmailSent(
-  id: string,
-  workerId: string,
-  providerMessageId: string,
-) {
+export async function markEmailSent(id: string, workerId: string, providerMessageId: string) {
   return getPrisma().emailOutbox.updateMany({
     where: { id, status: "PROCESSING", lockedBy: workerId },
-    data: {
-      status: "SENT",
-      sentAt: new Date(),
-      lockedAt: null,
-      lockedBy: null,
-      providerMessageId,
-    },
+    data: { status: "SENT", sentAt: new Date(), lockedAt: null, lockedBy: null, providerMessageId },
   });
 }
 

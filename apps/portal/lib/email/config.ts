@@ -42,16 +42,8 @@ const schema = z
     SMTP_CONNECTION_TIMEOUT_MS: positiveInt(10_000),
     SMTP_GREETING_TIMEOUT_MS: positiveInt(10_000),
     SMTP_SOCKET_TIMEOUT_MS: positiveInt(20_000),
-    SMTP_MAX_MESSAGES_PER_HOUR: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(180)
-      .default(120),
-    SMTP_MAX_CONCURRENCY: z
-      .literal("1")
-      .default("1")
-      .transform(() => 1),
+    SMTP_MAX_MESSAGES_PER_HOUR: z.coerce.number().int().min(1).max(180).default(120),
+    SMTP_MAX_CONCURRENCY: z.literal("1").default("1").transform(() => 1),
     SMTP_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(5).default(5),
     SMTP_TEST_RECIPIENT: z.union([address, z.literal("")]).default(""),
   })
@@ -88,9 +80,7 @@ const schema = z
 
 export type EmailConfig = z.infer<typeof schema>;
 
-export function getEmailConfig(
-  env: Record<string, string | undefined> = process.env,
-): EmailConfig {
+export function getEmailConfig(env: Record<string, string | undefined> = process.env): EmailConfig {
   const result = schema.safeParse(env);
   if (!result.success) {
     const details = result.error.issues

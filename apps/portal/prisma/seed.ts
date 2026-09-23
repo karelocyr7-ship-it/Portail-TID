@@ -96,7 +96,8 @@ export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
   TDB: "https://perf-tid.tadgroupe.com",
-  ATF: "https://atf.tadgroupe.com/api/session/openid/auth",
+  "REVUE-PDV": "https://pdv.tadgroupe.com/api/auth/oidc/start",
+  ATF: "https://atf.tadgroupe.com/rest/public/oidc",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
 };
 
@@ -122,6 +123,18 @@ type ProfileDefinition = {
   description: string;
   sourceSystem: string;
   sourceReference: string;
+};
+
+const defaultProfileKeys: Record<string, string> = {
+  TDB: "VIEWER",
+  GPARC: "CHAUFFEUR",
+  "REVUE-PDV": "sup_orange",
+  "CASH-RECON": "VIEWER",
+  MDM: "OBSERVER",
+  ATF: "OBSERVER",
+  SIRH: "RH",
+  GED: "RH",
+  RECRUTEMENT: "RECRUT_OCI_SUPERVISEUR",
 };
 
 const profileDefinitions: Record<string, ProfileDefinition[]> = {
@@ -356,6 +369,7 @@ async function main() {
           sourceReference: profile.sourceReference,
           syncedAt: new Date(),
           active: true,
+          isDefault: defaultProfileKeys[code] === profile.key,
           displayOrder,
         },
         create: {
@@ -366,6 +380,7 @@ async function main() {
           sourceSystem: profile.sourceSystem,
           sourceReference: profile.sourceReference,
           syncedAt: new Date(),
+          isDefault: defaultProfileKeys[code] === profile.key,
           displayOrder,
         },
       });

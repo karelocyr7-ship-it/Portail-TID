@@ -62,7 +62,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "▥",
     integrationLevel: 1,
     active: true,
-    url: "https://tdb.tadgroupe.com",
+    url: "https://perf-tid.tadgroupe.com",
     roles: ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
   },
   {
@@ -82,8 +82,9 @@ export const catalogApplications: CatalogApplication[] = [
     description: "Revue des points de vente",
     category: "Terrain",
     icon: "⌖",
-    integrationLevel: 1,
+    integrationLevel: 2,
     active: true,
+    url: "https://pdv.tadgroupe.com/api/auth/oidc/start",
     roles: ["PORTAL_ADMIN", "SUPERVISEUR", "AGENT_TERRAIN", "DIRECTION"],
   },
   {
@@ -94,7 +95,7 @@ export const catalogApplications: CatalogApplication[] = [
     icon: "↗",
     integrationLevel: 2,
     active: true,
-    url: "https://atf.tadgroupe.com/api/session/openid/auth",
+    url: "https://atf.tadgroupe.com/rest/public/oidc",
     roles: ["PORTAL_ADMIN", "SUPERVISEUR", "DIRECTION"],
   },
   {

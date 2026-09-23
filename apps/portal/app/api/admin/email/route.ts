@@ -13,34 +13,15 @@ async function requireAdmin() {
 
 export async function GET() {
   const session = await requireAdmin();
-  if (!session)
-    return NextResponse.json(
-      { error: "Accès administrateur requis" },
-      { status: 403 },
-    );
+  if (!session) return NextResponse.json({ error: "Accès administrateur requis" }, { status: 403 });
   const config = getEmailConfig();
   const prisma = getPrisma();
   const [pending, failed, sent24h, lastSent, lastFailure] = await Promise.all([
-    prisma.emailOutbox.count({
-      where: { status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
-    }),
+    prisma.emailOutbox.count({ where: { status: { in: ["PENDING", "PROCESSING", "RETRY"] } } }),
     prisma.emailOutbox.count({ where: { status: "FAILED" } }),
-    prisma.emailOutbox.count({
-      where: {
-        status: "SENT",
-        sentAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-      },
-    }),
-    prisma.emailOutbox.findFirst({
-      where: { status: "SENT" },
-      orderBy: { sentAt: "desc" },
-      select: { sentAt: true },
-    }),
-    prisma.emailOutbox.findFirst({
-      where: { status: "FAILED" },
-      orderBy: { failedAt: "desc" },
-      select: { failedAt: true },
-    }),
+    prisma.emailOutbox.count({ where: { status: "SENT", sentAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
+    prisma.emailOutbox.findFirst({ where: { status: "SENT" }, orderBy: { sentAt: "desc" }, select: { sentAt: true } }),
+    prisma.emailOutbox.findFirst({ where: { status: "FAILED" }, orderBy: { failedAt: "desc" }, select: { failedAt: true } }),
   ]);
   return NextResponse.json({
     enabled: config.SMTP_ENABLED,
@@ -58,28 +39,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const session = await requireAdmin();
-  if (!session)
-    return NextResponse.json(
-      { error: "Accès administrateur requis" },
-      { status: 403 },
-    );
-  const body = (await request.json().catch(() => ({}))) as {
-    confirm?: boolean;
-  };
-  if (body.confirm !== true)
-    return NextResponse.json(
-      { error: "Confirmation requise" },
-      { status: 400 },
-    );
+  if (!session) return NextResponse.json({ error: "Accès administrateur requis" }, { status: 403 });
+  const body = (await request.json().catch(() => ({}))) as { confirm?: boolean };
+  if (body.confirm !== true) return NextResponse.json({ error: "Confirmation requise" }, { status: 400 });
   const config = getEmailConfig();
-  if (!config.SMTP_ENABLED)
-    return NextResponse.json({ error: "SMTP désactivé" }, { status: 409 });
+  if (!config.SMTP_ENABLED) return NextResponse.json({ error: "SMTP désactivé" }, { status: 409 });
   const recipient = config.SMTP_TEST_RECIPIENT || session.email;
-  if (!recipient)
-    return NextResponse.json(
-      { error: "SMTP_TEST_RECIPIENT ou e-mail administrateur requis" },
-      { status: 400 },
-    );
+  if (!recipient) return NextResponse.json({ error: "SMTP_TEST_RECIPIENT ou e-mail administrateur requis" }, { status: 400 });
   const idempotencyKey = `smtp-test:${session.subject}:${new Date().toISOString().slice(0, 16)}`;
   try {
     await verifySmtpConnection();
@@ -87,35 +53,13 @@ export async function POST(request: Request) {
       to: recipient,
       subject: "Test SMTP — Portail TAD Groupe",
       template: "technical-alert",
-      variables: {
-        title: "Configuration SMTP validée",
-        message:
-          "Ce message confirme la configuration SMTP du Portail TAD Groupe.",
-      },
+      variables: { title: "Configuration SMTP validée", message: "Ce message confirme la configuration SMTP du Portail TAD Groupe." },
       idempotencyKey,
     });
-    await getPrisma().auditLog.create({
-      data: {
-        userId: session.subject,
-        eventType: "SMTP_TEST",
-        entityType: "Email",
-        entityId: result.correlationId,
-        afterData: { recipient: recipient.replace(/^(.).+(@.*)$/, "$1***$2") },
-      },
-    });
+    await getPrisma().auditLog.create({ data: { userId: session.subject, eventType: "SMTP_TEST", entityType: "Email", entityId: result.correlationId, afterData: { recipient: recipient.replace(/^(.).+(@.*)$/, "$1***$2") } } });
     return NextResponse.json({ ok: true, correlationId: result.correlationId });
   } catch {
-    await getPrisma().auditLog.create({
-      data: {
-        userId: session.subject,
-        eventType: "SMTP_TEST_FAILED",
-        entityType: "Email",
-        afterData: { recipient: recipient.replace(/^(.).+(@.*)$/, "$1***$2") },
-      },
-    });
-    return NextResponse.json(
-      { error: "Le test SMTP a échoué. Consultez les journaux techniques." },
-      { status: 502 },
-    );
+    await getPrisma().auditLog.create({ data: { userId: session.subject, eventType: "SMTP_TEST_FAILED", entityType: "Email", afterData: { recipient: recipient.replace(/^(.).+(@.*)$/, "$1***$2") } } });
+    return NextResponse.json({ error: "Le test SMTP a échoué. Consultez les journaux techniques." }, { status: 502 });
   }
 }

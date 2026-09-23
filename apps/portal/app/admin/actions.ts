@@ -4,10 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeEmployeeId } from "@/lib/employee-id";
-import {
-  provisionKeycloakUser,
-  setKeycloakUserEnabled,
-} from "@/lib/keycloak-admin";
+import { provisionKeycloakUser } from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -123,11 +120,10 @@ export async function savePortalUser(formData: FormData) {
   const employeeIdProvided = formData.has("employeeId");
   const employeeId = normalizeEmployeeId(formData.get("employeeId"));
   const email = String(formData.get("email") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
   const active = formData.get("active") === "on";
-  const profileIds = formData
+  const requestedProfileIds = formData
     .getAll("profileIds")
     .filter((value): value is string => typeof value === "string")
     .filter(Boolean);
@@ -144,6 +140,23 @@ export async function savePortalUser(formData: FormData) {
   if (email.length > 320 || (email && !email.includes("@"))) {
     throw new Error("Adresse e-mail invalide");
   }
+  const prisma = getPrisma();
+  const defaultProfiles = await prisma.applicationProfile.findMany({
+    where: { isDefault: true, active: true, application: { active: true } },
+    select: { id: true, applicationId: true },
+  });
+  const activeApplicationCount = await prisma.application.count({
+    where: { active: true },
+  });
+  if (
+    defaultProfiles.length !== activeApplicationCount ||
+    new Set(defaultProfiles.map(({ applicationId }) => applicationId)).size !==
+      defaultProfiles.length
+  ) {
+    throw new Error(
+      "Les profils minimaux des applications ne sont pas configurés",
+    );
+  }
   if (!userId && !keycloakSubject) {
     if (!email)
       throw new Error(
@@ -157,24 +170,6 @@ export async function savePortalUser(formData: FormData) {
     keycloakSubject = provisioned.subject;
   }
   if (!keycloakSubject) throw new Error("Identifiant Keycloak invalide");
-  if (phone.length > 128) throw new Error("Numéro de téléphone invalide");
-
-  const prisma = getPrisma();
-  const profiles = await prisma.applicationProfile.findMany({
-    where: {
-      id: { in: [...new Set(profileIds)] },
-      active: true,
-      application: { active: true },
-    },
-    select: { id: true },
-  });
-  if (profiles.length !== new Set(profileIds).size) {
-    throw new Error("Un profil sélectionné est invalide ou inactif");
-  }
-
-  // Keycloak is the authentication gate for the OIDC-enabled applications.
-  // Fail closed: do not persist a portal state that cannot be enforced there.
-  await setKeycloakUserEnabled(keycloakSubject, active);
 
   await prisma.$transaction(async (transaction) => {
     const before = userId
@@ -185,6 +180,23 @@ export async function savePortalUser(formData: FormData) {
       : null;
     if (userId && !before) throw new Error("Compte portail introuvable");
 
+    const profileIds = userId
+      ? formData.has("profileIds")
+        ? requestedProfileIds
+        : (before?.assignments.map(({ profileId }) => profileId) ?? [])
+      : defaultProfiles.map(({ id }) => id);
+    const profiles = await transaction.applicationProfile.findMany({
+      where: {
+        id: { in: [...new Set(profileIds)] },
+        active: true,
+        application: { active: true },
+      },
+      select: { id: true, applicationId: true },
+    });
+    if (profiles.length !== new Set(profileIds).size) {
+      throw new Error("Un profil sélectionné est invalide ou inactif");
+    }
+
     const user = userId
       ? await transaction.portalUser.update({
           where: { id: userId },
@@ -194,7 +206,6 @@ export async function savePortalUser(formData: FormData) {
               ? (employeeId ?? null)
               : (before?.employeeId ?? null),
             email: email || null,
-            phone: phone || null,
             displayName,
             active,
           },
@@ -204,7 +215,6 @@ export async function savePortalUser(formData: FormData) {
             keycloakSubject,
             employeeId: employeeIdProvided ? (employeeId ?? null) : null,
             email: email || null,
-            phone: phone || null,
             displayName,
             active,
           },
@@ -222,6 +232,16 @@ export async function savePortalUser(formData: FormData) {
         })),
       });
     }
+    if (!userId) {
+      await transaction.applicationProvisioningOutbox.createMany({
+        data: profiles.map((profile) => ({
+          idempotencyKey: `${user.id}:${profile.applicationId}`,
+          userId: user.id,
+          applicationId: profile.applicationId,
+          profileId: profile.id,
+        })),
+      });
+    }
     await transaction.auditLog.create({
       data: {
         userId: session.subject,
@@ -233,7 +253,6 @@ export async function savePortalUser(formData: FormData) {
               keycloakSubject: before.keycloakSubject,
               employeeId: before.employeeId,
               email: before.email,
-              phone: before.phone,
               displayName: before.displayName,
               active: before.active,
               profileIds: before.assignments.map(({ profileId }) => profileId),
@@ -243,7 +262,6 @@ export async function savePortalUser(formData: FormData) {
           keycloakSubject,
           employeeId: user.employeeId,
           email: email || null,
-          phone: phone || null,
           displayName,
           active,
           profileIds: [...new Set(profileIds)],
@@ -262,26 +280,17 @@ export async function deletePortalUser(formData: FormData) {
   if (!userId) throw new Error("Compte portail invalide");
 
   const prisma = getPrisma();
-  const user = await prisma.portalUser.findUnique({
-    where: { id: userId },
-    include: { assignments: { select: { profileId: true } } },
-  });
-  if (!user) throw new Error("Compte portail introuvable");
-  if (user.keycloakSubject === session.subject) {
-    throw new Error(
-      "Votre propre compte administrateur ne peut pas être supprimé",
-    );
-  }
-
-  // Disable before removing the portal record so the user cannot keep an
-  // OIDC session or start a new one if the database operation is interrupted.
-  await setKeycloakUserEnabled(user.keycloakSubject, false);
-
   await prisma.$transaction(async (transaction) => {
-    const current = await transaction.portalUser.findUnique({
+    const user = await transaction.portalUser.findUnique({
       where: { id: userId },
+      include: { assignments: { select: { profileId: true } } },
     });
-    if (!current) throw new Error("Compte portail introuvable");
+    if (!user) throw new Error("Compte portail introuvable");
+    if (user.keycloakSubject === session.subject) {
+      throw new Error(
+        "Votre propre compte administrateur ne peut pas être supprimé",
+      );
+    }
 
     await transaction.auditLog.create({
       data: {

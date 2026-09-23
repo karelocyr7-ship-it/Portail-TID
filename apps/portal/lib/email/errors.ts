@@ -8,20 +8,14 @@ export class EmailValidationError extends Error {
 
 export class EmailTemporaryError extends Error {
   readonly code = "EMAIL_TEMPORARY_FAILURE";
-  constructor(
-    message: string,
-    readonly cause?: unknown,
-  ) {
+  constructor(message: string, readonly cause?: unknown) {
     super(message);
   }
 }
 
 export class EmailPermanentError extends Error {
   readonly code = "EMAIL_PERMANENT_FAILURE";
-  constructor(
-    message: string,
-    readonly cause?: unknown,
-  ) {
+  constructor(message: string, readonly cause?: unknown) {
     super(message);
   }
 }

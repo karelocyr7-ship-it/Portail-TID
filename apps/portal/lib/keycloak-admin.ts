@@ -112,30 +112,3 @@ export async function provisionKeycloakUser(input: {
     throw new Error("Keycloak n’a pas retourné l’identifiant du compte créé");
   return { subject, created: true };
 }
-
-export async function setKeycloakUserEnabled(
-  subject: string,
-  enabled: boolean,
-): Promise<void> {
-  if (!subject) throw new Error("Identifiant Keycloak invalide");
-
-  const token = await getAdminToken();
-  const response = await fetch(
-    `${adminBaseUrl()}/users/${encodeURIComponent(subject)}`,
-    {
-      method: "PUT",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ enabled }),
-      cache: "no-store",
-    },
-  );
-
-  if (!response.ok) {
-    throw new Error(
-      `Mise à jour de l’état Keycloak refusée (HTTP ${response.status})`,
-    );
-  }
-}

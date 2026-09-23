@@ -24,12 +24,10 @@ type ServerAction = (formData: FormData) => Promise<void>;
 
 export function UserManagement({
   users,
-  profiles,
   savePortalUser,
   deletePortalUser,
 }: {
   users: UserManagementUser[];
-  profiles: UserManagementProfile[];
   savePortalUser: ServerAction;
   deletePortalUser: ServerAction;
 }) {
@@ -194,7 +192,6 @@ export function UserManagement({
         <UserModal
           key={modal === "create" ? "create" : modal.id}
           mode={modal}
-          profiles={profiles}
           savePortalUser={savePortalUser}
           onClose={() => setModal(null)}
         />
@@ -205,27 +202,15 @@ export function UserManagement({
 
 function UserModal({
   mode,
-  profiles,
   savePortalUser,
   onClose,
 }: {
   mode: "create" | UserManagementUser;
-  profiles: UserManagementProfile[];
   savePortalUser: ServerAction;
   onClose: () => void;
 }) {
   const existing = mode === "create" ? null : mode;
   const [error, setError] = useState<string | null>(null);
-  const groups = useMemo(() => {
-    const grouped = new Map<string, UserManagementProfile[]>();
-    profiles.forEach((profile) => {
-      const group = grouped.get(profile.applicationId) ?? [];
-      group.push(profile);
-      grouped.set(profile.applicationId, group);
-    });
-    return [...grouped.values()];
-  }, [profiles]);
-
   return (
     <div
       className="user-modal-backdrop"
@@ -316,38 +301,21 @@ function UserModal({
               />
             </label>
           </div>
-          <fieldset className="modal-accesses">
-            <legend>Accès aux applications</legend>
+          <div className="modal-accesses">
+            <strong>Accès applicatifs</strong>
             <p className="field-help">
-              Sélectionnez les profils que cet utilisateur peut utiliser.
+              À la création, le portail attribue automatiquement le profil
+              minimal de chaque application active et demande son provisioning.
+              Les droits plus fins sont gérés par l’administrateur de chaque
+              application.
             </p>
-            <div className="modal-access-grid">
-              {groups.map((applicationProfiles) => (
-                <div
-                  className="modal-access-group"
-                  key={applicationProfiles[0].applicationId}
-                >
-                  <strong>{applicationProfiles[0].applicationName}</strong>
-                  {applicationProfiles.map((profile) => (
-                    <label className="profile-option" key={profile.id}>
-                      <input
-                        type="checkbox"
-                        name="profileIds"
-                        value={profile.id}
-                        defaultChecked={existing?.profileIds.includes(
-                          profile.id,
-                        )}
-                      />
-                      <span>
-                        <b>{profile.name}</b>
-                        <small>{profile.key}</small>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </fieldset>
+            {existing && (
+              <p className="field-help">
+                Ce compte dispose actuellement de {existing.profileIds.length}{" "}
+                profil{existing.profileIds.length > 1 ? "s" : ""} applicatif.
+              </p>
+            )}
+          </div>
           <div className="user-modal-footer">
             {error && (
               <p className="form-error" role="alert">

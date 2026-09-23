@@ -43,10 +43,10 @@ confidentiel, distinct de `tad-portal`, avec le flux `client_credentials`.
 
 Dans le realm `tad-groupe`, créer ce client sans flux utilisateur puis attribuer
 à son compte de service uniquement les rôles `realm-management/manage-users`,
-`realm-management/query-users` et `realm-management/view-users`. Renseigner
-ensuite `KEYCLOAK_ADMIN_CLIENT_ID` et `KEYCLOAK_ADMIN_CLIENT_SECRET` dans le
-fichier de secrets d’exécution du portail. Le secret ne doit jamais être
-ajouté à `.env.example`, Git ou aux journaux.
+`realm-management/query-users` et `realm-management/view-users`. Renseigner ensuite `KEYCLOAK_ADMIN_CLIENT_ID`
+et `KEYCLOAK_ADMIN_CLIENT_SECRET` dans le fichier de secrets d’exécution du
+portail. Le secret ne doit jamais être ajouté à `.env.example`, Git ou aux
+journaux.
 
 Le portail crée le compte avec l’action requise `UPDATE_PASSWORD`; aucun mot de
 passe n’est généré ni stocké par le portail.

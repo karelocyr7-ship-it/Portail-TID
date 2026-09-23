@@ -23,6 +23,7 @@ model Application {
   category           Category               @relation(fields: [categoryId], references: [id])
   roles              ApplicationRole[]
   profiles           ApplicationProfile[]
+  provisioningJobs   ApplicationProvisioningOutbox[]
   favorites          Favorite[]
   accessLogs         ApplicationAccessLog[]
   createdAt          DateTime               @default(now())
@@ -58,9 +59,11 @@ model ApplicationProfile {
   sourceReference String?
   syncedAt      DateTime?
   active        Boolean                   @default(true)
+  isDefault     Boolean                   @default(false)
   displayOrder  Int                       @default(0)
   application   Application               @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   assignments   UserApplicationProfile[]
+  provisioningJobs ApplicationProvisioningOutbox[]
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
 
@@ -77,6 +80,7 @@ model PortalUser {
   displayName     String
   active          Boolean                   @default(true)
   assignments     UserApplicationProfile[]
+  provisioningJobs ApplicationProvisioningOutbox[]
   createdAt       DateTime                  @default(now())
   updatedAt       DateTime                  @updatedAt
 
@@ -103,6 +107,26 @@ model Favorite {
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@id([userId, applicationId])
+}
+
+model ApplicationProvisioningOutbox {
+  id             String             @id @default(cuid())
+  idempotencyKey String             @unique
+  userId         String
+  applicationId  String
+  profileId      String
+  status         String             @default("PENDING")
+  attempts       Int                @default(0)
+  nextAttemptAt  DateTime           @default(now())
+  lastError      String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  user           PortalUser         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application    Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  profile        ApplicationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, applicationId])
+  @@index([status, nextAttemptAt])
 }
 
 model ApplicationAccessLog {

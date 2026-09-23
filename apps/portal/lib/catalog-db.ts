@@ -43,10 +43,12 @@ export async function getVisibleApplicationsFromDatabase(
           ? "https://gparc.tadgroupe.com/api/oidc/start"
           : application.code === "MDM"
             ? "https://mdm.tadgroupe.com/rest/public/auth/oidc/login"
-          : application.url ??
-          (application.code === "TDB"
-            ? "https://perf-tid.tadgroupe.com"
-            : undefined),
+            : application.code === "REVUE-PDV"
+              ? "https://pdv.tadgroupe.com/api/auth/oidc/start"
+              : application.url ??
+                (application.code === "TDB"
+                  ? "https://perf-tid.tadgroupe.com"
+                  : undefined),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }

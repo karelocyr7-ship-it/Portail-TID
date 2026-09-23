@@ -228,13 +228,6 @@ export default async function AdminPage({
                 active: user.active,
                 profileIds: user.assignments.map(({ profileId }) => profileId),
               }))}
-              profiles={profiles.map((profile) => ({
-                id: profile.id,
-                name: profile.name,
-                key: profile.key,
-                applicationId: profile.applicationId,
-                applicationName: profile.application.name,
-              }))}
               savePortalUser={savePortalUser}
               deletePortalUser={deletePortalUser}
             />
@@ -287,7 +280,6 @@ export default async function AdminPage({
               id: user.id,
               displayName: user.displayName,
               email: user.email,
-              phone: user.phone,
               active: user.active,
               profileCount: user.assignments.length,
             }))}
@@ -309,10 +301,6 @@ export default async function AdminPage({
               <label>
                 E-mail de référence
                 <input name="email" type="email" required maxLength={320} />
-              </label>
-              <label>
-                Téléphone de référence
-                <input name="phone" type="tel" maxLength={128} />
               </label>
               <label>
                 Matricule d’entreprise
@@ -397,15 +385,6 @@ export default async function AdminPage({
                       />
                     </label>
                     <label>
-                      Téléphone de référence
-                      <input
-                        name="phone"
-                        type="tel"
-                        maxLength={128}
-                        defaultValue={user.phone ?? ""}
-                      />
-                    </label>
-                    <label>
                       Matricule d’entreprise
                       <input
                         name="employeeId"
@@ -469,19 +448,9 @@ export default async function AdminPage({
               : "Activez une application ou signalez sa mise en maintenance. Chaque action est enregistrée dans l’audit du portail."}
           </p>
         </div>
-        <div className="admin-tool-actions">
-          <a
-            className="button primary"
-            href="/auth/admin/tad-groupe/console/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Administrer Keycloak
-          </a>
-          <Link className="button secondary" href="/">
-            Retour au tableau de bord
-          </Link>
-        </div>
+        <Link className="button secondary" href="/">
+          Retour au tableau de bord
+        </Link>
       </section>
     </div>
   );

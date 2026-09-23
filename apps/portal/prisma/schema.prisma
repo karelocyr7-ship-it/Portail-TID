@@ -76,6 +76,7 @@ model PortalUser {
   keycloakSubject String                    @unique
   employeeId      String?                   @unique
   email           String?
+  phone           String?
   displayName     String
   active          Boolean                   @default(true)
   assignments     UserApplicationProfile[]
@@ -84,6 +85,7 @@ model PortalUser {
   updatedAt       DateTime                  @updatedAt
 
   @@index([email])
+  @@index([phone])
 }
 
 model UserApplicationProfile {

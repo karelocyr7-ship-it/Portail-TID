@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getRoles, getSession } from "@/lib/oidc";
-import { getAgentRuntimeStatus } from "@/lib/agent-runtime";
+import {
+  getAgentRuntimeStatus,
+  isAgentDispatchPaused,
+} from "@/lib/agent-runtime";
 
 export async function GET() {
   const session = await getSession();
@@ -10,8 +13,13 @@ export async function GET() {
       { status: 403 },
     );
   }
+  const [agents, paused] = await Promise.all([
+    getAgentRuntimeStatus(),
+    isAgentDispatchPaused(),
+  ]);
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
-    agents: await getAgentRuntimeStatus(),
+    paused,
+    agents,
   });
 }

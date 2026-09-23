@@ -17,12 +17,13 @@ const labels: Record<Runtime["status"], string> = {
   EXECUTING: "En cours",
   QUEUED: "En file",
   COMPLETED: "Dernière tâche terminée",
-  IDLE: "En attente",
+  IDLE: "Disponible",
 };
 
 export function AgentLiveBoard() {
   const [agents, setAgents] = useState<Runtime[]>([]);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -34,6 +35,7 @@ export function AgentLiveBoard() {
       const payload = await response.json();
       setAgents(payload.agents ?? []);
       setUpdatedAt(payload.generatedAt ?? null);
+      setPaused(Boolean(payload.paused));
     };
     refresh();
     const timer = window.setInterval(refresh, 5000);
@@ -59,6 +61,12 @@ export function AgentLiveBoard() {
             : "Synchronisation…"}
         </small>
       </div>
+      {paused ? (
+        <p className="agent-runtime-notice">
+          Exécution suspendue jusqu’à 19:30. Les actions validées restent en
+          file et seront traitées automatiquement pendant la prochaine fenêtre.
+        </p>
+      ) : null}
       <div className="agent-live-grid">
         {agents.map((agent) => (
           <article className="agent-live-card" key={agent.agentId}>

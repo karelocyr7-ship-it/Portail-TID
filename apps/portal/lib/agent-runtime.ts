@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 
 const stateRoot = process.env.AGENT_STATE_DIR ?? "/var/lib/tad-agent-state";
@@ -59,6 +59,15 @@ async function readJson(filePath: string) {
     >;
   } catch {
     return null;
+  }
+}
+
+export async function isAgentDispatchPaused(): Promise<boolean> {
+  try {
+    await access(path.join(stateRoot, "stop-new-tasks"));
+    return true;
+  } catch {
+    return false;
   }
 }
 

@@ -333,6 +333,28 @@ Le fichier `/tmp/portail-pr.md` devra résumer la recette et référencer
 `docs/RECETTE_PHASE_12.md`. Vérifier les workflows et la protection de `main`
 sur GitHub avant toute fusion. Ne jamais publier `.env`, de token ou de secret.
 
+Authentification GitHub depuis la VM
+-------------------------------------
+
+Pour autoriser les opérations GitHub (`push`, création de Pull Request et
+lecture des contrôles), utiliser l’authentification par appareil :
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+```
+
+Ouvrir l’URL et saisir le code temporaire affiché par la commande. Vérifier
+ensuite l’état de la session sans afficher de token :
+
+```sh
+gh auth status
+gh auth setup-git
+```
+
+Ne jamais copier le code temporaire, le token ou le fichier de credentials
+dans Git ; ne jamais les inscrire dans un fichier du dépôt. Si la session
+expire, relancer uniquement la commande `gh auth login` ci-dessus.
+
 18. Reprise VM — agents, Git et compatibilité Keycloak — 23 juillet 2026
     - Reprise effectuée sur la VM `vps-f97dd485`, branche de travail
       `codex/deploy-main-20260723`; aucun fichier `.env` réel n'a été lu ou

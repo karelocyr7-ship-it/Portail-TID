@@ -53,13 +53,22 @@ export async function POST(request: Request) {
             include: userInclude,
           })
         : null);
+    const profiles = user?.active
+      ? user.assignments.map(({ profile }) => profile.key)
+      : [];
     return NextResponse.json({
       lookup: true,
       subject: identity.subject,
+      identity: {
+        employeeId: identity.employeeId ?? null,
+        email: user?.email ?? identity.email ?? null,
+        name: user?.displayName ?? identity.name ?? null,
+        phone: user?.phone ?? identity.phone ?? null,
+      },
       active: Boolean(user?.active),
-      profiles: user?.active
-        ? user.assignments.map(({ profile }) => profile.key)
-        : [],
+      authorized: Boolean(user?.active) && profiles.length > 0,
+      profiles,
+      revision: user?.updatedAt.toISOString() ?? null,
     });
   } catch {
     return NextResponse.json(

@@ -174,7 +174,6 @@ nav {
   font-size: 12px;
 }
 .auth-link {
-  margin-left: 8px;
   min-height: 44px;
   padding: 8px 11px;
   border: 1px solid #d7e0f0;
@@ -183,6 +182,11 @@ nav {
   font-size: 11px;
   font-weight: 700;
   white-space: nowrap;
+}
+.auth-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 8px;
 }
 .auth-link:hover {
   background: #e8effb;
@@ -729,6 +733,13 @@ p {
 .admin-tool-strip p {
   margin-bottom: 0;
 }
+.admin-tool-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .admin-card {
   position: relative;
   padding: 22px;
@@ -789,6 +800,10 @@ p {
     padding: 7px 8px;
     font-size: 10px;
   }
+  .auth-actions {
+    gap: 4px;
+    margin-left: 0;
+  }
   .page-container {
     padding-top: 25px;
   }
@@ -817,9 +832,34 @@ p {
     align-items: start;
     flex-direction: column;
   }
+  .admin-tool-actions {
+    width: 100%;
+  }
+  .admin-tool-actions .button {
+    flex: 1 1 190px;
+  }
   .section-header {
     align-items: start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar > div:first-child {
+    display: none;
+  }
+  .user-chip {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .user-identity {
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 420px) {
+  .user-identity {
+    display: none;
   }
 }
 
@@ -2038,6 +2078,16 @@ body {
 }
 .agent-live-board .section-header small {
   color: #61718a;
+}
+.agent-runtime-notice {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  color: #8a4b08;
+  border: 1px solid #f4c76b;
+  border-radius: 10px;
+  background: #fff8e6;
+  font-size: 13px;
+  font-weight: 700;
 }
 .agent-live-grid {
   display: grid;

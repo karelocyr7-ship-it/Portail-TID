@@ -237,12 +237,17 @@ export async function savePortalUser(formData: FormData) {
         })),
       });
     }
-    await transaction.applicationProvisioningOutbox.deleteMany({
+    await transaction.applicationProvisioningOutbox.updateMany({
       where: {
         userId: user.id,
         applicationId: {
           notIn: profiles.map(({ applicationId }) => applicationId),
         },
+      },
+      data: {
+        status: "REVOKE",
+        lastError: null,
+        nextAttemptAt: new Date(),
       },
     });
     for (const profile of profiles) {

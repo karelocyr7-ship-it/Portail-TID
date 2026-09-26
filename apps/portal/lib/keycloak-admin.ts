@@ -81,7 +81,12 @@ export async function provisionKeycloakUser(input: {
       firstName: input.displayName.trim(),
       requiredActions: ["UPDATE_PASSWORD"],
       ...(input.employeeId
-        ? { attributes: { employeeId: [input.employeeId] } }
+        ? {
+            attributes: {
+              sageId: [input.employeeId],
+              employeeId: [input.employeeId],
+            },
+          }
         : {}),
     }),
     cache: "no-store",

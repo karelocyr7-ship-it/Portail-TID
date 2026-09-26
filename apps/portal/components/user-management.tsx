@@ -2,32 +2,34 @@
 
 import { useMemo, useState } from "react";
 
-export type UserManagementProfile = {
+export type UserManagementApplication = {
   id: string;
+  code: string;
   name: string;
-  key: string;
-  applicationId: string;
-  applicationName: string;
+  defaultProfileName: string;
 };
 
 export type UserManagementUser = {
   id: string;
   displayName: string;
   email: string | null;
-  employeeId: string | null;
+  sageEmployeeId: string | null;
   keycloakSubject: string;
   active: boolean;
   profileIds: string[];
+  applicationIds: string[];
 };
 
 type ServerAction = (formData: FormData) => Promise<void>;
 
 export function UserManagement({
   users,
+  applications,
   savePortalUser,
   deletePortalUser,
 }: {
   users: UserManagementUser[];
+  applications: UserManagementApplication[];
   savePortalUser: ServerAction;
   deletePortalUser: ServerAction;
 }) {
@@ -110,7 +112,7 @@ export function UserManagement({
           <thead>
             <tr>
               <th scope="col">Utilisateur</th>
-              <th scope="col">Matricule</th>
+              <th scope="col">ID Sage</th>
               <th scope="col">Accès</th>
               <th scope="col">Statut</th>
               <th scope="col" className="user-table-actions-heading">
@@ -134,7 +136,7 @@ export function UserManagement({
                     </span>
                   </div>
                 </td>
-                <td>{user.employeeId ?? "—"}</td>
+                <td>{user.sageEmployeeId ?? "—"}</td>
                 <td>
                   <span className="user-access-count">
                     {user.profileIds.length}
@@ -192,6 +194,7 @@ export function UserManagement({
         <UserModal
           key={modal === "create" ? "create" : modal.id}
           mode={modal}
+          applications={applications}
           savePortalUser={savePortalUser}
           onClose={() => setModal(null)}
         />
@@ -202,10 +205,12 @@ export function UserManagement({
 
 function UserModal({
   mode,
+  applications,
   savePortalUser,
   onClose,
 }: {
   mode: "create" | UserManagementUser;
+  applications: UserManagementApplication[];
   savePortalUser: ServerAction;
   onClose: () => void;
 }) {
@@ -281,12 +286,12 @@ function UserModal({
               />
             </label>
             <label>
-              Matricule
+              ID Sage
               <input
-                name="employeeId"
-                maxLength={32}
-                placeholder="TID000… ou TIDP000…"
-                defaultValue={existing?.employeeId ?? ""}
+                name="sageId"
+                maxLength={64}
+                placeholder="Identifiant Sage"
+                defaultValue={existing?.sageEmployeeId ?? ""}
               />
             </label>
             <label>
@@ -302,19 +307,33 @@ function UserModal({
             </label>
           </div>
           <div className="modal-accesses">
-            <strong>Accès applicatifs</strong>
+            <strong>Applications autorisées</strong>
             <p className="field-help">
-              À la création, le portail attribue automatiquement le profil
-              minimal de chaque application active et demande son provisioning.
-              Les droits plus fins sont gérés par l’administrateur de chaque
-              application.
+              Sélectionnez les applications à ouvrir. Le portail crée le compte
+              avec le profil minimal ; les droits fonctionnels sont attribués
+              ensuite par l’administrateur de l’application.
             </p>
-            {existing && (
-              <p className="field-help">
-                Ce compte dispose actuellement de {existing.profileIds.length}{" "}
-                profil{existing.profileIds.length > 1 ? "s" : ""} applicatif.
-              </p>
-            )}
+            <input type="hidden" name="applicationIds" value="" />
+            <div className="modal-access-grid">
+              {applications.map((application) => (
+                <label className="profile-option" key={application.id}>
+                  <input
+                    type="checkbox"
+                    name="applicationIds"
+                    value={application.id}
+                    defaultChecked={existing?.applicationIds.includes(
+                      application.id,
+                    )}
+                  />
+                  <span>
+                    <b>{application.name}</b>
+                    <small>
+                      Profil initial : {application.defaultProfileName}
+                    </small>
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
           <div className="user-modal-footer">
             {error && (

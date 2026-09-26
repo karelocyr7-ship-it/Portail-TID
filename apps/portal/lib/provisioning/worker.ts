@@ -1,8 +1,50 @@
 import { randomUUID } from "node:crypto";
 import { getPrisma } from "../prisma";
 
-const driveUrl = () => process.env.DRIVE_PROVISIONING_URL?.trim();
-const driveToken = () => process.env.DRIVE_PROVISIONING_TOKEN?.trim();
+type ConnectorCode =
+  | "TDB"
+  | "CASH-RECON"
+  | "REVUE-PDV"
+  | "GPARC"
+  | "ATF"
+  | "MDM"
+  | "SIRH"
+  | "GED"
+  | "RECRUTEMENT";
+
+type Connector = { url: string; token: string };
+
+const envKey = (code: ConnectorCode) => code.replace(/[^A-Z0-9]+/g, "_");
+
+function connectorFor(code: string): Connector | null {
+  if (!isConnectorCode(code)) return null;
+  const prefix = envKey(code);
+  const url =
+    (code === "GED"
+      ? process.env.DRIVE_PROVISIONING_URL
+      : process.env[`${prefix}_PROVISIONING_URL`]
+    )?.trim() ?? "";
+  const token =
+    (code === "GED"
+      ? process.env.DRIVE_PROVISIONING_TOKEN
+      : process.env[`${prefix}_PROVISIONING_TOKEN`]
+    )?.trim() ?? "";
+  return url && token ? { url, token } : null;
+}
+
+function isConnectorCode(code: string): code is ConnectorCode {
+  return [
+    "TDB",
+    "CASH-RECON",
+    "REVUE-PDV",
+    "GPARC",
+    "ATF",
+    "MDM",
+    "SIRH",
+    "GED",
+    "RECRUTEMENT",
+  ].includes(code as ConnectorCode);
+}
 
 function splitDisplayName(displayName: string) {
   const parts = displayName.trim().split(/\s+/).filter(Boolean);
@@ -16,35 +58,42 @@ async function claimNextJob() {
   const prisma = getPrisma();
   const job = await prisma.applicationProvisioningOutbox.findFirst({
     where: {
-      status: { in: ["PENDING", "RETRY", "REVOKE"] },
+      status: { in: ["PENDING", "RETRY", "REVOKE", "WAITING_CONFIG"] },
       nextAttemptAt: { lte: new Date() },
-      application: { code: "GED", active: true },
     },
     include: { user: true, application: true, profile: true },
     orderBy: { createdAt: "asc" },
   });
   if (!job) return null;
   const claimed = await prisma.applicationProvisioningOutbox.updateMany({
-    where: { id: job.id, status: { in: ["PENDING", "RETRY", "REVOKE"] } },
+    where: {
+      id: job.id,
+      status: { in: ["PENDING", "RETRY", "REVOKE", "WAITING_CONFIG"] },
+    },
     data: { status: "PROCESSING", attempts: { increment: 1 } },
   });
   return claimed.count === 1 ? job : null;
 }
 
-async function provisionDrive(job: Awaited<ReturnType<typeof claimNextJob>>) {
+async function provisionApplication(
+  job: Awaited<ReturnType<typeof claimNextJob>>,
+) {
   if (!job) return;
-  const url = driveUrl();
-  const token = driveToken();
-  if (!url || !token)
-    throw new Error("Drive provisioning configuration is missing");
+  const connector = connectorFor(job.application.code);
+  if (!connector) return "WAITING_CONFIG" as const;
   const { first_name, last_name } = splitDisplayName(job.user.displayName);
-  const response = await fetch(url, {
+  const response = await fetch(connector.url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-sirh-provisioning-token": token,
+      // Keep the existing GED header for backward compatibility. New
+      // connectors should accept this same header and the application code in
+      // the signed body to avoid per-application authentication schemes.
+      "x-sirh-provisioning-token": connector.token,
     },
     body: JSON.stringify({
+      application: job.application.code,
+      profile: job.profile.key,
       sage_id: job.user.sageEmployeeId ?? job.user.employeeId,
       email: job.user.email,
       first_name,
@@ -54,7 +103,10 @@ async function provisionDrive(job: Awaited<ReturnType<typeof claimNextJob>>) {
     signal: AbortSignal.timeout(20_000),
   });
   if (!response.ok)
-    throw new Error(`Drive provisioning HTTP ${response.status}`);
+    throw new Error(
+      `${job.application.code} provisioning HTTP ${response.status}`,
+    );
+  return "COMPLETED" as const;
 }
 
 async function processOne() {
@@ -62,10 +114,20 @@ async function processOne() {
   const job = await claimNextJob();
   if (!job) return false;
   try {
-    await provisionDrive(job);
+    const result = await provisionApplication(job);
     await prisma.applicationProvisioningOutbox.update({
       where: { id: job.id },
-      data: { status: "COMPLETED", lastError: null },
+      data: {
+        status: result,
+        lastError:
+          result === "WAITING_CONFIG"
+            ? `Connector ${job.application.code} not configured`
+            : null,
+        nextAttemptAt:
+          result === "WAITING_CONFIG"
+            ? new Date(Date.now() + 5 * 60_000)
+            : new Date(),
+      },
     });
   } catch (error) {
     const retry = job.attempts + 1 < 5;

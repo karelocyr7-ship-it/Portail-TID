@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
-import { normalizeEmployeeId } from "@/lib/employee-id";
+import { normalizeSageId } from "@/lib/sage-id";
 import { provisionKeycloakUser } from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
@@ -117,22 +117,24 @@ export async function updateApplicationUrl(formData: FormData) {
 export async function savePortalUser(formData: FormData) {
   const session = await requireAdmin();
   let keycloakSubject = String(formData.get("keycloakSubject") ?? "").trim();
-  const employeeIdProvided = formData.has("employeeId");
-  const employeeId = normalizeEmployeeId(formData.get("employeeId"));
+  const sageIdProvided = formData.has("sageId") || formData.has("employeeId");
+  const sageId = normalizeSageId(
+    formData.get("sageId") ?? formData.get("employeeId"),
+  );
   const email = String(formData.get("email") ?? "").trim();
   const displayName = String(formData.get("displayName") ?? "").trim();
   const userId = String(formData.get("userId") ?? "").trim();
   const active = formData.get("active") === "on";
-  const requestedProfileIds = formData
-    .getAll("profileIds")
+  const requestedApplicationIds = formData
+    .getAll("applicationIds")
     .filter((value): value is string => typeof value === "string")
     .filter(Boolean);
 
   if (keycloakSubject.length > 200) {
     throw new Error("Identifiant Keycloak invalide");
   }
-  if (formData.get("employeeId") && !employeeId) {
-    throw new Error("Matricule invalide : TID000… ou TIDP000… requis");
+  if (sageIdProvided && !sageId) {
+    throw new Error("ID Sage invalide");
   }
   if (!displayName || displayName.length > 160) {
     throw new Error("Nom d’affichage invalide");
@@ -141,22 +143,6 @@ export async function savePortalUser(formData: FormData) {
     throw new Error("Adresse e-mail invalide");
   }
   const prisma = getPrisma();
-  const defaultProfiles = await prisma.applicationProfile.findMany({
-    where: { isDefault: true, active: true, application: { active: true } },
-    select: { id: true, applicationId: true },
-  });
-  const activeApplicationCount = await prisma.application.count({
-    where: { active: true },
-  });
-  if (
-    defaultProfiles.length !== activeApplicationCount ||
-    new Set(defaultProfiles.map(({ applicationId }) => applicationId)).size !==
-      defaultProfiles.length
-  ) {
-    throw new Error(
-      "Les profils minimaux des applications ne sont pas configurés",
-    );
-  }
   if (!userId && !keycloakSubject) {
     if (!email)
       throw new Error(
@@ -165,7 +151,7 @@ export async function savePortalUser(formData: FormData) {
     const provisioned = await provisionKeycloakUser({
       email,
       displayName,
-      employeeId,
+      employeeId: sageId,
     });
     keycloakSubject = provisioned.subject;
   }
@@ -180,30 +166,48 @@ export async function savePortalUser(formData: FormData) {
       : null;
     if (userId && !before) throw new Error("Compte portail introuvable");
 
-    const profileIds = userId
-      ? formData.has("profileIds")
-        ? requestedProfileIds
-        : (before?.assignments.map(({ profileId }) => profileId) ?? [])
-      : defaultProfiles.map(({ id }) => id);
-    const profiles = await transaction.applicationProfile.findMany({
-      where: {
-        id: { in: [...new Set(profileIds)] },
-        active: true,
-        application: { active: true },
-      },
-      select: { id: true, applicationId: true },
-    });
-    if (profiles.length !== new Set(profileIds).size) {
-      throw new Error("Un profil sélectionné est invalide ou inactif");
+    const preserveAssignments = userId && !formData.has("applicationIds");
+    const profiles = preserveAssignments
+      ? await transaction.applicationProfile.findMany({
+          where: {
+            id: {
+              in: before?.assignments.map(({ profileId }) => profileId) ?? [],
+            },
+            active: true,
+            application: { active: true },
+          },
+          select: { id: true, applicationId: true },
+        })
+      : await transaction.applicationProfile.findMany({
+          where: {
+            applicationId: { in: [...new Set(requestedApplicationIds)] },
+            isDefault: true,
+            active: true,
+            application: { active: true },
+          },
+          select: { id: true, applicationId: true },
+        });
+    if (
+      !preserveAssignments &&
+      new Set(profiles.map(({ applicationId }) => applicationId)).size !==
+        new Set(requestedApplicationIds).size
+    ) {
+      throw new Error(
+        "Chaque application sélectionnée doit avoir un profil minimal actif",
+      );
     }
+    const profileIds = profiles.map(({ id }) => id);
 
     const user = userId
       ? await transaction.portalUser.update({
           where: { id: userId },
           data: {
             keycloakSubject,
-            employeeId: employeeIdProvided
-              ? (employeeId ?? null)
+            sageEmployeeId: sageIdProvided
+              ? (sageId ?? null)
+              : (before?.sageEmployeeId ?? null),
+            employeeId: sageIdProvided
+              ? (sageId ?? null)
               : (before?.employeeId ?? null),
             email: email || null,
             displayName,
@@ -213,7 +217,8 @@ export async function savePortalUser(formData: FormData) {
       : await transaction.portalUser.create({
           data: {
             keycloakSubject,
-            employeeId: employeeIdProvided ? (employeeId ?? null) : null,
+            sageEmployeeId: sageIdProvided ? (sageId ?? null) : null,
+            employeeId: sageIdProvided ? (sageId ?? null) : null,
             email: email || null,
             displayName,
             active,
@@ -232,14 +237,34 @@ export async function savePortalUser(formData: FormData) {
         })),
       });
     }
-    if (!userId) {
-      await transaction.applicationProvisioningOutbox.createMany({
-        data: profiles.map((profile) => ({
-          idempotencyKey: `${user.id}:${profile.applicationId}`,
+    await transaction.applicationProvisioningOutbox.deleteMany({
+      where: {
+        userId: user.id,
+        applicationId: {
+          notIn: profiles.map(({ applicationId }) => applicationId),
+        },
+      },
+    });
+    for (const profile of profiles) {
+      await transaction.applicationProvisioningOutbox.upsert({
+        where: {
+          userId_applicationId: {
+            userId: user.id,
+            applicationId: profile.applicationId,
+          },
+        },
+        update: {
+          profileId: profile.id,
+          status: "PENDING",
+          lastError: null,
+          nextAttemptAt: new Date(),
+        },
+        create: {
+          idempotencyKey: user.id + ":" + profile.applicationId,
           userId: user.id,
           applicationId: profile.applicationId,
           profileId: profile.id,
-        })),
+        },
       });
     }
     await transaction.auditLog.create({
@@ -251,6 +276,7 @@ export async function savePortalUser(formData: FormData) {
         beforeData: before
           ? {
               keycloakSubject: before.keycloakSubject,
+              sageEmployeeId: before.sageEmployeeId,
               employeeId: before.employeeId,
               email: before.email,
               displayName: before.displayName,
@@ -260,6 +286,7 @@ export async function savePortalUser(formData: FormData) {
           : undefined,
         afterData: {
           keycloakSubject,
+          sageEmployeeId: user.sageEmployeeId,
           employeeId: user.employeeId,
           email: email || null,
           displayName,
@@ -300,6 +327,7 @@ export async function deletePortalUser(formData: FormData) {
         entityId: user.id,
         beforeData: {
           keycloakSubject: user.keycloakSubject,
+          sageEmployeeId: user.sageEmployeeId,
           employeeId: user.employeeId,
           email: user.email,
           displayName: user.displayName,
@@ -325,7 +353,8 @@ export async function saveCurrentPortalUser(formData: FormData) {
   );
   currentUser.set("email", session.email ?? session.username ?? "");
   currentUser.set("keycloakSubject", session.subject);
-  if (session.employeeId) currentUser.set("employeeId", session.employeeId);
+  if (session.sageId ?? session.employeeId)
+    currentUser.set("sageId", session.sageId ?? session.employeeId ?? "");
   currentUser.set("active", "on");
   for (const profileId of formData.getAll("profileIds")) {
     if (typeof profileId === "string")

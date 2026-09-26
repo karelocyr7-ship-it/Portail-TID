@@ -223,11 +223,22 @@ export default async function AdminPage({
                 id: user.id,
                 displayName: user.displayName,
                 email: user.email,
-                employeeId: user.employeeId,
+                sageEmployeeId: user.sageEmployeeId ?? user.employeeId,
                 keycloakSubject: user.keycloakSubject,
                 active: user.active,
                 profileIds: user.assignments.map(({ profileId }) => profileId),
+                applicationIds: user.assignments.map(
+                  ({ profile }) => profile.applicationId,
+                ),
               }))}
+              applications={profiles
+                .filter((profile) => profile.isDefault)
+                .map((profile) => ({
+                  id: profile.applicationId,
+                  code: profile.application.code,
+                  name: profile.application.name,
+                  defaultProfileName: profile.name,
+                }))}
               savePortalUser={savePortalUser}
               deletePortalUser={deletePortalUser}
             />

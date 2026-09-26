@@ -74,6 +74,7 @@ model ApplicationProfile {
 model PortalUser {
   id              String                    @id @default(cuid())
   keycloakSubject String                    @unique
+  sageEmployeeId   String?                   @unique
   employeeId      String?                   @unique
   email           String?
   phone           String?

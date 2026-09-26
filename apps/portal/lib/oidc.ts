@@ -6,7 +6,7 @@ import {
   verify,
 } from "node:crypto";
 import { cookies } from "next/headers";
-import { normalizeEmployeeId } from "@/lib/employee-id";
+import { normalizeSageId } from "@/lib/sage-id";
 
 const SESSION_COOKIE = "tad_portal_session";
 const STATE_COOKIE = "tad_oidc_state";
@@ -23,6 +23,7 @@ type OidcConfiguration = {
 
 export type PortalSession = {
   subject: string;
+  sageId?: string;
   employeeId?: string;
   name?: string;
   email?: string;
@@ -137,6 +138,7 @@ export async function verifyApplicationIdToken(
   applicationCode: string,
 ): Promise<{
   subject: string;
+  sageId?: string;
   employeeId?: string;
   email?: string;
   name?: string;
@@ -172,9 +174,11 @@ export async function verifyApplicationIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
-  const employeeId = normalizeEmployeeId(
+  const sageId = normalizeSageId(
     claims.employee_id ??
       claims.employeeId ??
+      claims.sage_id ??
+      claims.sageId ??
       claims.matricule ??
       claims.preferred_username,
   );
@@ -206,7 +210,8 @@ export async function verifyApplicationIdToken(
   }
   return {
     subject: claims.sub,
-    employeeId,
+    sageId,
+    employeeId: sageId,
     email:
       typeof claims.email === "string"
         ? claims.email
@@ -254,9 +259,11 @@ async function verifyIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
-  const employeeId = normalizeEmployeeId(
+  const sageId = normalizeSageId(
     claims.employee_id ??
       claims.employeeId ??
+      claims.sage_id ??
+      claims.sageId ??
       claims.matricule ??
       claims.preferred_username,
   );
@@ -280,7 +287,8 @@ async function verifyIdToken(
     ?.roles ?? []) as unknown[];
   return {
     subject: String(claims.sub ?? ""),
-    employeeId,
+    sageId,
+    employeeId: sageId,
     name: typeof claims.name === "string" ? claims.name : undefined,
     email: typeof claims.email === "string" ? claims.email : undefined,
     phone:

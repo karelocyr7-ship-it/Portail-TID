@@ -128,7 +128,7 @@ type ProfileDefinition = {
 const defaultProfileKeys: Record<string, string> = {
   TDB: "VIEWER",
   GPARC: "CHAUFFEUR",
-  "REVUE-PDV": "sup_orange",
+  "REVUE-PDV": "auditeur",
   "CASH-RECON": "VIEWER",
   MDM: "OBSERVER",
   ATF: "OBSERVER",
@@ -216,12 +216,17 @@ const profileDefinitions: Record<string, ProfileDefinition[]> = {
     ["rc", "Responsable Canal", "Pilotage de la branche Canal+"],
     ["sup_orange", "Superviseur Orange", "Suivi terrain Orange"],
     ["rz", "Responsable de zone", "Suivi terrain Canal+"],
+    [
+      "auditeur",
+      "Invité sans données",
+      "Compte sans branche ni périmètre de données",
+    ],
   ].map(([key, name, description]) => ({
     key,
     name,
     description,
     sourceSystem: "REVUE-PDV",
-    sourceReference: ["ro", "rc", "sup_orange", "rz"].includes(key)
+    sourceReference: ["ro", "rc", "sup_orange", "rz", "auditeur"].includes(key)
       ? "api/src/lib/branches.js:DEFAULT_BRANCHES"
       : "db/init.sql:users.role",
   })),

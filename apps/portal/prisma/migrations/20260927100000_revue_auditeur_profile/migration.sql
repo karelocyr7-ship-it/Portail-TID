@@ -1,10 +1,10 @@
 INSERT INTO "ApplicationProfile" (
-  "id", "applicationId", "key", "name", "description", "sourceSystem", "sourceReference", "active", "isDefault"
+  "id", "applicationId", "key", "name", "description", "sourceSystem", "sourceReference", "active", "isDefault", "createdAt", "updatedAt"
 )
 SELECT
   'revue-pdv-auditeur', a."id", 'auditeur', 'Invité sans données',
   'Compte sans branche ni périmètre de données', 'REVUE-PDV',
-  'api/src/lib/domainAccess.js:auditor', true, false
+  'api/src/lib/domainAccess.js:auditor', true, false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
 FROM "Application" a
 WHERE a."code" = 'REVUE-PDV'
   AND NOT EXISTS (

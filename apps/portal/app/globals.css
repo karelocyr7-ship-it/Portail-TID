@@ -1359,6 +1359,25 @@ body {
   text-align: left;
   text-transform: uppercase;
 }
+
+.user-table-sort-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 0.2rem;
+  padding: 0;
+  text-align: left;
+}
+
+.user-table-sort-button:hover,
+.user-table-sort-button:focus-visible {
+  color: var(--color-primary, #0b5cad);
+  text-decoration: underline;
+}
 .user-table td {
   padding: 13px 14px;
   border-top: 1px solid #edf1f6;

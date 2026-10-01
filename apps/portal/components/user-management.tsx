@@ -21,6 +21,21 @@ export type UserManagementUser = {
 };
 
 type ServerAction = (formData: FormData) => Promise<void>;
+type SortKey = "user" | "employeeId" | "access" | "status";
+type SortState = { key: SortKey; direction: "asc" | "desc" };
+
+function sortValue(user: UserManagementUser, key: SortKey): string | number {
+  switch (key) {
+    case "employeeId":
+      return user.employeeId ?? "";
+    case "access":
+      return user.profileIds.length;
+    case "status":
+      return user.active ? 1 : 0;
+    default:
+      return `${user.employeeId ?? ""} ${user.displayName} ${user.email ?? ""}`;
+  }
+}
 
 export function UserManagement({
   users,
@@ -35,6 +50,10 @@ export function UserManagement({
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
+  const [sort, setSort] = useState<SortState>({
+    key: "employeeId",
+    direction: "asc",
+  });
   const [modal, setModal] = useState<"create" | UserManagementUser | null>(
     null,
   );
@@ -44,7 +63,7 @@ export function UserManagement({
       users.filter((user) => {
         const matchesQuery =
           !normalizedQuery ||
-          `${user.displayName} ${user.email ?? ""}`
+          `${user.employeeId ?? ""} ${user.displayName} ${user.email ?? ""}`
             .toLocaleLowerCase()
             .includes(normalizedQuery);
         const matchesStatus =
@@ -54,6 +73,46 @@ export function UserManagement({
       }),
     [normalizedQuery, status, users],
   );
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((left, right) => {
+      const leftValue = sortValue(left, sort.key);
+      const rightValue = sortValue(right, sort.key);
+      const comparison =
+        typeof leftValue === "number" && typeof rightValue === "number"
+          ? leftValue - rightValue
+          : String(leftValue).localeCompare(String(rightValue), "fr", {
+              numeric: true,
+              sensitivity: "base",
+            });
+      return sort.direction === "asc" ? comparison : -comparison;
+    });
+  }, [filteredUsers, sort]);
+
+  function toggleSort(key: SortKey) {
+    setSort((current) =>
+      current.key === key
+        ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+        : { key, direction: "asc" },
+    );
+  }
+
+  function sortLabel(key: SortKey, label: string) {
+    const active = sort.key === key;
+    return (
+      <button
+        className="user-table-sort-button"
+        type="button"
+        onClick={() => toggleSort(key)}
+        aria-label={`Trier par ${label}`}
+        aria-pressed={active}
+      >
+        {label}
+        <span aria-hidden="true">
+          {active ? (sort.direction === "asc" ? " ↑" : " ↓") : " ↕"}
+        </span>
+      </button>
+    );
+  }
 
   return (
     <div className="user-management">
@@ -81,7 +140,7 @@ export function UserManagement({
           <span>Rechercher</span>
           <input
             type="search"
-            placeholder="Nom ou e-mail…"
+            placeholder="Matricule, nom ou e-mail…"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
@@ -111,17 +170,17 @@ export function UserManagement({
           <caption className="sr-only">Utilisateurs du portail</caption>
           <thead>
             <tr>
-              <th scope="col">Utilisateur</th>
-              <th scope="col">Matricule</th>
-              <th scope="col">Accès</th>
-              <th scope="col">Statut</th>
+              <th scope="col">{sortLabel("user", "Utilisateur")}</th>
+              <th scope="col">{sortLabel("employeeId", "Matricule")}</th>
+              <th scope="col">{sortLabel("access", "Accès")}</th>
+              <th scope="col">{sortLabel("status", "Statut")}</th>
               <th scope="col" className="user-table-actions-heading">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user) => (
+            {sortedUsers.map((user) => (
               <tr key={user.id}>
                 <td>
                   <div className="user-table-identity">
@@ -207,7 +266,7 @@ export function UserManagement({
             ))}
           </tbody>
         </table>
-        {filteredUsers.length === 0 && (
+        {sortedUsers.length === 0 && (
           <div className="user-table-empty">
             <strong>Aucun utilisateur trouvé</strong>
             <span>Modifiez la recherche ou ajoutez un nouveau compte.</span>

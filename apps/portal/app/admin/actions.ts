@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeSageId } from "@/lib/sage-id";
-import { provisionKeycloakUser } from "@/lib/keycloak-admin";
+import {
+  provisionKeycloakUser,
+  sendKeycloakPasswordReset,
+} from "@/lib/keycloak-admin";
 
 const allowedActions = ["toggle-active", "toggle-maintenance"] as const;
 type AdminAction = (typeof allowedActions)[number];
@@ -346,6 +349,32 @@ export async function deletePortalUser(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/");
+}
+
+export async function sendPortalUserPasswordReset(formData: FormData) {
+  const session = await requireAdmin();
+  const userId = String(formData.get("userId") ?? "").trim();
+  if (!userId) throw new Error("Compte portail invalide");
+
+  const prisma = getPrisma();
+  const user = await prisma.portalUser.findUnique({
+    where: { id: userId },
+    select: { id: true, keycloakSubject: true, email: true },
+  });
+  if (!user) throw new Error("Compte portail introuvable");
+  if (!user.email) throw new Error("Aucune adresse e-mail n’est renseignée");
+
+  await sendKeycloakPasswordReset(user.keycloakSubject);
+  await prisma.auditLog.create({
+    data: {
+      userId: session.subject,
+      eventType: "PORTAL_USER_PASSWORD_RESET_REQUESTED",
+      entityType: "PortalUser",
+      entityId: user.id,
+      afterData: { email: user.email },
+    },
+  });
+  revalidatePath("/admin");
 }
 
 export async function saveCurrentPortalUser(formData: FormData) {

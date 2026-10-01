@@ -63,6 +63,7 @@ export async function provisionKeycloakUser(input: {
   const email = input.email.trim().toLowerCase();
   if (!email || !email.includes("@"))
     throw new Error("Un e-mail est requis pour créer le compte Keycloak");
+  const username = input.employeeId?.trim() || email;
 
   const token = await getAdminToken();
   const endpoint = `${adminBaseUrl()}/users`;
@@ -74,7 +75,7 @@ export async function provisionKeycloakUser(input: {
     method: "POST",
     headers,
     body: JSON.stringify({
-      username: email,
+      username,
       email,
       enabled: true,
       emailVerified: false,

@@ -47,5 +47,11 @@ describe("provisionKeycloakUser", () => {
         employeeId: "TID0001",
       }),
     ).resolves.toEqual({ subject: "sub-123", created: true });
+    const createRequest = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[1]?.[1] as RequestInit;
+    expect(JSON.parse(String(createRequest.body))).toMatchObject({
+      username: "TID0001",
+      email: "test.user@example.test",
+    });
   });
 });

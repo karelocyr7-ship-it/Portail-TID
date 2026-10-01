@@ -2,7 +2,9 @@ import { normalizeSageId } from "@/lib/sage-id";
 import { sendKeycloakPasswordReset } from "@/lib/keycloak-admin";
 import { getPrisma } from "@/lib/prisma";
 
-export async function requestPasswordReset(identifier: string): Promise<boolean> {
+export async function requestPasswordReset(
+  identifier: string,
+): Promise<boolean> {
   const value = identifier.trim();
   if (!value || value.length > 200) return false;
 

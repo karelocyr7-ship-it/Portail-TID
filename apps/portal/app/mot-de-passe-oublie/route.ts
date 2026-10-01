@@ -58,7 +58,10 @@ export async function POST(request: Request): Promise<Response> {
   try {
     await requestPasswordReset(identifier);
   } catch (error) {
-    console.error("password_reset_request_failed", error instanceof Error ? error.message : "unknown_error");
+    console.error(
+      "password_reset_request_failed",
+      error instanceof Error ? error.message : "unknown_error",
+    );
   }
 
   return new Response(page(message), {

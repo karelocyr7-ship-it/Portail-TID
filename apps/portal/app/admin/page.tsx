@@ -13,6 +13,7 @@ import {
   savePortalUser,
   updateApplicationStatus,
   updateApplicationUrl,
+  sendPortalUserPasswordReset,
 } from "./actions";
 
 export default async function AdminPage({
@@ -230,6 +231,7 @@ export default async function AdminPage({
               }))}
               savePortalUser={savePortalUser}
               deletePortalUser={deletePortalUser}
+              sendPortalUserPasswordReset={sendPortalUserPasswordReset}
             />
           </section>
         </>

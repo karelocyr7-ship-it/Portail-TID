@@ -112,3 +112,32 @@ export async function provisionKeycloakUser(input: {
     throw new Error("Keycloak n’a pas retourné l’identifiant du compte créé");
   return { subject, created: true };
 }
+
+export async function sendKeycloakPasswordReset(
+  subject: string,
+): Promise<void> {
+  const normalizedSubject = subject.trim();
+  if (!normalizedSubject || normalizedSubject.length > 200) {
+    throw new Error("Identifiant Keycloak invalide");
+  }
+
+  const token = await getAdminToken();
+  const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(normalizedSubject)}/execute-actions-email`;
+  const response = await fetch(
+    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(required("PORTAL_PUBLIC_URL"))}`,
+    {
+      method: "PUT",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(["UPDATE_PASSWORD"]),
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) {
+    throw new Error(
+      `Envoi du lien de réinitialisation refusé (HTTP ${response.status})`,
+    );
+  }
+}

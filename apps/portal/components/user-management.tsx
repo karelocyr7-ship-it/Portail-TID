@@ -26,10 +26,12 @@ export function UserManagement({
   users,
   savePortalUser,
   deletePortalUser,
+  sendPortalUserPasswordReset,
 }: {
   users: UserManagementUser[];
   savePortalUser: ServerAction;
   deletePortalUser: ServerAction;
+  sendPortalUserPasswordReset: ServerAction;
 }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
@@ -159,6 +161,31 @@ export function UserManagement({
                     >
                       Modifier
                     </button>
+                    <form
+                      action={async (formData) => {
+                        if (
+                          !window.confirm(
+                            `Envoyer un lien de réinitialisation à ${user.email ?? "cet utilisateur"} ?`,
+                          )
+                        )
+                          return;
+                        await sendPortalUserPasswordReset(formData);
+                      }}
+                    >
+                      <input type="hidden" name="userId" value={user.id} />
+                      <button
+                        className="button secondary compact-button"
+                        type="submit"
+                        disabled={!user.email}
+                        title={
+                          user.email
+                            ? "Envoyer un lien de réinitialisation"
+                            : "Une adresse e-mail est requise"
+                        }
+                      >
+                        Réinitialiser
+                      </button>
+                    </form>
                     <form
                       action={async (formData) => {
                         if (!window.confirm(`Supprimer ${user.displayName} ?`))

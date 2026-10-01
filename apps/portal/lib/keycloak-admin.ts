@@ -129,8 +129,9 @@ export async function sendKeycloakPasswordReset(
 
   const token = await getAdminToken();
   const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(normalizedSubject)}/execute-actions-email`;
+  const redirectUri = `${required("PORTAL_PUBLIC_URL").replace(/\/+$/, "")}/api/auth/callback`;
   const response = await fetch(
-    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(required("PORTAL_PUBLIC_URL"))}`,
+    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(redirectUri)}`,
     {
       method: "PUT",
       headers: {

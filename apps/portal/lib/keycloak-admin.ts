@@ -1,5 +1,7 @@
 type KeycloakUser = {
   id?: string;
+  username?: string;
+  email?: string;
 };
 
 type ProvisionedKeycloakUser = {
@@ -75,6 +77,7 @@ export async function provisionKeycloakUser(input: {
     headers,
     body: JSON.stringify({
       username: email,
+      ...(input.employeeId ? { username: input.employeeId } : {}),
       email,
       enabled: true,
       emailVerified: false,

@@ -5,7 +5,10 @@ Statut : préparation uniquement — migration non exécutée.
 ## Format cible
 
 - TID : `TID` suivi d’au moins trois chiffres, par exemple `TID000`.
-- TID+ : `TIDP` suivi d’au moins trois chiffres, par exemple `TIDP000`.
+- Sociétés : `TIDS`, `TIDC`, `TIDPS` et `TIDPC` suivis d’au moins trois chiffres,
+  par exemple `TIDS001` ou `TIDPC001`.
+- TID+ historique : `TIDP` suivi d’au moins trois chiffres, par exemple
+  `TIDP000`.
 
 La comparaison est insensible à la casse côté application puis stockée en
 majuscules. Le champ reste nullable pendant la transition afin de préserver

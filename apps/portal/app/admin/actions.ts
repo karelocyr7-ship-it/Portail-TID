@@ -135,7 +135,9 @@ export async function savePortalUser(formData: FormData) {
     throw new Error("Identifiant Keycloak invalide");
   }
   if (formData.get("employeeId") && !employeeId) {
-    throw new Error("Matricule invalide : TID000… ou TIDP000… requis");
+    throw new Error(
+      "Matricule invalide : TID, TIDS, TIDC, TIDP, TIDPS ou TIDPC suivi d’au moins trois chiffres requis",
+    );
   }
   if (!displayName || displayName.length > 160) {
     throw new Error("Nom d’affichage invalide");

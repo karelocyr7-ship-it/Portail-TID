@@ -37,3 +37,12 @@ pas modifier directement la base de production.
 
 Les URL du catalogue restent modifiables uniquement depuis l’administration ;
 aucune URL métier réelle n’est inventée dans le dépôt.
+
+## Provisionnement SIRH
+
+Le SIRH appelle `POST /api/provisioning/sirh/users` avec les en-têtes
+`X-SIRH-Timestamp` et `X-SIRH-Signature`. La signature HMAC-SHA256 porte sur
+`timestamp + "." + corps JSON` et utilise `SIRH_PROVISIONING_SECRET`.
+Chaque appel est idempotent par matricule et crée ou met à jour l’identité
+Keycloak, le compte portail, les profils minimaux des applications actives et
+les demandes de provisioning externes.

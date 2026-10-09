@@ -371,7 +371,7 @@ function UserModal({
               <input
                 name="employeeId"
                 maxLength={32}
-                placeholder="TID000… ou TIDP000…"
+                placeholder="TID, TIDS, TIDC, TIDP, TIDPS ou TIDPC…"
                 defaultValue={existing?.employeeId ?? ""}
               />
             </label>

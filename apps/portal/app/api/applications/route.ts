@@ -9,7 +9,9 @@ export async function GET() {
       data: await getVisibleApplicationsFromDatabase(
         roles,
         session?.subject,
+        session?.sageId,
         session?.employeeId,
+        session?.email,
       ),
     },
     { headers: { "cache-control": "no-store" } },

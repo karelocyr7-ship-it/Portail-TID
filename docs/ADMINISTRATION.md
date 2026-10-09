@@ -3,18 +3,35 @@
 L’espace `/admin` permet aux utilisateurs portant le rôle Keycloak
 `PORTAL_ADMIN` de :
 
-- créer un compte utilisateur à partir de son identité métier et de son
-  adresse e-mail ; le compte Keycloak est provisionné automatiquement ;
+- recevoir la création ou la mise à jour d’un utilisateur depuis le SIRH avec
+  son identifiant Sage et son adresse e-mail ; le compte Keycloak est
+  provisionné automatiquement si nécessaire ;
 - activer ou désactiver ce compte sans stocker de mot de passe ;
-- attribuer automatiquement le profil minimal de chaque application active ;
+- attribuer les applications autorisées à l’utilisateur ; le portail demande
+  alors la création du compte applicatif avec le profil minimal ;
 - consulter les habilitations enregistrées.
 
-Les profils minimaux sont définis dans le catalogue et ne sont pas choisis par
-le navigateur. Une demande idempotente est inscrite dans
-`ApplicationProvisioningOutbox` pour chaque application ; le connecteur de
-l’application crée ou synchronise ensuite son compte local avec ce profil.
-Les administrateurs des applications restent responsables de l’affinage des
-droits après cette création initiale.
+Les profils minimaux sont définis dans le catalogue. Une demande idempotente
+est inscrite dans ApplicationProvisioningOutbox pour chaque application
+sélectionnée ; le connecteur de l’application crée ou synchronise ensuite son
+compte local avec ce profil. Les administrateurs des applications restent
+responsables de l’affinage des droits fonctionnels après cette création
+initiale.
+
+## Onboarding SIRH
+
+Le SIRH appelle POST /api/provisioning/sirh/users avec un JSON contenant
+sageId, email, displayName et éventuellement phone ou keycloakSubject. La
+requête est signée avec HMAC-SHA256 :
+
+- X-SIRH-Timestamp contient l’époque Unix en secondes ;
+- X-SIRH-Signature contient sha256= suivi de la signature de timestamp.body.
+
+Le secret partagé reste uniquement dans la configuration d’exécution du SIRH
+et du portail. L’onboarding rapproche d’abord l’utilisateur par ID Sage, puis
+par e-mail uniquement si la correspondance est unique. Les profils minimaux
+de toutes les applications actives sont attribués automatiquement ; les
+administrateurs des applications peuvent ensuite affiner les droits.
 
 La section **Comptes et profils applicatifs** affiche un répertoire filtrable
 par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un
@@ -37,12 +54,3 @@ pas modifier directement la base de production.
 
 Les URL du catalogue restent modifiables uniquement depuis l’administration ;
 aucune URL métier réelle n’est inventée dans le dépôt.
-
-## Provisionnement SIRH
-
-Le SIRH appelle `POST /api/provisioning/sirh/users` avec les en-têtes
-`X-SIRH-Timestamp` et `X-SIRH-Signature`. La signature HMAC-SHA256 porte sur
-`timestamp + "." + corps JSON` et utilise `SIRH_PROVISIONING_SECRET`.
-Chaque appel est idempotent par matricule et crée ou met à jour l’identité
-Keycloak, le compte portail, les profils minimaux des applications actives et
-les demandes de provisioning externes.

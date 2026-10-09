@@ -9,5 +9,11 @@
     "target": "ES2022",
     "verbatimModuleSyntax": false
   },
-  "include": ["lib/email/worker-entry.ts", "lib/email/**/*.ts", "lib/prisma.ts"]
+  "include": [
+    "lib/email/worker-entry.ts",
+    "lib/email/**/*.ts",
+    "lib/provisioning/worker-entry.ts",
+    "lib/provisioning/**/*.ts",
+    "lib/prisma.ts"
+  ]
 }

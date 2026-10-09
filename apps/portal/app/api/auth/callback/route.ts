@@ -5,6 +5,7 @@ import {
   publicUrl,
   setSession,
 } from "@/lib/oidc";
+import { reconcilePortalUserSubject } from "@/lib/portal-users";
 
 export const runtime = "nodejs";
 
@@ -24,7 +25,9 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   try {
-    await setSession(await exchangeCode(code, nonce));
+    const session = await exchangeCode(code, nonce);
+    await reconcilePortalUserSubject(session);
+    await setSession(session);
     return Response.redirect(new URL("/", publicUrl()));
   } catch {
     return Response.json(

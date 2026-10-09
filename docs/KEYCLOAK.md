@@ -50,3 +50,12 @@ journaux.
 
 Le portail crée le compte avec l’action requise `UPDATE_PASSWORD`; aucun mot de
 passe n’est généré ni stocké par le portail.
+
+## Identité Sage et onboarding SIRH
+
+Le claim OIDC `sage_id` (alias acceptés : `sageId`, `employee_id`,
+`employeeId`, `matricule`) est normalisé et stocké comme identifiant métier
+prioritaire. L’e-mail vérifié reste un mécanisme de rapprochement secondaire.
+Le SIRH peut créer ou mettre à jour un compte portail via l’endpoint signé
+`/api/provisioning/sirh/users`. Cet endpoint ne donne aucun accès applicatif ;
+l’administrateur du portail doit sélectionner les applications autorisées.

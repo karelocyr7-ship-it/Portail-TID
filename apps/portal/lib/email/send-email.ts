@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { getEmailConfig } from "./config";
-import { EmailPermanentError, EmailTemporaryError, EmailValidationError } from "./errors";
+import {
+  EmailPermanentError,
+  EmailTemporaryError,
+  EmailValidationError,
+} from "./errors";
 import { getTransporter } from "./transporter";
 import { renderTemplate } from "./templates";
 import type { SendTransactionalEmailInput } from "./types";
@@ -32,19 +36,25 @@ function classifyError(error: unknown): Error {
     typeof error === "object" && error !== null && "code" in error
       ? String((error as { code?: unknown }).code)
       : "SMTP_ERROR";
-  const message = responseCode ? `SMTP response ${responseCode}` : "SMTP transport failure";
+  const message = responseCode
+    ? `SMTP response ${responseCode}`
+    : "SMTP transport failure";
   if (responseCode && responseCode >= 500 && responseCode < 600) {
     return new EmailPermanentError(message);
   }
   return new EmailTemporaryError(`${message} (${code})`);
 }
 
-export async function sendTransactionalEmail(input: SendTransactionalEmailInput) {
+export async function sendTransactionalEmail(
+  input: SendTransactionalEmailInput,
+) {
   const config = getEmailConfig();
   if (!config.SMTP_ENABLED) throw new EmailValidationError("SMTP is disabled");
   const to = validateRecipient(input.to);
   const subject = validateHeader(input.subject, "subject");
-  const replyTo = input.replyTo ? validateRecipient(input.replyTo) : config.SMTP_REPLY_TO || undefined;
+  const replyTo = input.replyTo
+    ? validateRecipient(input.replyTo)
+    : config.SMTP_REPLY_TO || undefined;
   const correlationId = randomUUID();
   const rendered = renderTemplate(input.template, input.variables);
   try {

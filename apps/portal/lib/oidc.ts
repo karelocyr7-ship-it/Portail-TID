@@ -6,7 +6,7 @@ import {
   verify,
 } from "node:crypto";
 import { cookies } from "next/headers";
-import { normalizeEmployeeId } from "@/lib/employee-id";
+import { normalizeSageId } from "@/lib/sage-id";
 
 const SESSION_COOKIE = "tad_portal_session";
 const STATE_COOKIE = "tad_oidc_state";
@@ -23,9 +23,12 @@ type OidcConfiguration = {
 
 export type PortalSession = {
   subject: string;
+  sageId?: string;
   employeeId?: string;
   name?: string;
   email?: string;
+  phone?: string;
+  emailVerified?: boolean;
   username?: string;
   roles: string[];
   groups: string[];
@@ -84,7 +87,9 @@ export function callbackUrl(): string {
   return `${publicUrl()}/api/auth/callback`;
 }
 
-export async function authorizationUrl(): Promise<{
+export async function authorizationUrl(options?: {
+  prompt?: "login";
+}): Promise<{
   url: string;
   state: string;
   nonce: string;
@@ -99,6 +104,7 @@ export async function authorizationUrl(): Promise<{
   url.searchParams.set("redirect_uri", callbackUrl());
   url.searchParams.set("state", state);
   url.searchParams.set("nonce", nonce);
+  if (options?.prompt) url.searchParams.set("prompt", options.prompt);
   return { url: url.toString(), state, nonce };
 }
 
@@ -130,7 +136,14 @@ export async function exchangeCode(
 export async function verifyApplicationIdToken(
   token: string,
   applicationCode: string,
-): Promise<{ subject: string; employeeId?: string; email?: string }> {
+): Promise<{
+  subject: string;
+  sageId?: string;
+  employeeId?: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+}> {
   const oidc = await configuration();
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("Invalid application ID token");
@@ -161,9 +174,11 @@ export async function verifyApplicationIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
-  const employeeId = normalizeEmployeeId(
+  const sageId = normalizeSageId(
     claims.employee_id ??
       claims.employeeId ??
+      claims.sage_id ??
+      claims.sageId ??
       claims.matricule ??
       claims.preferred_username,
   );
@@ -175,7 +190,7 @@ export async function verifyApplicationIdToken(
   const clientIds = Object.fromEntries(
     (
       process.env.APPLICATION_OIDC_CLIENT_IDS ??
-      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf,RECRUTEMENT=tad-recrut-om"
+      "TDB=tad-tdb,REVUE-PDV=tad-revue-pdv,CASH-RECON=tad-cash-recon,ATF=tad-atf,MDM=tad-mdm,RECRUTEMENT=tad-recrut-om"
     )
       .split(",")
       .map((entry) => entry.split("=", 2).map((value) => value.trim()))
@@ -195,12 +210,20 @@ export async function verifyApplicationIdToken(
   }
   return {
     subject: claims.sub,
-    employeeId,
+    sageId,
+    employeeId: sageId,
     email:
       typeof claims.email === "string"
         ? claims.email
         : typeof claims.preferred_username === "string"
           ? claims.preferred_username
+          : undefined,
+    name: typeof claims.name === "string" ? claims.name : undefined,
+    phone:
+      typeof claims.phone_number === "string"
+        ? claims.phone_number
+        : typeof claims.phone === "string"
+          ? claims.phone
           : undefined,
   };
 }
@@ -236,9 +259,11 @@ async function verifyIdToken(
   const claims = JSON.parse(
     Buffer.from(parts[1], "base64url").toString("utf8"),
   ) as Record<string, unknown>;
-  const employeeId = normalizeEmployeeId(
+  const sageId = normalizeSageId(
     claims.employee_id ??
       claims.employeeId ??
+      claims.sage_id ??
+      claims.sageId ??
       claims.matricule ??
       claims.preferred_username,
   );
@@ -262,9 +287,17 @@ async function verifyIdToken(
     ?.roles ?? []) as unknown[];
   return {
     subject: String(claims.sub ?? ""),
-    employeeId,
+    sageId,
+    employeeId: sageId,
     name: typeof claims.name === "string" ? claims.name : undefined,
     email: typeof claims.email === "string" ? claims.email : undefined,
+    phone:
+      typeof claims.phone_number === "string"
+        ? claims.phone_number
+        : typeof claims.phone === "string"
+          ? claims.phone
+          : undefined,
+    emailVerified: claims.email_verified === true,
     username:
       typeof claims.preferred_username === "string"
         ? claims.preferred_username

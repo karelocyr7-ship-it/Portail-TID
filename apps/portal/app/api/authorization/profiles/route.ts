@@ -16,50 +16,52 @@ export async function POST(request: Request) {
     }
     const identity = await verifyApplicationIdToken(idToken, application);
     const prisma = getPrisma();
-    const userInclude = {
-      assignments: {
-        where: {
-          profile: {
-            active: true,
-            application: { code: application, active: true },
-          },
-        },
-        select: { profile: { select: { key: true } } },
+    const user = await prisma.portalUser.findFirst({
+      where: {
+        OR: [
+          { keycloakSubject: identity.subject },
+          ...(identity.sageId ? [{ sageEmployeeId: identity.sageId }] : []),
+          ...(identity.employeeId ? [{ employeeId: identity.employeeId }] : []),
+          ...(identity.email
+            ? [
+                {
+                  email: {
+                    equals: identity.email,
+                    mode: "insensitive" as const,
+                  },
+                },
+              ]
+            : []),
+        ],
       },
-    } as const;
-
-    // The portal provisions access by Keycloak subject. If Keycloak has
-    // re-created a user, the verified email is the only safe recovery key
-    // available to this endpoint. Keep subject lookup authoritative and use
-    // the email only when no subject record exists, without changing stored
-    // identities implicitly.
-    const subjectUser = await prisma.portalUser.findUnique({
-      where: { keycloakSubject: identity.subject },
-      include: userInclude,
-    });
-    const user =
-      subjectUser ??
-      (identity.employeeId
-        ? await prisma.portalUser.findUnique({
-            where: { employeeId: identity.employeeId },
-            include: userInclude,
-          })
-        : null) ??
-      (identity.email
-        ? await prisma.portalUser.findFirst({
-            where: {
-              email: { equals: identity.email, mode: "insensitive" },
+      include: {
+        assignments: {
+          where: {
+            profile: {
+              active: true,
+              application: { code: application, active: true },
             },
-            include: userInclude,
-          })
-        : null);
+          },
+          select: { profile: { select: { key: true } } },
+        },
+      },
+    });
+    const profiles = user?.active
+      ? user.assignments.map(({ profile }) => profile.key)
+      : [];
     return NextResponse.json({
       lookup: true,
       subject: identity.subject,
+      identity: {
+        employeeId: identity.employeeId ?? null,
+        email: user?.email ?? identity.email ?? null,
+        name: user?.displayName ?? identity.name ?? null,
+        phone: user?.phone ?? identity.phone ?? null,
+      },
       active: Boolean(user?.active),
-      profiles: user?.active
-        ? user.assignments.map(({ profile }) => profile.key)
-        : [],
+      authorized: Boolean(user?.active) && profiles.length > 0,
+      profiles,
+      revision: user?.updatedAt.toISOString() ?? null,
     });
   } catch {
     return NextResponse.json(

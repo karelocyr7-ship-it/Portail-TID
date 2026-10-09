@@ -36,6 +36,19 @@ Les prérequis système `bubblewrap` et `ripgrep` sont installés sur la VM du
 Portail. Le service systemd autorise `AF_NETLINK`, requis par bubblewrap, sans
 accorder d’accès SSH, Docker ou base de données aux agents.
 
+## Synchronisation de la file
+
+Le service Compose `agent-dispatch-worker` synchronise toutes les 15 secondes
+les rapports déposés par les runtimes, les actions approuvées en base et les
+fichiers `.task` de la file technique. Cette synchronisation ne dépend pas de
+l’ouverture de la page « Rapports des agents ».
+
+Le worker accède uniquement à PostgreSQL, aux résultats en lecture seule et à
+la file en écriture. Il ne possède ni socket Docker, ni clé SSH, ni accès aux
+secrets des applications métiers. Le traitement effectif des tâches demeure
+assuré par `tad-agent-start.service`, un agent à la fois, pendant la fenêtre
+19 h 30–5 h 30.
+
 ## n8n local
 
 n8n utilise sa base PostgreSQL dédiée et reste privé. Pour un accès ponctuel,

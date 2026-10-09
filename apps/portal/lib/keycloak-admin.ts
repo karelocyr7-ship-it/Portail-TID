@@ -1,7 +1,5 @@
 type KeycloakUser = {
   id?: string;
-  username?: string;
-  email?: string;
 };
 
 type ProvisionedKeycloakUser = {
@@ -65,6 +63,7 @@ export async function provisionKeycloakUser(input: {
   const email = input.email.trim().toLowerCase();
   if (!email || !email.includes("@"))
     throw new Error("Un e-mail est requis pour créer le compte Keycloak");
+  const username = input.employeeId?.trim() || email;
 
   const token = await getAdminToken();
   const endpoint = `${adminBaseUrl()}/users`;
@@ -76,15 +75,19 @@ export async function provisionKeycloakUser(input: {
     method: "POST",
     headers,
     body: JSON.stringify({
-      username: email,
-      ...(input.employeeId ? { username: input.employeeId } : {}),
+      username,
       email,
       enabled: true,
       emailVerified: false,
       firstName: input.displayName.trim(),
       requiredActions: ["UPDATE_PASSWORD"],
       ...(input.employeeId
-        ? { attributes: { employeeId: [input.employeeId] } }
+        ? {
+            attributes: {
+              sageId: [input.employeeId],
+              employeeId: [input.employeeId],
+            },
+          }
         : {}),
     }),
     cache: "no-store",
@@ -126,8 +129,9 @@ export async function sendKeycloakPasswordReset(
 
   const token = await getAdminToken();
   const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(normalizedSubject)}/execute-actions-email`;
+  const redirectUri = `${required("PORTAL_PUBLIC_URL").replace(/\/+$/, "")}/api/auth/callback`;
   const response = await fetch(
-    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(required("PORTAL_PUBLIC_URL"))}`,
+    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(redirectUri)}`,
     {
       method: "PUT",
       headers: {

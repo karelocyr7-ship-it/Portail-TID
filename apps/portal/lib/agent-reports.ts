@@ -7,7 +7,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
-import { getPrisma } from "@/lib/prisma";
+import { getPrisma } from "./prisma";
 
 const applicationByAgent: Record<string, string> = {
   "tdb-agent": "tdb",

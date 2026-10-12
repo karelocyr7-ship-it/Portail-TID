@@ -54,3 +54,15 @@ pas modifier directement la base de production.
 
 Les URL du catalogue restent modifiables uniquement depuis l’administration ;
 aucune URL métier réelle n’est inventée dans le dépôt.
+
+## Connecteurs de provisionnement
+
+Le worker charge les paramètres de connecteurs depuis
+`/srv/tad/secrets/portal-provisioning-connectors.env` en plus de
+`portal.env`. Ce fichier facultatif doit rester hors Git, appartenir à
+l’utilisateur d’exploitation et être protégé en mode `0600`. Il contient les
+variables `<APPLICATION>_PROVISIONING_URL` et
+`<APPLICATION>_PROVISIONING_TOKEN` pour CASH-RECON, GPARC et RECRUITMENT.
+Chaque application reçoit le même jeton que son connecteur portail, par son
+propre fichier de secrets runtime. Les valeurs ne doivent jamais être
+affichées dans les journaux ni ajoutées au dépôt.

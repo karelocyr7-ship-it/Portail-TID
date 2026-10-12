@@ -49,6 +49,11 @@ agents:
     application: recrutement-om-telco
     scope: [recrutement-om-telco]
     can_execute_production: false
+  - id: sirh-agent
+    type: application
+    application: sirh
+    scope: [sirh]
+    can_execute_production: false
   - id: architecture-review-agent
     type: reviewer
     scope:

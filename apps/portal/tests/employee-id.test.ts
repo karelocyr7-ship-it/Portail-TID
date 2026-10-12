@@ -11,13 +11,10 @@ describe("matricules d’entreprise", () => {
     "TIDC001",
     "TIDPS001",
     "TIDPC001",
-  ])(
-    "accepte %s",
-    (value) => {
-      expect(isEmployeeId(value)).toBe(true);
-      expect(normalizeEmployeeId(value)).toBe(value.toUpperCase());
-    },
-  );
+  ])("accepte %s", (value) => {
+    expect(isEmployeeId(value)).toBe(true);
+    expect(normalizeEmployeeId(value)).toBe(value.toUpperCase());
+  });
 
   it.each([
     "TID",
@@ -27,10 +24,7 @@ describe("matricules d’entreprise", () => {
     "TIDXS001",
     "TIDPCS001",
     "user@example.com",
-  ])(
-    "refuse %s",
-    (value) => {
-      expect(normalizeEmployeeId(value)).toBeUndefined();
-    },
-  );
+  ])("refuse %s", (value) => {
+    expect(normalizeEmployeeId(value)).toBeUndefined();
+  });
 });

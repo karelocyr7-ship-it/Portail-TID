@@ -10,6 +10,7 @@ agent_ids=(
   gparc-agent
   mdm-agent
   recrutement-om-telco-agent
+  sirh-agent
   architecture-review-agent
   security-review-agent
   database-review-agent
@@ -24,6 +25,7 @@ declare -A repository_by_agent=(
   [gparc-agent]="/srv/tad/agents/repositories/gparc"
   [mdm-agent]="/srv/tad/agents/repositories/mdm"
   [recrutement-om-telco-agent]="/srv/tad/agents/repositories/recrutement-om-telco"
+  [sirh-agent]="/srv/tad/agents/repositories/sirh"
 )
 declare -A application_by_agent=(
   [tdb-agent]=tdb
@@ -32,6 +34,7 @@ declare -A application_by_agent=(
   [gparc-agent]=gparc
   [mdm-agent]=mdm
   [recrutement-om-telco-agent]=recrutement-om-telco
+  [sirh-agent]=sirh
 )
 declare -A vm_by_agent=(
   [tdb-agent]=135.125.132.51
@@ -40,6 +43,7 @@ declare -A vm_by_agent=(
   [gparc-agent]=51.91.102.44
   [mdm-agent]=91.134.255.77
   [recrutement-om-telco-agent]=91.134.255.77
+  [sirh-agent]=SIRH-GED
 )
 declare -A environment_by_agent=(
   [tdb-agent]=production
@@ -48,6 +52,7 @@ declare -A environment_by_agent=(
   [gparc-agent]=production
   [mdm-agent]=production
   [recrutement-om-telco-agent]=production
+  [sirh-agent]=development
 )
 state_dir="$agent_root/state"
 pid_file="$state_dir/agent.pid"

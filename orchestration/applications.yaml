@@ -146,11 +146,12 @@ applications:
   - id: sirh
     name: SIRH
     description: Système d'information des ressources humaines
-    vm_alias: tadgroupe.com
-    ssh_user: sirh
+    vm_alias: SIRH-GED
+    vm_address: 152.228.138.54
+    ssh_user: debian
     environment: production
     repository_path: /home/debian/SIRH
-    git_remote: "to_confirm (SSH target given: sirh@tadgroupe.com; host key not verified)"
+    git_remote: ssh://debian@152.228.138.54/home/debian/SIRH
     default_branch: to_confirm
     integration_branch: feature/tad-hr-modern-ui
     deployment_method: to_confirm
@@ -162,4 +163,4 @@ applications:
     criticality: to_confirm
     contains_personal_data: true
     automatic_production_deployment: false
-    evidence: User-provided repository path and feature branch; SSH host-key verification is currently blocked
+    evidence: User-provided VM hostname, IP, repository path and branch; SSH host key verified against console fingerprint; source accessed read-only

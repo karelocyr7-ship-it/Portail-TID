@@ -117,8 +117,8 @@ export async function POST(request: Request) {
             phone: payload.phone || null,
             displayName: payload.displayName,
             active: true,
-      },
-    });
+          },
+        });
     for (const profile of defaults) {
       await transaction.userApplicationProfile.upsert({
         where: {

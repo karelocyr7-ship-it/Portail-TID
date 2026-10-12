@@ -46,6 +46,11 @@ agents:
     application: recrutement-om-telco
     enabled: true
     repository_access: mirror-required
+  - id: sirh-agent
+    application: sirh
+    enabled: false
+    blocked_reason: "Miroir absent et vérification de clé d'hôte SSH échouée; attendre une empreinte vérifiée"
+    repository_access: mirror-required
 
 review_agents:
   - architecture-review-agent
@@ -75,3 +80,5 @@ activation:
   disabled_agents:
     - id: atf-agent
       reason: "Miroir du dépôt et confinement sans secrets à préparer"
+    - id: sirh-agent
+      reason: "Miroir absent et empreinte de l'hôte SSH à vérifier"

@@ -142,3 +142,24 @@ applications:
     contains_personal_data: true
     automatic_production_deployment: false
     evidence: VM audit 2026-07-28; Git status, remote and Compose metadata
+
+  - id: sirh
+    name: SIRH
+    description: Système d'information des ressources humaines
+    vm_alias: tadgroupe.com
+    ssh_user: sirh
+    environment: production
+    repository_path: /home/debian/SIRH
+    git_remote: "to_confirm (SSH target given: sirh@tadgroupe.com; host key not verified)"
+    default_branch: to_confirm
+    integration_branch: feature/tad-hr-modern-ui
+    deployment_method: to_confirm
+    compose_file: to_confirm
+    healthcheck_url: to_confirm
+    agent_file: AGENTS.md
+    documentation_path: to_confirm
+    owner_agent: sirh-agent
+    criticality: to_confirm
+    contains_personal_data: true
+    automatic_production_deployment: false
+    evidence: User-provided repository path and feature branch; SSH host-key verification is currently blocked

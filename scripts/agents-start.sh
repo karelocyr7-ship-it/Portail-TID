@@ -102,7 +102,8 @@ application_id="${application_by_agent[$job_agent]:-unknown}"
 target_vm="${vm_by_agent[$job_agent]:-to_confirm}"
 target_environment="${environment_by_agent[$job_agent]:-to_confirm}"
 repository="${repository_by_agent[$job_agent]:-}"
-if [[ -n "$repository" && -d "$repository/.git" && -z "$(find "$workspace" -mindepth 1 -print -quit 2>/dev/null)" ]]; then
+if [[ -n "$repository" && -d "$repository" && -z "$(find "$workspace" -mindepth 1 -print -quit 2>/dev/null)" ]] \
+  && git -C "$repository" rev-parse --git-dir >/dev/null 2>&1; then
   git clone --quiet --no-local "$repository" "$workspace"
   git -C "$workspace" checkout -q -b "agent/$job_agent/$(basename "$job" .task)"
 fi

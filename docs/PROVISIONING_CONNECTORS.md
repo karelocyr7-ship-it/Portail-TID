@@ -15,6 +15,11 @@ Content-Type: application/json
 x-sirh-provisioning-token: <secret partagé>
 ```
 
+Le récepteur SIRH natif est
+`POST /api/method/hrms_fr_ci.api.provisioning.sync_portal_user`; renseigner
+cette URL HTTPS dans `SIRH_PROVISIONING_URL`. Le SIRH doit avoir un mapping de
+profils validé avant activation; un profil absent ou inconnu est refusé.
+
 Le corps contient `application`, `profile`, `sage_id`, `email`, `first_name`,
 `last_name` et `enabled`. L’application doit créer ou synchroniser uniquement
 le compte minimal demandé par `profile`; elle conserve ensuite la gestion de

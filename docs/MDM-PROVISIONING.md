@@ -10,12 +10,12 @@ Tous les comptes sont attachés au client maître HMDM, déterminé à partir du
 marqueur `customers.master` (et non d’un ID supposé). Les profils se mappent
 ainsi :
 
-| Profil portail | Rôle HMDM | Portée |
-| --- | --- | --- |
-| `ADMIN` | `Admin` | Administrateur du client maître, pas super-admin global |
-| `USER` | `User` | Utilisateur opérationnel |
-| `OBSERVER` | `Portal Observer` | Lecture des applications, fichiers et détails des appareils |
-| `adminportail@tadgroupe.com` + `ADMIN` | `Super-Admin` | Exception globale explicitement autorisée |
+| Profil portail                         | Rôle HMDM         | Portée                                                      |
+| -------------------------------------- | ----------------- | ----------------------------------------------------------- |
+| `ADMIN`                                | `Admin`           | Administrateur du client maître, pas super-admin global     |
+| `USER`                                 | `User`            | Utilisateur opérationnel                                    |
+| `OBSERVER`                             | `Portal Observer` | Lecture des applications, fichiers et détails des appareils |
+| `adminportail@tadgroupe.com` + `ADMIN` | `Super-Admin`     | Exception globale explicitement autorisée                   |
 
 Une révocation sans compte existant est un succès sans création. La révocation
 d’un compte géré fait tourner son mot de passe aléatoire inconnu, révoque son

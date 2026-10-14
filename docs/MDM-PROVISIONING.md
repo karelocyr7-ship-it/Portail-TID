@@ -10,12 +10,12 @@ Tous les comptes sont attachés au client maître HMDM, déterminé à partir du
 marqueur `customers.master` (et non d’un ID supposé). Les profils se mappent
 ainsi :
 
-| Profil portail | Rôle HMDM | Portée |
-| --- | --- | --- |
-| `ADMIN` | `Admin` | Administrateur du client maître, pas super-admin global |
-| `USER` | `User` | Utilisateur opérationnel |
-| `OBSERVER` | `Portal Observer` | Lecture des applications, fichiers et détails des appareils |
-| `adminportail@tadgroupe.com` + `ADMIN` | `Super-Admin` | Exception globale explicitement autorisée |
+| Profil portail                         | Rôle HMDM         | Portée                                                      |
+| -------------------------------------- | ----------------- | ----------------------------------------------------------- |
+| `ADMIN`                                | `Admin`           | Administrateur du client maître, pas super-admin global     |
+| `USER`                                 | `User`            | Utilisateur opérationnel                                    |
+| `OBSERVER`                             | `Portal Observer` | Lecture des applications, fichiers et détails des appareils |
+| `adminportail@tadgroupe.com` + `ADMIN` | `Super-Admin`     | Exception globale explicitement autorisée                   |
 
 Une révocation sans compte existant est un succès sans création. La révocation
 d’un compte géré fait tourner son mot de passe aléatoire inconnu, révoque son
@@ -33,6 +33,13 @@ valeur de token est fournie par
 mode `0600`; aucune valeur secrète ne va dans Git ou dans Compose.
 
 ## Livraison et retour arrière
+
+La VM héberge actuellement HMDM 5.38.1, mais le seul dépôt source complet
+disponible dans l’espace de travail est basé sur HMDM 5.30.3. Le WAR de cette
+livraison est donc un remplacement volontaire par la version source 5.30.3,
+autorisé explicitement par l’utilisateur, et non une mise à niveau. La base
+est sauvegardée avant migration; les deux changesets ajoutés (index unique
+partiel et rôle de lecture seule) sont réversibles via Liquibase.
 
 1. Construire le WAR et exécuter les tests HMDM dans l’image Maven Java 17.
 2. Avant toute livraison, faire un `pg_dump` complet de la base HMDM et

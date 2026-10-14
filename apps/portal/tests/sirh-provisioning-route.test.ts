@@ -26,22 +26,27 @@ function signedRequest(body: unknown = payload) {
   const signature = createHmac("sha256", secret)
     .update(`${timestamp}.${raw}`)
     .digest("hex");
-  return new Request("https://portal.example.invalid/api/provisioning/sirh/users", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-sirh-timestamp": timestamp,
-      "x-sirh-signature": `sha256=${signature}`,
+  return new Request(
+    "https://portal.example.invalid/api/provisioning/sirh/users",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-sirh-timestamp": timestamp,
+        "x-sirh-signature": `sha256=${signature}`,
+      },
+      body: raw,
     },
-    body: raw,
-  });
+  );
 }
 
 describe("POST /api/provisioning/sirh/users", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SIRH_PROVISIONING_SECRET = secret;
-    mocks.provisionKeycloakUser.mockResolvedValue({ subject: "synthetic-subject" });
+    mocks.provisionKeycloakUser.mockResolvedValue({
+      subject: "synthetic-subject",
+    });
   });
 
   it("crée l'identité Portail sans attribuer d'accès applicatif implicite", async () => {
@@ -85,7 +90,10 @@ describe("POST /api/provisioning/sirh/users", () => {
       portalUser: { update: vi.fn().mockResolvedValue(updated) },
       userApplicationProfile: {
         findMany: vi.fn().mockResolvedValue([
-          { profileId: "synthetic-profile", profile: { applicationId: "synthetic-app" } },
+          {
+            profileId: "synthetic-profile",
+            profile: { applicationId: "synthetic-app" },
+          },
         ]),
       },
       applicationProvisioningOutbox: {
@@ -112,15 +120,20 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(transaction.portalUser.update).toHaveBeenCalledOnce();
     expect(mocks.provisionKeycloakUser).not.toHaveBeenCalled();
     expect(transaction.userApplicationProfile.findMany).toHaveBeenCalledOnce();
-    expect(transaction.applicationProvisioningOutbox.upsert).toHaveBeenCalledOnce();
+    expect(
+      transaction.applicationProvisioningOutbox.upsert,
+    ).toHaveBeenCalledOnce();
   });
 
   it("refuse les requêtes non signées avant tout accès aux comptes", async () => {
     const response = await POST(
-      new Request("https://portal.example.invalid/api/provisioning/sirh/users", {
-        method: "POST",
-        body: JSON.stringify(payload),
-      }),
+      new Request(
+        "https://portal.example.invalid/api/provisioning/sirh/users",
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+        },
+      ),
     );
 
     expect(response.status).toBe(401);

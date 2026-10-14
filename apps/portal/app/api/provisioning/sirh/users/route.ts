@@ -106,7 +106,10 @@ export async function POST(request: Request) {
     if (existing) {
       const assignments = await transaction.userApplicationProfile.findMany({
         where: { userId: user.id },
-        select: { profileId: true, profile: { select: { applicationId: true } } },
+        select: {
+          profileId: true,
+          profile: { select: { applicationId: true } },
+        },
       });
       for (const assignment of assignments) {
         await transaction.applicationProvisioningOutbox.upsert({

@@ -2415,3 +2415,31 @@ avant de conclure que la VM est inaccessible.
     - Seul le frontend a été recréé; backend, SQLite, volume et données
       métier inchangés. Site local/public et API `/api/health` HTTP 200;
       libellé E‑Recharge et style Orange Money présents dans le bundle actif.
+
+114. Provisionnement SIRH → Portail → applications — 14 octobre 2026
+    - Demande utilisateur : « met tout en place pour que ça fonctionne,
+      trouve des solutions pour arriver à ce but »; suivi demandé dans ce
+      fichier README.txt.
+    - La route SIRH du Portail refuse une requête non signée (HTTP 401). Un
+      payload synthétique correctement signé atteint le contrôle de schéma
+      (HTTP 400) sans créer de compte. Aucun secret n’a été affiché.
+    - Correctifs sur branches dédiées : le SIRH ne donne plus implicitement
+      accès à toutes les applications; les profils Portail sont transmis par
+      les connecteurs TDB, GParc et Revue; Recrutement accepte les cinq
+      profils définis et autorise les comptes actifs provisionnés sans leur
+      accorder de privilèges de gestion.
+    - PR ouvertes : Portail #91, TDB #216, GParc #2, Revue-PDV #12 et
+      Recrutement #18. Les tests unitaires synthétiques TDB/GParc/Revue
+      passent. Build Portail et repository-check passent; le contrôle quality
+      de la PR #91 a d’abord échoué sur le format Prettier, corrigé ensuite
+      dans une mise à jour de branche dont la CI doit encore confirmer le
+      résultat. Tests Recrutement non exécutables localement : paramètres
+      Compose manquants et pytest absent.
+    - Les connecteurs ATF et MDM restent à construire/configurer; GParc et
+      Recrutement n’ont pas encore tous les paramètres de connectivité
+      confirmés en production. Aucun déploiement, fusion, création de compte,
+      rejeu de file ou changement de donnée de production n’a été effectué.
+      Ne pas rejouer les anciens jobs sans contrôle ciblé.
+    - Suite : attendre les contrôles CI, terminer les connecteurs ATF/MDM,
+      configurer les secrets par le mécanisme prévu, fusionner après contrôles
+      verts et déployer avec healthcheck et rollback documenté.

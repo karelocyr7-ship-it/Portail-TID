@@ -2415,3 +2415,36 @@ avant de conclure que la VM est inaccessible.
     - Seul le frontend a été recréé; backend, SQLite, volume et données
       métier inchangés. Site local/public et API `/api/health` HTTP 200;
       libellé E‑Recharge et style Orange Money présents dans le bundle actif.
+
+114. État du provisionnement SIRH → Portail → applications — 14 octobre 2026
+    - Dans le code SIRH, la création ou la modification d’un salarié admissible
+      (ID Sage et e-mail renseignés) déclenche la synchronisation vers le
+      Portail. Le contrôle de présence, sans afficher leurs valeurs, a trouvé
+      `portal_provisioning_url` et `portal_provisioning_secret` configurés en
+      production.
+    - L’endpoint public du Portail répond HTTP 401 à une requête POST sans
+      signature. Cela confirme que la route est publiée et que sa protection
+      HMAC rejette une requête non authentifiée; aucune requête signée ni
+      création de compte réel n’a été utilisée pour cette vérification.
+    - Le worker Portail a une URL et un jeton configurés pour TDB,
+      CASH-RECON, REVUE-PDV, SIRH et GED/Drive. Les contrôles HTTP `HEAD`
+      non mutatifs ont répondu respectivement 401, 404, 404, 403 et 403.
+      `HEAD` ne valide pas le contrat de provisioning POST ni la création
+      d’un compte; les réponses 404 de CASH-RECON et REVUE-PDV nécessitent
+      une vérification de route par leurs propriétaires.
+    - Aucun couple URL/jeton n’est configuré dans le worker pour GPARC, ATF,
+      MDM et RECRUITMENT. Pour ces services, les tâches restent en attente de
+      configuration. La documentation des connecteurs indique aussi que
+      chaque application doit livrer son adaptateur de réception compatible.
+    - Le flux SIRH → Portail attribue actuellement les profils minimaux par
+      défaut de toutes les applications actives; ce n’est pas une sélection
+      manuelle par compte. L’administration du Portail permet séparément
+      d’attribuer des applications et crée une tâche par application, mais la
+      création effective dans chaque application dépend de son connecteur et
+      de son endpoint.
+    - Conclusion : le câblage SIRH → Portail est configuré mais n’a pas été
+      validé par une synchronisation signée de bout en bout. La propagation
+      vers les applications n’est pas garantie pour toutes; ne considérer
+      un accès comme provisionné qu’après statut `COMPLETED` et vérification
+      par le propriétaire de l’application. Aucun compte réel n’a été créé
+      ou modifié durant ces contrôles.

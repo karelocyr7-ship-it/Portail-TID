@@ -30,8 +30,11 @@ requête est signée avec HMAC-SHA256 :
 Le secret partagé reste uniquement dans la configuration d’exécution du SIRH
 et du portail. L’onboarding rapproche d’abord l’utilisateur par ID Sage, puis
 par e-mail uniquement si la correspondance est unique. Les profils minimaux
-de toutes les applications actives sont attribués automatiquement ; les
-administrateurs des applications peuvent ensuite affiner les droits.
+ne sont pas attribués automatiquement. L’onboarding crée ou met à jour
+l’identité Portail et son compte Keycloak sans changer les accès applicatifs
+existants. Un administrateur du Portail doit ensuite sélectionner explicitement
+les applications et profils autorisés; chaque sélection produit une demande
+de provisionnement dédiée.
 
 La section **Comptes et profils applicatifs** affiche un répertoire filtrable
 par nom ou e-mail, avec des filtres pour les comptes actifs et désactivés. Un

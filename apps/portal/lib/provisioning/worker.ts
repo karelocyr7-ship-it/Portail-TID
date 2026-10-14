@@ -98,7 +98,7 @@ async function provisionApplication(
       email: job.user.email,
       first_name,
       last_name,
-      enabled: job.status !== "REVOKE",
+      enabled: job.status !== "REVOKE" && job.user.active,
     }),
     signal: AbortSignal.timeout(20_000),
   });

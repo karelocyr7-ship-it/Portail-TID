@@ -12,6 +12,7 @@ const payloadSchema = z.object({
   displayName: z.string().trim().min(1).max(160),
   phone: z.string().trim().max(64).optional(),
   keycloakSubject: z.string().trim().min(1).max(200).optional(),
+  enabled: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
   const sageId = normalizeSageId(payload.sageId);
   if (!sageId)
     return Response.json({ error: "ID Sage invalide" }, { status: 400 });
+  const enabled = payload.enabled ?? true;
 
   const prisma = getPrisma();
   const bySage = await prisma.portalUser.findUnique({
@@ -76,24 +78,6 @@ export async function POST(request: Request) {
       })
     ).subject;
 
-  const defaults = await prisma.applicationProfile.findMany({
-    where: { isDefault: true, active: true, application: { active: true } },
-    select: { id: true, applicationId: true },
-  });
-  const activeApplicationCount = await prisma.application.count({
-    where: { active: true },
-  });
-  if (
-    defaults.length !== activeApplicationCount ||
-    new Set(defaults.map(({ applicationId }) => applicationId)).size !==
-      defaults.length
-  ) {
-    return Response.json(
-      { error: "Profils minimaux des applications non configurés" },
-      { status: 503 },
-    );
-  }
-
   const result = await prisma.$transaction(async (transaction) => {
     const user = existing
       ? await transaction.portalUser.update({
@@ -105,7 +89,7 @@ export async function POST(request: Request) {
             email: payload.email.toLowerCase(),
             phone: payload.phone || null,
             displayName: payload.displayName,
-            active: true,
+            active: enabled,
           },
         })
       : await transaction.portalUser.create({
@@ -116,41 +100,39 @@ export async function POST(request: Request) {
             email: payload.email.toLowerCase(),
             phone: payload.phone || null,
             displayName: payload.displayName,
-            active: true,
+            active: enabled,
           },
         });
-    for (const profile of defaults) {
-      await transaction.userApplicationProfile.upsert({
-        where: {
-          userId_profileId: { userId: user.id, profileId: profile.id },
+    if (existing) {
+      const assignments = await transaction.userApplicationProfile.findMany({
+        where: { userId: user.id },
+        select: {
+          profileId: true,
+          profile: { select: { applicationId: true } },
         },
-        create: {
-          userId: user.id,
-          profileId: profile.id,
-          assignedBy: "SIRH",
-        },
-        update: {},
       });
-      await transaction.applicationProvisioningOutbox.upsert({
-        where: {
-          userId_applicationId: {
-            userId: user.id,
-            applicationId: profile.applicationId,
+      for (const assignment of assignments) {
+        await transaction.applicationProvisioningOutbox.upsert({
+          where: {
+            userId_applicationId: {
+              userId: user.id,
+              applicationId: assignment.profile.applicationId,
+            },
           },
-        },
-        create: {
-          idempotencyKey: `${user.id}:${profile.applicationId}`,
-          userId: user.id,
-          applicationId: profile.applicationId,
-          profileId: profile.id,
-        },
-        update: {
-          profileId: profile.id,
-          status: "PENDING",
-          nextAttemptAt: new Date(),
-          lastError: null,
-        },
-      });
+          create: {
+            idempotencyKey: `${user.id}:${assignment.profile.applicationId}`,
+            userId: user.id,
+            applicationId: assignment.profile.applicationId,
+            profileId: assignment.profileId,
+          },
+          update: {
+            profileId: assignment.profileId,
+            status: "PENDING",
+            nextAttemptAt: new Date(),
+            lastError: null,
+          },
+        });
+      }
     }
     await transaction.auditLog.create({
       data: {
@@ -164,7 +146,8 @@ export async function POST(request: Request) {
           sageEmployeeId: sageId,
           email: payload.email.toLowerCase(),
           displayName: payload.displayName,
-          applicationAccess: "DEFAULT_PROFILES_ASSIGNED",
+          active: enabled,
+          applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
         },
       },
     });
@@ -176,7 +159,8 @@ export async function POST(request: Request) {
       id: result.id,
       sageId,
       keycloakSubject: result.keycloakSubject,
-      applicationAccess: "DEFAULT_PROFILES_ASSIGNED",
+      applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
+      active: enabled,
     },
     { status: existing ? 200 : 201 },
   );

@@ -2428,18 +2428,30 @@ avant de conclure que la VM est inaccessible.
       les connecteurs TDB, GParc et Revue; Recrutement accepte les cinq
       profils définis et autorise les comptes actifs provisionnés sans leur
       accorder de privilèges de gestion.
-    - PR ouvertes : Portail #91, TDB #216, GParc #2, Revue-PDV #12 et
-      Recrutement #18. Les tests unitaires synthétiques TDB/GParc/Revue
-      passent. Build Portail et repository-check passent; le contrôle quality
-      de la PR #91 a d’abord échoué sur le format Prettier, corrigé ensuite
-      dans une mise à jour de branche dont la CI doit encore confirmer le
-      résultat. Tests Recrutement non exécutables localement : paramètres
-      Compose manquants et pytest absent.
-    - Les connecteurs ATF et MDM restent à construire/configurer; GParc et
-      Recrutement n’ont pas encore tous les paramètres de connectivité
-      confirmés en production. Aucun déploiement, fusion, création de compte,
-      rejeu de file ou changement de donnée de production n’a été effectué.
-      Ne pas rejouer les anciens jobs sans contrôle ciblé.
-    - Suite : attendre les contrôles CI, terminer les connecteurs ATF/MDM,
-      configurer les secrets par le mécanisme prévu, fusionner après contrôles
-      verts et déployer avec healthcheck et rollback documenté.
+    - PR fusionnées : Portail #91 et #93, TDB #216, GParc #2, Revue-PDV #12,
+      Recrutement #18–#20 et ATF #6–#7. Le connecteur TDB applique maintenant
+      les profils reconnus et ne crée pas de compte lors d’une révocation.
+    - Le worker Portail reçoit les connecteurs configurés pour TDB,
+      CASH-RECON, REVUE-PDV, GPARC, RECRUTEMENT, ATF, SIRH et GED (Drive).
+      Les requêtes synthétiques authentifiées à profil invalide atteignent
+      les validations applicatives; les requêtes non authentifiées sont
+      rejetées. Aucun vrai compte ni donnée nominative n’a servi aux tests.
+    - Déploiements vérifiés : API TDB (santé HTTPS 200, commit fusionné
+      8d1cdde4), conteneur ATF (sain, SSO sur atf.tadgroupe.com et accès local
+      conservé sur tid.atf.onl), worker Portail et API Recrutement/GParc.
+      Le connecteur GED utilise l’endpoint Drive sécurisé existant; le SIRH
+      et Drive ont rejeté les requêtes synthétiques invalides. Le compte TDB
+      synthétique créé par l’ancienne API lors du premier contrôle a été
+      désactivé puis supprimé de façon ciblée; les contrôles suivants n’ont
+      créé aucun utilisateur.
+    - Sauvegardes avant livraison : base ATF compressée et vérifiée sous
+      `/srv/tad/backups/atf-keycloak-sso/20261014T095812Z/`; base SQLite TDB
+      vérifiée sous `/home/debian/backups/tdb-portal-provisioning/20261014T103147Z/`.
+      Images de retour arrière conservées sur les VM. Aucun secret n’est
+      enregistré dans ce README.
+    - MDM/HMDM reste à faire : aucun `MDM_PROVISIONING_URL/TOKEN` n’est chargé
+      dans le worker et l’API HMDM de provisionnement manque. Le callback OIDC
+      exige encore un utilisateur préexistant. L’identifiant de client/tenant
+      et les rôles HMDM doivent être définis explicitement avant d’activer ce
+      connecteur afin d’éviter une attribution de droits ou d’appareils trop
+      large.

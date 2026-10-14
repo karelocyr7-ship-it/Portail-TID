@@ -1,0 +1,4 @@
+services:
+  hmdm-app:
+    env_file:
+      - /opt/hmdm/secrets/mdm-provisioning.env

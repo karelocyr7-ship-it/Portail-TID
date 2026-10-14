@@ -16,6 +16,27 @@ Après validation, le callback crée aussi le cookie de profil de session attend
 par l’interface Angular. Sa valeur est URL-encodée et ne contient ni
 `authToken`, ni token OIDC, ni mot de passe.
 
+## Provisioning depuis le portail
+
+L’endpoint de provisioning est `POST
+/rest/public/provisioning/users`. Il exige l’en-tête partagé
+`x-sirh-provisioning-token` et le payload commun du portail. Les nouveaux
+comptes sont rattachés à l’unique client maître HMDM. Les profils du portail
+sont associés à `Admin`, `User` et au rôle `Portal Observer`, créé par
+Liquibase avec seulement les permissions de consultation de la liste des
+applications, fichiers et détails des appareils. Seule
+l’adresse `adminportail@tadgroupe.com` avec le profil `ADMIN` reçoit le rôle
+global Super-Admin. Un compte existant non géré par le portail n’est jamais
+écrasé. Une révocation invalide le mot de passe généré et le jeton
+d’authentification HMDM et bloque la connexion OIDC.
+
+La VM MDM reçoit le secret `HMDM_PORTAL_PROVISIONING_TOKEN` via son fichier
+d’environnement runtime. Le worker du portail lit `MDM_PROVISIONING_URL` et
+`MDM_PROVISIONING_TOKEN` depuis
+`/srv/tad/secrets/mdm-provisioning.env`. Le même token doit être posé sur les
+deux VM dans des fichiers distincts protégés en `0600`; il ne doit jamais être
+ajouté au dépôt ou au YAML Compose.
+
 ## Paramètres de déploiement
 
 À fournir uniquement par l’environnement de la VM MDM, jamais dans Git :

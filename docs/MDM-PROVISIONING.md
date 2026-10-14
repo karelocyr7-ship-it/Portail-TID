@@ -41,7 +41,7 @@ mode `0600`; aucune valeur secrète ne va dans Git ou dans Compose.
 3. Installer le WAR validé par remplacement atomique du fichier monté
    `/opt/hmdm/hmdm-oidc.war`, charger l’override
    `integrations/hmdm-oidc/compose.provisioning.yml`, puis recréer uniquement
-   `hmdm-app` (ne pas recréer PostgreSQL).
+   le service Compose `hmdm` (conteneur `hmdm-app`, sans recréer PostgreSQL).
 4. Vérifier l’état du conteneur, la route OIDC (réponse de redirection) et
    l’endpoint de provisioning sans token (403). Avec un payload synthétique
    invalide authentifié, vérifier un refus 400 et l’absence d’écriture en DB.
@@ -53,5 +53,5 @@ L’override Compose charge le token depuis le fichier runtime protégé :
 
 ```sh
 cd /opt/hmdm
-docker compose -f docker-compose.yml -f compose.provisioning.yml up -d --no-deps hmdm-app
+docker compose -f docker-compose.yml -f compose.provisioning.yml up -d --no-deps hmdm
 ```

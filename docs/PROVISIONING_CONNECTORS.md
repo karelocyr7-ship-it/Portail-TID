@@ -46,10 +46,24 @@ Une application non configurée reste dans l’état `WAITING_CONFIG`; son job
 n’est pas supprimé et sera repris après ajout de l’URL et du secret. Les flux
 OIDC et locaux existants restent inchangés.
 
+## Connecteurs SIRH et GED livrés — 15/10/2026
+
+- SIRH : `POST /api/method/hrms_fr_ci.api.provisioning.sync_portal_user`, livré
+  en production avec HRMS 0.4.116 après fusion de la PR SIRH #1.
+- GED : `POST /api/method/hrms_fr_ci_drive.api.sync_employee`, livré en
+  production avec Drive RH 0.2.36 après fusion de la PR SIRH #3. Le profil
+  `PORTAL_ADMIN` est limité côté SIRH à l’adresse admin autorisée, ne nécessite
+  pas de matricule SAGE, et obtient les rôles Drive Admin/System Manager ainsi
+  qu’un accès admin aux équipes existantes et nouvelles.
+- Ces connecteurs provisionnent des comptes applicatifs distincts; cela ne
+  crée pas de SSO et ne partage aucun mot de passe. Les changements de statut
+  d’un job Portal doivent être confirmés par le worker; ne pas corriger
+  directement l’outbox en base.
+
 ## Déploiement côté application
 
-Pour chaque application, il reste à ajouter la route adaptatrice qui traduit
-le profil minimal vers son modèle local, puis à livrer cette route sur sa VM.
-Cette étape est volontairement séparée du portail : elle doit être revue par
-le propriétaire de l’application et ne doit pas contourner ses contrôles
-d’autorisation.
+Les routes SIRH et GED sont livrées sur leurs VM respectives. Pour tout autre
+connecteur restant, ajouter une route adaptatrice qui traduit le profil minimal
+vers le modèle local, puis la livrer sur la VM de l’application. Cette étape
+est volontairement séparée du portail : elle doit être revue par le propriétaire
+de l’application et ne doit pas contourner ses contrôles d’autorisation.

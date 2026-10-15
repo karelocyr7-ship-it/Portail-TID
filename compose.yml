@@ -29,7 +29,7 @@ services:
     build:
       context: .
       dockerfile: apps/portal/Dockerfile
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     restart: unless-stopped
     env_file:
       - /srv/tad/secrets/portal.env
@@ -71,7 +71,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
 
   mail-worker:
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     command: ["node", "apps/portal/.worker-dist/email/worker-entry.js"]
     restart: unless-stopped
     env_file:
@@ -91,7 +91,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
 
   provisioning-worker:
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     command: ["node", "apps/portal/.worker-dist/provisioning/worker-entry.js"]
     restart: unless-stopped
     env_file:

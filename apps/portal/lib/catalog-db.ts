@@ -1,5 +1,9 @@
 import { getPrisma } from "@/lib/prisma";
-import { canReadCatalog, type CatalogApplication } from "@/lib/catalog";
+import {
+  canReadCatalog,
+  getApplicationLaunchUrl,
+  type CatalogApplication,
+} from "@/lib/catalog";
 import { getPortalUserAccess } from "@/lib/portal-users";
 
 export async function getVisibleApplicationsFromDatabase(
@@ -34,23 +38,14 @@ export async function getVisibleApplicationsFromDatabase(
     description: application.description,
     category: application.category.name,
     icon: application.icon,
-    integrationLevel: application.integrationLevel as 1 | 2 | 3,
+    integrationLevel:
+      application.code === "TDB"
+        ? 2
+        : (application.integrationLevel as 1 | 2 | 3),
     active: application.active,
     maintenance: application.maintenance,
     maintenanceMessage: application.maintenanceMessage ?? undefined,
-    url:
-      application.code === "RECRUTEMENT"
-        ? "https://recrut-oci.tadgroupe.com/?sso=1"
-        : application.code === "GPARC"
-          ? "https://gparc.tadgroupe.com/api/oidc/start"
-          : application.code === "MDM"
-            ? "https://mdm.tadgroupe.com/rest/public/auth/oidc/login"
-            : application.code === "REVUE-PDV"
-              ? "https://pdv.tadgroupe.com/api/auth/oidc/start"
-              : application.url ??
-                (application.code === "TDB"
-                  ? "https://perf-tid.tadgroupe.com"
-                  : undefined),
+    url: getApplicationLaunchUrl(application.code, application.url),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }
@@ -71,7 +66,7 @@ export async function getAdminApplications(): Promise<CatalogApplication[]> {
     active: application.active,
     maintenance: application.maintenance,
     maintenanceMessage: application.maintenanceMessage ?? undefined,
-    url: application.url ?? undefined,
+    url: getApplicationLaunchUrl(application.code, application.url),
     roles: application.roles.map((role) => role.keycloakRole) as CatalogApplication["roles"],
   }));
 }

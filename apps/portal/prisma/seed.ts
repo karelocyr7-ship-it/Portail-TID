@@ -325,11 +325,11 @@ async function main() {
               integrationLevel: 2,
             }
           : code === "ATF"
-          ? {
-              url: initialApplicationUrls.ATF,
-              integrationLevel: 2,
-            }
-          : {}),
+            ? {
+                url: initialApplicationUrls.ATF,
+                integrationLevel: 2,
+              }
+            : {}),
       },
       create: {
         code,

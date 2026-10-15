@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   catalogApplications,
   canReadCatalog,
+  getApplicationLaunchUrl,
   getVisibleApplications,
   hasRoleAccess,
 } from "../lib/catalog";
@@ -59,14 +60,18 @@ describe("contrôle d’accès au catalogue", () => {
     expect(hasRoleAccess(revuePdv!, ["SUPERVISEUR"])).toBe(true);
   });
 
-  it("expose Perf-TID avec son nouveau domaine", () => {
+  it("ouvre Perf-TID par OIDC plutôt que de réutiliser une session locale", () => {
     const perfTid = catalogApplications.find(
       (application) => application.code === "TDB",
     );
     expect(perfTid).toMatchObject({
       name: "Perf-TID",
-      url: "https://perf-tid.tadgroupe.com",
+      integrationLevel: 2,
+      url: "https://perf-tid.tadgroupe.com/api/auth/oidc/start",
     });
+    expect(
+      getApplicationLaunchUrl("TDB", "https://perf-tid.tadgroupe.com"),
+    ).toBe("https://perf-tid.tadgroupe.com/api/auth/oidc/start");
   });
 
   it("donne accès à tout le catalogue à PORTAL_ADMIN", () => {

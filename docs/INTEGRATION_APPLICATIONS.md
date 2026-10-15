@@ -31,6 +31,12 @@ non personnel reste à effectuer.
 
 ## Application effective des profils
 
+Perf-TID doit être ouvert via son entrée OIDC
+`https://perf-tid.tadgroupe.com/api/auth/oidc/start`, et non via la racine de
+l’application. Le lien direct à la racine peut réutiliser une session locale
+déjà ouverte dans le navigateur et afficher un autre compte que celui du
+Portail.
+
 La sélection d’un profil dans le portail contrôle actuellement l’accès au
 catalogue et l’habilitation enregistrée pour le compte Keycloak. Les
 applications TDB, Revue-PDV, CASH-RECON et ATF continuent toutefois de vérifier

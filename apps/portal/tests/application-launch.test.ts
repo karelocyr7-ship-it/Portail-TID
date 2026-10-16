@@ -11,9 +11,7 @@ describe("getApplicationLaunchHref", () => {
         },
         "TID0328",
       ),
-    ).toBe(
-      "https://pdv.example.test/api/auth/oidc/start?login_hint=TID0328",
-    );
+    ).toBe("https://pdv.example.test/api/auth/oidc/start?login_hint=TID0328");
   });
 
   it("does not change URLs of applications without identity-bound launch support", () => {

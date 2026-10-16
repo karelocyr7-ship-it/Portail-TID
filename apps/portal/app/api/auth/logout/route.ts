@@ -43,10 +43,7 @@ export async function POST(request: Request) {
   } catch {
     // La déconnexion locale reste valable si Keycloak est momentanément indisponible.
   }
-  const completionUrl = new URL(
-    "/api/auth/logout/complete",
-    publicUrl(),
-  );
+  const completionUrl = new URL("/api/auth/logout/complete", publicUrl());
   completionUrl.searchParams.set(
     "state",
     keycloakSessionsRevoked ? "global-revoked" : "global-unconfirmed",

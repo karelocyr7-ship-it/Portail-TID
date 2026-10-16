@@ -1,5 +1,8 @@
 import { z } from "zod";
-import { provisionKeycloakUser } from "@/lib/keycloak-admin";
+import {
+  provisionKeycloakUser,
+  syncKeycloakUsernameFromSirh,
+} from "@/lib/keycloak-admin";
 import { getPrisma } from "@/lib/prisma";
 import { normalizeSageId } from "@/lib/sage-id";
 import { verifySirhSignature } from "@/lib/sirh-provisioning";
@@ -77,6 +80,8 @@ export async function POST(request: Request) {
         employeeId: sageId,
       })
     ).subject;
+
+  if (existing) await syncKeycloakUsernameFromSirh(keycloakSubject, sageId);
 
   const result = await prisma.$transaction(async (transaction) => {
     const user = existing

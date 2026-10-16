@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   provisionKeycloakUser,
   sendKeycloakPasswordReset,
+  syncKeycloakUsernameFromSirh,
 } from "@/lib/keycloak-admin";
 
 describe("provisionKeycloakUser", () => {
@@ -106,6 +107,50 @@ describe("provisionKeycloakUser", () => {
     const resetRequest = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
       .calls[1]?.[1] as RequestInit;
     expect(JSON.parse(String(resetRequest.body))).toEqual(["UPDATE_PASSWORD"]);
+  });
+
+  it("aligns an existing Keycloak login with the SIRH matricule", async () => {
+    process.env.KEYCLOAK_ISSUER =
+      "https://sso.example.test/auth/realms/tad-groupe";
+    process.env.KEYCLOAK_ADMIN_CLIENT_ID = "portal-provisioner-test";
+    process.env.KEYCLOAK_ADMIN_CLIENT_SECRET = "test-only-secret";
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ access_token: "test-token" }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "subject-123",
+            username: "old-login@example.test",
+            enabled: true,
+            attributes: { department: ["synthetic"] },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(new Response("[]", { status: 200 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(
+      syncKeycloakUsernameFromSirh("subject-123", "tid0328"),
+    ).resolves.toBeUndefined();
+
+    const update = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[3]?.[1] as RequestInit;
+    expect(JSON.parse(String(update.body))).toMatchObject({
+      id: "subject-123",
+      username: "TID0328",
+      enabled: true,
+      attributes: {
+        department: ["synthetic"],
+        employeeId: ["TID0328"],
+        sageId: ["TID0328"],
+      },
+    });
   });
 
   it("resends activation only when a duplicate Keycloak account is awaiting setup", async () => {

@@ -2,8 +2,15 @@
 set -euo pipefail
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+compose() {
+  if [[ -n "${PORTAL_COMPOSE_ENV_FILE:-}" ]]; then
+    docker compose --env-file "$PORTAL_COMPOSE_ENV_FILE" -f "$repo_dir/compose.yml" "$@"
+  else
+    docker compose -f "$repo_dir/compose.yml" "$@"
+  fi
+}
 echo "== Conteneurs =="
-docker compose -f "$repo_dir/compose.yml" ps --all
+compose ps --all
 
 echo "== Ressources =="
 docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}' 2>/dev/null || true

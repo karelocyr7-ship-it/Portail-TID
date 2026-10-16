@@ -1,6 +1,9 @@
 type KeycloakUser = {
   id?: string;
+  username?: string;
   requiredActions?: string[];
+  attributes?: Record<string, unknown>;
+  [key: string]: unknown;
 };
 
 type ProvisionedKeycloakUser = {
@@ -139,6 +142,65 @@ export async function provisionKeycloakUser(input: {
     token,
   );
   return { subject, created: true };
+}
+
+/** Keep an already-linked Keycloak account's login name aligned with the SIRH ID. */
+export async function syncKeycloakUsernameFromSirh(
+  subject: string,
+  employeeId: string,
+): Promise<void> {
+  const username = employeeId.trim().toUpperCase();
+  if (!username) throw new Error("Un matricule SIRH est requis");
+
+  const token = await getAdminToken();
+  const base = adminBaseUrl();
+  const headers = { authorization: `Bearer ${token}` };
+  const userUrl = `${base}/users/${encodeURIComponent(subject)}`;
+  const userResponse = await fetch(userUrl, { headers, cache: "no-store" });
+  if (!userResponse.ok)
+    throw new Error(
+      `Impossible de vérifier le compte Keycloak (HTTP ${userResponse.status})`,
+    );
+  const user = (await userResponse.json()) as KeycloakUser;
+  if (user.username === username) return;
+
+  const collisionUrl = new URL(`${base}/users`);
+  collisionUrl.searchParams.set("username", username);
+  collisionUrl.searchParams.set("exact", "true");
+  const collisionResponse = await fetch(collisionUrl, {
+    headers,
+    cache: "no-store",
+  });
+  if (!collisionResponse.ok)
+    throw new Error(
+      `Impossible de vérifier la disponibilité du matricule Keycloak (HTTP ${collisionResponse.status})`,
+    );
+  const collisions = (await collisionResponse.json()) as KeycloakUser[];
+  if (collisions.some((candidate) => candidate.id !== subject))
+    throw new Error("Le matricule SIRH est déjà utilisé par un autre compte");
+
+  const attributes =
+    user.attributes && typeof user.attributes === "object"
+      ? user.attributes
+      : {};
+  const updateResponse = await fetch(userUrl, {
+    method: "PUT",
+    headers: { ...headers, "content-type": "application/json" },
+    body: JSON.stringify({
+      ...user,
+      username,
+      attributes: {
+        ...attributes,
+        sageId: [username],
+        employeeId: [username],
+      },
+    }),
+    cache: "no-store",
+  });
+  if (!updateResponse.ok)
+    throw new Error(
+      `Mise à jour de l’identifiant Keycloak refusée (HTTP ${updateResponse.status})`,
+    );
 }
 
 async function sendKeycloakActionsEmail(

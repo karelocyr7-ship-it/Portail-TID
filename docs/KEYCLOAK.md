@@ -25,9 +25,21 @@ Seuls les claims utiles (`sub`, nom, groupes et rôles realm) sont conservés da
 un cookie HttpOnly signé avec `SESSION_SECRET`. Les tokens OIDC ne sont jamais
 renvoyés au navigateur ni écrits dans les logs.
 
-La déconnexion locale utilise `/api/auth/logout`. Le client Keycloak doit
-autoriser exactement `${PORTAL_PUBLIC_URL}/api/auth/callback` et le portail doit
-être lancé derrière HTTPS.
+La déconnexion utilise `/api/auth/logout`. Le portail efface son cookie, demande
+à l'API d'administration Keycloak de fermer toutes les sessions du sujet courant,
+puis redirige le navigateur vers la déconnexion OIDC. Le compte de service
+`KEYCLOAK_ADMIN_CLIENT_ID` doit donc conserver le rôle `manage-users` pour
+permettre cette révocation. Le client Keycloak doit autoriser exactement
+`${PORTAL_PUBLIC_URL}/api/auth/callback` et le portail doit être lancé derrière
+HTTPS.
+
+La révocation Keycloak n'invalide les sessions locales d'une application que si
+son client OIDC est configuré pour recevoir la déconnexion propagée et que
+l'application invalide effectivement sa session locale. Les applications qui
+émettent des JWT locaux autonomes ou qui utilisent une session indépendante doivent
+implémenter et tester leur propre révocation avant que la déconnexion puisse
+être annoncée comme globale. Le portail journalise `GLOBAL_LOGOUT` avec le
+résultat de l'appel Keycloak, sans enregistrer de jeton ou de secret.
 
 Le scope client par défaut `roles` doit inclure le mapper realm roles dans
 l’ID token et UserInfo (`realm_access.roles`). Sans ce réglage, le rôle

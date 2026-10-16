@@ -32,7 +32,16 @@ export default async function ApplicationsPage() {
       ) : (
         <div className="application-grid">
           {applications.map((application) => (
-            <ApplicationCard key={application.code} application={application} />
+            <ApplicationCard
+              key={application.code}
+              application={application}
+              loginHint={
+                session.employeeId ??
+                session.sageId ??
+                session.username ??
+                session.email
+              }
+            />
           ))}
         </div>
       )}

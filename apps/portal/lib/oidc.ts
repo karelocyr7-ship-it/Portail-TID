@@ -422,7 +422,9 @@ export async function clearSession(): Promise<void> {
   (await cookies()).delete(SESSION_COOKIE);
 }
 
-export async function logoutUrl(): Promise<string | undefined> {
+export async function logoutUrl(options?: {
+  userSessionsRevoked?: boolean;
+}): Promise<string | undefined> {
   const oidc = await configuration();
   if (!oidc.end_session_endpoint) return undefined;
   const url = new URL(oidc.end_session_endpoint);
@@ -430,6 +432,10 @@ export async function logoutUrl(): Promise<string | undefined> {
   url.searchParams.set(
     "post_logout_redirect_uri",
     `${publicUrl()}/api/auth/logout/complete`,
+  );
+  url.searchParams.set(
+    "state",
+    options?.userSessionsRevoked ? "global-revoked" : "global-unconfirmed",
   );
   return url.toString();
 }

@@ -37,8 +37,6 @@ describe("provisionKeycloakUser", () => {
       "https://sso.example.test/auth/realms/tad-groupe";
     process.env.KEYCLOAK_ADMIN_CLIENT_ID = "portal-provisioner-test";
     process.env.KEYCLOAK_ADMIN_CLIENT_SECRET = "test-only-secret";
-    process.env.KEYCLOAK_CLIENT_ID = "tad-portal";
-    process.env.PORTAL_PUBLIC_URL = "https://portail.example.test";
     globalThis.fetch = vi
       .fn()
       .mockResolvedValueOnce(
@@ -71,14 +69,16 @@ describe("provisionKeycloakUser", () => {
     const activationRequest = (globalThis.fetch as ReturnType<typeof vi.fn>)
       .mock.calls[2];
     expect(String(activationRequest?.[0])).toContain(
-      "redirect_uri=https%3A%2F%2Fportail.example.test%2F",
+      "execute-actions-email?lifespan=1800",
     );
+    expect(String(activationRequest?.[0])).not.toContain("redirect_uri");
+    expect(String(activationRequest?.[0])).not.toContain("client_id");
     expect(
       JSON.parse(String((activationRequest?.[1] as RequestInit).body)),
     ).toEqual(["VERIFY_EMAIL", "UPDATE_PASSWORD"]);
   });
 
-  it("uses the portal landing page for password reset links", async () => {
+  it("does not use a client redirect for password reset action emails", async () => {
     process.env.KEYCLOAK_ISSUER =
       "https://sso.example.test/auth/realms/tad-groupe";
     process.env.KEYCLOAK_ADMIN_CLIENT_ID = "portal-provisioner-test";
@@ -100,9 +100,9 @@ describe("provisionKeycloakUser", () => {
     const resetUrl = String(
       (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1]?.[0],
     );
-    expect(resetUrl).toContain(
-      "redirect_uri=https%3A%2F%2Fportail.example.test%2F",
-    );
+    expect(resetUrl).toContain("execute-actions-email?lifespan=1800");
+    expect(resetUrl).not.toContain("redirect_uri");
+    expect(resetUrl).not.toContain("client_id");
     const resetRequest = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
       .calls[1]?.[1] as RequestInit;
     expect(JSON.parse(String(resetRequest.body))).toEqual(["UPDATE_PASSWORD"]);

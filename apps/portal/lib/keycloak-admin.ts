@@ -147,19 +147,17 @@ async function sendKeycloakActionsEmail(
   token: string,
 ): Promise<void> {
   const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(subject)}/execute-actions-email`;
-  const redirectUri = `${required("PORTAL_PUBLIC_URL").replace(/\/+$/, "")}/`;
-  const response = await fetch(
-    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(redirectUri)}`,
-    {
-      method: "PUT",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(actions),
-      cache: "no-store",
+  const url = new URL(endpoint);
+  url.searchParams.set("lifespan", "1800");
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
     },
-  );
+    body: JSON.stringify(actions),
+    cache: "no-store",
+  });
   if (!response.ok) {
     throw new Error(
       `Envoi du lien d’activation Keycloak refusé (HTTP ${response.status})`,

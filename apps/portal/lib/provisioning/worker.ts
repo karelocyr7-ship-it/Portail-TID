@@ -76,7 +76,7 @@ async function claimNextJob() {
   return claimed.count === 1 ? job : null;
 }
 
-async function provisionApplication(
+export async function provisionApplication(
   job: Awaited<ReturnType<typeof claimNextJob>>,
 ) {
   if (!job) return;

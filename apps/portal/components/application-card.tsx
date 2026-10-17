@@ -1,12 +1,17 @@
 import Image from "next/image";
 import type { CatalogApplication } from "@/lib/catalog";
 import { getApplicationIconPath } from "@/lib/application-icons";
+import { getApplicationLaunchHref } from "@/lib/application-launch";
 
 export function ApplicationCard({
   application,
+  loginHint,
 }: {
   application: CatalogApplication;
+  loginHint?: string;
 }) {
+  const launchUrl = getApplicationLaunchHref(application, loginHint);
+
   return (
     <article className="application-card">
       <div className="application-icon">
@@ -35,8 +40,8 @@ export function ApplicationCard({
             {application.maintenanceMessage ?? "Maintenance en cours"}
           </p>
         )}
-        {application.url ? (
-          <a className="button secondary" href={application.url}>
+        {launchUrl ? (
+          <a className="button secondary" href={launchUrl}>
             Ouvrir l’application
           </a>
         ) : (

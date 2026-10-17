@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  logoutKeycloakUser,
   provisionKeycloakUser,
   sendKeycloakPasswordReset,
   syncKeycloakUsernameFromSirh,
@@ -107,6 +108,31 @@ describe("provisionKeycloakUser", () => {
     const resetRequest = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
       .calls[1]?.[1] as RequestInit;
     expect(JSON.parse(String(resetRequest.body))).toEqual(["UPDATE_PASSWORD"]);
+  });
+
+  it("ends all Keycloak sessions for the requested user without logging credentials", async () => {
+    process.env.KEYCLOAK_ISSUER =
+      "https://sso.example.test/auth/realms/tad-groupe";
+    process.env.KEYCLOAK_ADMIN_CLIENT_ID = "portal-provisioner-test";
+    process.env.KEYCLOAK_ADMIN_CLIENT_SECRET = "test-only-secret";
+    globalThis.fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ access_token: "test-token" }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await expect(logoutKeycloakUser("subject-123")).resolves.toBeUndefined();
+    const [url, init] = (globalThis.fetch as ReturnType<typeof vi.fn>).mock
+      .calls[1] as [string, RequestInit];
+    expect(url).toBe(
+      "https://sso.example.test/auth/admin/realms/tad-groupe/users/subject-123/logout",
+    );
+    expect(init.method).toBe("POST");
+    expect(init.headers).toMatchObject({ authorization: "Bearer test-token" });
+    expect(init.body).toBeUndefined();
   });
 
   it("aligns an existing Keycloak login with the SIRH matricule", async () => {

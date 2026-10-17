@@ -37,6 +37,7 @@ contient aucun jeton :
   "active": true,
   "authorized": true,
   "profiles": ["PROFILE_KEY"],
+  "primaryProfile": "PROFILE_KEY",
   "revision": "2026-07-29T00:00:00.000Z"
 }
 ```
@@ -66,3 +67,65 @@ Avant son activation dans le catalogue, une nouvelle application doit :
 3. consommer cet endpoint et appliquer les profils portail ;
 4. documenter son mapping de profils, sa synchronisation et son rollback ;
 5. fournir des tests de création, changement de profil et désactivation.
+
+## Sélection du profil applicatif
+
+`profiles` contient les profils actifs attribués, dans un ordre déterministe.
+`primaryProfile` est le premier de cette liste, ou `null` sans autorisation.
+Les connecteurs historiques qui prennent le premier élément bénéficient ainsi
+de la même sélection que le provisioning. Aucun profil absent des attributions
+n'est ajouté et les permissions ne sont pas fusionnées.
+
+Priorités de sélection (de gauche à droite) :
+
+| Application | Profils |
+| --- | --- |
+| REVUE-PDV | super_admin, admin, ro, rc, sup_orange, rz, auditeur |
+| CASH-RECON | ADMIN, DAF, DG, TRESORIER, CASH_MANAGER, VIEWER |
+| TDB | ADMIN, MANAGER, SUPERVISOR, DIRECTION, VIEWER |
+| GPARC | ADMIN, DAF, CHAUFFEUR_GESTIONNAIRE, GESTIONNAIRE, CHAUFFEUR |
+| MDM | ADMIN, USER, OBSERVER |
+| ATF | ADMIN, USER, OBSERVER, OBSERVER_LIMITED |
+| RECRUTEMENT | RECRUT_OCI_ADMIN, RECRUT_OCI_GESTIONNAIRE, RECRUT_OCI_RO, RECRUT_OCI_SUPERVISEUR, RECRUT_OCI_DIRECTION |
+
+Cette priorité détermine le profil d'ouverture, pas une hiérarchie universelle
+de permissions. Pour les autres applications, l'ordre du catalogue
+`ApplicationProfile.displayOrder` s'applique, puis la clé départage les égalités.
+Les profils non répertoriés restent présents après les profils répertoriés.
+Un compte inactif reçoit une liste vide, `primaryProfile: null` et
+`authorized: false`.
+
+Le worker relit les attributions actives avant chaque envoi. Une ancienne tâche
+qui contient un profil remplacé ne doit pas rétablir ce profil. La suppression
+d'un seul profil conserve l'accès si un autre profil actif reste attribué ;
+la suppression de tous les profils ou la désactivation du compte retire l'accès.
+Le profil conservé dans un message de désactivation est uniquement une valeur
+technique historique : `enabled` reste faux.
+
+## Validation et livraison de la sélection
+
+Tests ciblés sans dépendances :
+`node --test apps/portal/tests/application-profile-priority.node.mjs`.
+Ils vérifient les sept politiques, l'indépendance de l'ordre des attributions,
+l'absence d'élévation depuis un profil unique, le catalogue de secours et les
+comptes sans autorisation. Ils ne remplacent pas les tests d'intégration API,
+Prisma, worker et de connexion réelle.
+
+Avant fusion, exécuter `make lint`, `make typecheck`, `make test`, `make build`
+et la compilation `build:worker` dans l'environnement prévu. Déployer ensemble
+le portail et le worker par la procédure du README, après validation et
+confirmation. Aucune migration de schéma n'est nécessaire.
+
+Contrôler après livraison, avec des comptes de test autorisés, le profil obtenu
+à la reconnexion et après provisioning pour chaque application. Revue-PDV,
+CASH-RECON et TDB ont des consommateurs du contrat identifiés dans le code ;
+les autres connecteurs restent à vérifier de bout en bout. Une application
+qui ignore ce contrat ne bénéficie pas automatiquement de cette correction.
+Les sessions déjà ouvertes peuvent conserver leur profil jusqu'au prochain
+contrôle. Aucun traitement massif des comptes ni changement Android n'est inclus.
+
+Rollback : rétablir les images précédentes du portail et du worker par la
+procédure du README, sans supprimer de données ni de volumes. Les projections
+applicatives déjà mises à jour ne sont pas annulées par un retour d'image ;
+les contrôler puis les resynchroniser depuis les attributions du portail si
+nécessaire. Ne pas restaurer une base pour annuler cette seule modification.

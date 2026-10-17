@@ -12,7 +12,7 @@
     "smtp:worker": "tsx scripts/mail-worker.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run && node --test tests/*.node.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

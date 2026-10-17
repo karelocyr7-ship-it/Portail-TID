@@ -1,3 +1,4 @@
+import { applicationProfileAccess } from "../application-profile-priority.js";
 import { randomUUID } from "node:crypto";
 import { getPrisma } from "../prisma";
 
@@ -75,12 +76,32 @@ async function claimNextJob() {
   return claimed.count === 1 ? job : null;
 }
 
-async function provisionApplication(
+export async function provisionApplication(
   job: Awaited<ReturnType<typeof claimNextJob>>,
 ) {
   if (!job) return;
   const connector = connectorFor(job.application.code);
   if (!connector) return "WAITING_CONFIG" as const;
+  // Re-read current assignments: the queued profile may have been replaced.
+  const currentUser = await getPrisma().portalUser.findUnique({
+    where: { id: job.user.id },
+    include: {
+      assignments: {
+        where: {
+          profile: {
+            active: true,
+            application: { id: job.application.id, active: true },
+          },
+        },
+        select: { profile: { select: { key: true, displayOrder: true } } },
+      },
+    },
+  });
+  const access = applicationProfileAccess(
+    job.application.code,
+    Boolean(currentUser?.active),
+    currentUser?.assignments.map(({ profile }) => profile) ?? [],
+  );
   const { first_name, last_name } = splitDisplayName(job.user.displayName);
   const response = await fetch(connector.url, {
     method: "POST",
@@ -93,12 +114,12 @@ async function provisionApplication(
     },
     body: JSON.stringify({
       application: job.application.code,
-      profile: job.profile.key,
+      profile: access.primaryProfile ?? job.profile.key,
       sage_id: job.user.sageEmployeeId ?? job.user.employeeId,
       email: job.user.email,
       first_name,
       last_name,
-      enabled: job.status !== "REVOKE" && job.user.active,
+      enabled: access.authorized,
     }),
     signal: AbortSignal.timeout(20_000),
   });

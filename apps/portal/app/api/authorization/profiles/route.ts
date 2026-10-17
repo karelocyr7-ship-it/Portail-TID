@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { applicationProfileAccess } from "@/lib/application-profile-priority.js";
 import { getPrisma } from "@/lib/prisma";
 import { verifyApplicationIdToken } from "@/lib/oidc";
 
@@ -42,13 +43,15 @@ export async function POST(request: Request) {
               application: { code: application, active: true },
             },
           },
-          select: { profile: { select: { key: true } } },
+          select: { profile: { select: { key: true, displayOrder: true } } },
         },
       },
     });
-    const profiles = user?.active
-      ? user.assignments.map(({ profile }) => profile.key)
-      : [];
+    const access = applicationProfileAccess(
+      application,
+      Boolean(user?.active),
+      user?.assignments.map(({ profile }) => profile) ?? [],
+    );
     return NextResponse.json({
       lookup: true,
       subject: identity.subject,
@@ -59,8 +62,7 @@ export async function POST(request: Request) {
         phone: user?.phone ?? identity.phone ?? null,
       },
       active: Boolean(user?.active),
-      authorized: Boolean(user?.active) && profiles.length > 0,
-      profiles,
+      ...access,
       revision: user?.updatedAt.toISOString() ?? null,
     });
   } catch {

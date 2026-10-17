@@ -78,14 +78,14 @@ n'est ajouté et les permissions ne sont pas fusionnées.
 
 Priorités de sélection (de gauche à droite) :
 
-| Application | Profils |
-| --- | --- |
-| REVUE-PDV | super_admin, admin, ro, rc, sup_orange, rz, auditeur |
-| CASH-RECON | ADMIN, DAF, DG, TRESORIER, CASH_MANAGER, VIEWER |
-| TDB | ADMIN, MANAGER, SUPERVISOR, DIRECTION, VIEWER |
-| GPARC | ADMIN, DAF, CHAUFFEUR_GESTIONNAIRE, GESTIONNAIRE, CHAUFFEUR |
-| MDM | ADMIN, USER, OBSERVER |
-| ATF | ADMIN, USER, OBSERVER, OBSERVER_LIMITED |
+| Application | Profils                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------ |
+| REVUE-PDV   | super_admin, admin, ro, rc, sup_orange, rz, auditeur                                                   |
+| CASH-RECON  | ADMIN, DAF, DG, TRESORIER, CASH_MANAGER, VIEWER                                                        |
+| TDB         | ADMIN, MANAGER, SUPERVISOR, DIRECTION, VIEWER                                                          |
+| GPARC       | ADMIN, DAF, CHAUFFEUR_GESTIONNAIRE, GESTIONNAIRE, CHAUFFEUR                                            |
+| MDM         | ADMIN, USER, OBSERVER                                                                                  |
+| ATF         | ADMIN, USER, OBSERVER, OBSERVER_LIMITED                                                                |
 | RECRUTEMENT | RECRUT_OCI_ADMIN, RECRUT_OCI_GESTIONNAIRE, RECRUT_OCI_RO, RECRUT_OCI_SUPERVISEUR, RECRUT_OCI_DIRECTION |
 
 Cette priorité détermine le profil d'ouverture, pas une hiérarchie universelle

@@ -60,3 +60,18 @@ comptes et mots de passe personnels nouveaux ; ne pas restaurer la base sur des
 Tout futur changement de version Keycloak impose une nouvelle recette SPI.
 
 État à cette entrée : candidat testé, non fusionné et non déployé.
+
+## Première tentative de bascule et garde de santé
+
+PR #106 fusionnée dans ad9f76d. Tentative Keycloak du 18/10 : sauvegarde
+tad-20261018T185910Z.tar.gz, santé Docker atteinte mais découverte publique 503 ;
+retour automatique à l'image amont précédente réussi, découverte publique 200.
+SIRH non basculé. Le contrôle existant cherchait simplement UP dans la réponse,
+ce qui accepte aussi un composant UP quand l'état global est DOWN. Le correctif
+de procédure impose désormais HTTP 200 sur readiness et une attente bornée de
+la découverte publique, sans contourner le rollback en cas d'échec persistant.
+
+Le contrôle complémentaire SIRH a détecté la sérialisation native de l'objet User
+avec son attribut privé de provisoire dans create_contact. La livraison SIRH
+reste conditionnée au correctif et au scan effectif des jobs RQ, pas seulement
+à l'inspection de leurs arguments affichables.

@@ -73,6 +73,7 @@ temporaire ne fournit pas à elle seule une preuve d'exclusion des actions
 de changement déjà ouvertes. Aucun contournement de ce type n'est livré.
 
 Sources amont inspectées (aucune source amont modifiée) :
+
 - https://github.com/keycloak/keycloak/blob/26.6.2/services/src/main/java/org/keycloak/credential/PasswordCredentialProvider.java
 - https://github.com/keycloak/keycloak/blob/26.6.2/services/src/main/java/org/keycloak/services/resources/LoginActionsService.java
 

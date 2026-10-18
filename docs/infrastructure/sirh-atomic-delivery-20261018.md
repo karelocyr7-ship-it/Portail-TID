@@ -1,4 +1,54 @@
-# Relais initial SIRH — candidate atomique du 18 octobre 2026
+# Relais initial SIRH — livraison atomique du 18 octobre 2026
+
+## Livraison portail et Keycloak, 19 h 14 UTC
+
+PR #106 et #107 fusionnées ; version applicative déployée :
+`d5bdf1ac8f1a5b97b852a03fdd8682e93d73cef8`. Image portail/2 workers
+`tad-portal:d5bdf1ac8f1a`, image Keycloak
+`tad-keycloak:initial-access-26.6.2-v1`. Santé portail et découverte OIDC HTTP
+200, workers running. Sonde authentifiée Keycloak vide refusée avant toute
+opération utilisateur ; garde atomique disponible. Sonde HTTPS/HMAC depuis le
+SIRH de production refusée en validation de contrat (400), donc liaison signée
+effective, sans création ni modification de compte.
+
+Sauvegardes de bascule : `tad-20261018T191041Z.tar.gz` (Keycloak),
+`tad-20261018T191222Z.tar.gz` (portail, 6/6 empreintes vérifiées).
+Restauration effective des trois bases isolées réussie avant bascule depuis
+`tad-20261018T184919Z.tar.gz`. Retour portail par `scripts/rollback.sh`, image
+`tad-portal:rollback-20261018T191224Z-404ce31f9652cb681657ffe429f677a3dba95c1d4545f3f330730bb6bdd8397f`.
+Retour Keycloak vers l'image 26.6.2 d'origine
+`sha256:f9ba7b2af90db8dc749a57ca9aedca51e840cb9224441ab546a968da941da900`,
+uniquement après retour SIRH et arrêt du nouveau relais.
+
+Complément de recette finale : 57 tests ciblés SIRH, chaîne intégrée réelle
+salarié sans e-mail, reprise après panne, prestataire et stagiaire. Scan des
+vrais payloads RQ (y compris sérialisation binaire compressée) et journaux :
+aucune occurrence des secrets synthétiques après correction. Le test navigateur
+de présentation RH intercepte seulement l'endpoint de reprise pour empêcher
+le clone Web de joindre le connecteur de production ; le relais serveur réel
+est testé séparément avec TLS/HMAC sous les permissions RH synthétiques.
+Le parcours navigateur Keycloak/portail, lui, n'est pas simulé.
+
+## SIRH livré et reprise RH disponible
+
+PR SIRH #10–11, main `46b8656cd795e2b675c24ce052a4779efed0ac5c`, HRMS 0.4.129.
+Six services sur `srih-ged/hrms:atomic-initial-access-0.4.129-20261018`, image
+`sha256:355c640a16d4755582434ef6f574551f07c92e36d55281e60a5f00002669452b`.
+Migration et santé finales réussies, JS/CSS HTTP 200 ; Drive .36 inchangé.
+Backup `/home/debian/SIRH/backups/20261018T191651Z`, 11/11 empreintes.
+Restauration préalable du backup 185027Z en MariaDB isolée : 919 tables HRMS,
+274 tables Drive. Procédure RH et rollback SIRH : `INITIAL_ACCESS_DELIVERY.txt`
+dans le dépôt SIRH. Retour HRMS vers `reconciled-password-reset-20261018` avec
+`scripts/deploy_password_reset.sh` avant tout retrait du relais portail/Keycloak.
+
+TID1000 relu après livraison : fiche active unique, login activé, génération 0 ;
+Keycloak activé, zéro credential et UPDATE_PASSWORD en attente. Aucun reset ou
+essai sur ce compte. La reprise RH est livrée : Personnel > Employés > TID1000 >
+Accès portail, confirmer puis remettre le provisoire affiché une seule fois.
+La remise RH et le choix du mot de passe personnel par le titulaire restent
+à effectuer ; ne pas confondre mécanisme livré et compte déjà activé.
+
+Les états « candidat/non déployé » ci-dessous sont des notes historiques.
 
 Autorisation explicite : extension Keycloak, branches/PR de cette correction,
 fusion et déploiement après contrôles. Aucun push direct sur main. Les changements

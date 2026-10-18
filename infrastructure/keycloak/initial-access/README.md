@@ -1,6 +1,6 @@
 # Initialisation atomique des accès SIRH
 
-Extension autorisée, candidate non déployée. Keycloak **26.6.2 uniquement**,
+Extension autorisée et déployée le 18/10/2026. Keycloak **26.6.2 uniquement**,
 PostgreSQL obligatoire. Aucune source amont modifiée, aucune dépendance Java
 supplémentaire embarquée. Compilation avec les bibliothèques exactes de l'image.
 Les SPI internes sont sensibles aux versions : retester avant toute mise à jour.

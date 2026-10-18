@@ -153,13 +153,11 @@ try {
     await page
       .getByRole("searchbox", { name: "Rechercher un salarié" })
       .fill(config.identity.sageId);
-    const row = page
-      .locator("tr")
-      .filter({
-        has: page.getByText("SAGE · " + config.identity.sageId, {
-          exact: true,
-        }),
-      });
+    const row = page.locator("tr").filter({
+      has: page.getByText("SAGE · " + config.identity.sageId, {
+        exact: true,
+      }),
+    });
     step = "rh_protected_click";
     await row
       .getByRole("button", { name: "Accès portail", exact: true })

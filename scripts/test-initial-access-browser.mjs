@@ -7,7 +7,11 @@ for await (const chunk of process.stdin) input += chunk;
 const config = JSON.parse(input);
 if (
   config.base !== "http://localhost:18291" ||
-  !config.identity.email.endsWith("@example.invalid")
+  !(
+    config.identity.email.endsWith("@example.invalid") ||
+    (config.identity.email.endsWith("@sirh.invalid") &&
+      /^TIDP000\d{1,10}$/.test(config.identity.sageId))
+  )
 )
   process.exit(2);
 let step = "launch";
@@ -89,6 +93,8 @@ try {
     ...config.identity,
     purpose: "initial-access-v1",
     requestId: randomUUID(),
+    operationId: randomUUID(),
+    generation: 2,
     temporaryPassword: config.temporary,
   });
   assert.equal((await repeated.json()).status, "EXISTING_CREDENTIAL_PROTECTED");

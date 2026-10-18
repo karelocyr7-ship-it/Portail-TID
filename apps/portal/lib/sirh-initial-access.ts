@@ -13,6 +13,11 @@ type User = {
   requiredActions?: string[];
 };
 type Credential = { type: string };
+export type InitialOperation = {
+  operationId: string;
+  generation: number;
+  allowPendingExisting: boolean;
+};
 
 export class InitialAccessError extends Error {
   constructor(public readonly code: string) {
@@ -25,6 +30,7 @@ export async function initializeSirhAccess(
   identity: InitialIdentity,
   password: string | undefined,
   expectedSubject?: string,
+  operation?: InitialOperation,
 ) {
   const token = await getAdminToken();
   const base = adminBaseUrl();
@@ -32,6 +38,50 @@ export async function initializeSirhAccess(
     authorization: `Bearer ${token}`,
     "content-type": "application/json",
   };
+  if (operation) {
+    if (!password) throw new InitialAccessError("INITIAL_PASSWORD_REQUIRED");
+    const issuer = process.env.KEYCLOAK_ISSUER?.replace(/\/+$/, "");
+    if (!issuer)
+      throw new InitialAccessError("IDENTITY_CONFIGURATION_UNAVAILABLE");
+    const response = await fetch(`${issuer}/tad-initial-access`, {
+      method: "POST",
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify({
+        ...identity,
+        ...operation,
+        temporaryPassword: password,
+        expectedSubject,
+      }),
+    });
+    let outcome;
+    try {
+      outcome = await response.json();
+    } catch {
+      throw new InitialAccessError("ATOMIC_INITIAL_ACCESS_UNAVAILABLE");
+    }
+    const statuses = [
+      "READY",
+      "EXISTING_CREDENTIAL_PROTECTED",
+      "DISABLED",
+      "REVIEW_REQUIRED",
+      "OPERATION_CONFLICT",
+    ];
+    if (
+      !statuses.includes(outcome.status) ||
+      ![200, 409].includes(response.status)
+    )
+      throw new InitialAccessError("ATOMIC_INITIAL_ACCESS_UNAVAILABLE");
+    if (
+      typeof outcome.subject !== "string" ||
+      !/^[a-f0-9-]{36}$/i.test(outcome.subject)
+    )
+      throw new InitialAccessError("IDENTITY_CONFLICT");
+    if (expectedSubject && outcome.subject !== expectedSubject)
+      throw new InitialAccessError("IDENTITY_CONFLICT");
+    return { status: String(outcome.status), subject: String(outcome.subject) };
+  }
   const call = (path: string, options: RequestInit = {}) =>
     fetch(`${base}${path}`, {
       ...options,

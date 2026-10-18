@@ -12,6 +12,9 @@ const schema = z
   .object({
     purpose: z.literal("initial-access-v1"),
     requestId: z.string().uuid(),
+    operationId: z.string().uuid().optional(),
+    generation: z.number().int().min(1).max(2147483647).optional(),
+    allowPendingExisting: z.boolean().optional(),
     sageId: z.string().min(2).max(64),
     email: z.string().email().max(320).optional(),
     firstName: z.string().trim().min(1).max(80),
@@ -48,6 +51,11 @@ export async function POST(request: Request) {
   // leaving an account whose initial credential cannot safely be reissued.
   const sageId = normalizeEmployeeId(parsed.sageId);
   if (!sageId) return reply({ error: "INVALID_MATRICULE" }, 400);
+  if (
+    Boolean(parsed.operationId) !== Boolean(parsed.generation) ||
+    (parsed.allowPendingExisting && !parsed.operationId)
+  )
+    return reply({ error: "INVALID_OPERATION" }, 400);
   let stage = "transaction";
   try {
     const result = await getPrisma().$transaction(
@@ -79,9 +87,21 @@ export async function POST(request: Request) {
         });
         stage = "keycloak";
         const outcome = await initializeSirhAccess(
-          { ...parsed, sageId },
+          {
+            sageId,
+            email: parsed.email,
+            firstName: parsed.firstName,
+            lastName: parsed.lastName,
+          },
           parsed.temporaryPassword,
           existing?.keycloakSubject,
+          parsed.operationId && parsed.generation
+            ? {
+                operationId: parsed.operationId,
+                generation: parsed.generation,
+                allowPendingExisting: parsed.allowPendingExisting ?? false,
+              }
+            : undefined,
         );
         if (
           outcome.subject &&
@@ -112,6 +132,12 @@ export async function POST(request: Request) {
             afterData: {
               status: outcome.status,
               credentialRequested: Boolean(parsed.temporaryPassword),
+              ...(parsed.operationId
+                ? {
+                    operationId: parsed.operationId,
+                    generation: parsed.generation,
+                  }
+                : {}),
             },
           },
         });

@@ -11,6 +11,9 @@ Portail centralisé des applications métiers de TID / TAD Groupe.
 
 ## État du projet
 
+Candidate première connexion SIRH (non déployée) : diagnostic, contrôles et
+blocages dans [le rapport de livraison](docs/infrastructure/sirh-initial-credentials-20261018.md).
+
 Le socle V1 est opérationnel : monolithe modulaire Next.js/TypeScript avec
 PostgreSQL, Prisma, Keycloak, Caddy et Docker Compose. Le flux OIDC du portail
 utilise les rôles realm Keycloak pour filtrer le catalogue côté serveur.

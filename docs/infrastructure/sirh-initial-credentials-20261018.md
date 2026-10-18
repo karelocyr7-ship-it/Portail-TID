@@ -21,7 +21,7 @@ que des codes bornés, jamais les corps des échanges.
 ## Contrôles exécutés
 
 - make lint, make typecheck : réussis.
-- make test : 56 tests Vitest et 12 tests Node réussis.
+- make test : 72 tests Vitest et 12 tests Node réussis (84 au total).
 - make build : échec Turbopack lié aux dépendances symlinkées hors worktree.
 - next build --webpack : réussi, y compris après protection des comptes legacy.
 - Keycloak 26.6.2 et PostgreSQL éphémères isolés : initialisation READY et
@@ -32,6 +32,18 @@ que des codes bornés, jamais les corps des échanges.
   connexion avec le mot de passe personnel après cette synchronisation.
 - Scan des journaux portail et Keycloak isolés : les deux mots de passe
   synthétiques sont absents. Le contrôle des files et logs SIRH reste à finir.
+- Recette isolée rejouée après validation stricte des matricules : les six
+  familles TID/TIDS/TIDC/TIDP/TIDPS/TIDPC et les zéros initiaux sont conservés.
+  Un matricule incompatible avec la contrainte employeeId est refusé avant
+  toute mutation distante ; absence du compte confirmée dans Keycloak.
+- Deux requêtes simultanées, identifiants de requête distincts, même matricule :
+  exactement une réponse READY et une EXISTING_CREDENTIAL_PROTECTED, un seul
+  compte et un seul credential Keycloak. Un compte désactivé reste désactivé.
+- Seize tests de frontière API ajoutés : familles de matricules, rejet précoce,
+  signatures absentes/périmées/futures, rejeu, compte suspendu, conservation
+  des affectations et absence de secret dans les réponses/audits/erreurs.
+  Les tests unitaires de transaction utilisent des mocks ; le test de
+  concurrence ci-dessus utilise réellement PostgreSQL et Keycloak isolés.
 - SIRH isolé : 6 tests de transfert mocké, 4 régressions HTTP de changement
   de mot de passe, 10 tests de fiches/permissions réussis. Build Vue réussi.
 
@@ -49,6 +61,25 @@ salarié SIRH ni la reprise legacy. Aucune réussite globale annoncée.
 3. Recette intégrée SIRH réel isolé → portail, concurrence, panne/reprise,
    vérification finale des logs et des files, encore à terminer.
 4. Migrations et sauvegardes de livraison/rollback à vérifier avant fusion.
+
+### Limite confirmée de la reprise legacy
+
+L'API Admin REST reset-password n'offre pas de précondition « uniquement si
+aucun credential n'existe ». Dans Keycloak 26.6.2, PasswordCredentialProvider
+met à jour le mot de passe existant lorsqu'il en trouve un. Une lecture
+préalable, même sous verrou PostgreSQL du portail, ne sérialise pas les
+changements effectués directement par Keycloak. Une simple désactivation
+temporaire ne fournit pas à elle seule une preuve d'exclusion des actions
+de changement déjà ouvertes. Aucun contournement de ce type n'est livré.
+
+Sources amont inspectées (aucune source amont modifiée) :
+- https://github.com/keycloak/keycloak/blob/26.6.2/services/src/main/java/org/keycloak/credential/PasswordCredentialProvider.java
+- https://github.com/keycloak/keycloak/blob/26.6.2/services/src/main/java/org/keycloak/services/resources/LoginActionsService.java
+
+La protection fail-closed reste volontaire : une reprise ne doit jamais
+écraser un secret personnel. La recette navigateur réussie ci-dessus ne
+valide toujours pas la remise intégrée depuis le formulaire RH, ni la reprise
+après perte de réponse. Ne pas fusionner/déployer cette candidate en l'état.
 
 TID1000 : contrôle en lecture seule, compte activé, actions UPDATE_PASSWORD
 et VERIFY_EMAIL présentes, liste de credentials vide au moment du contrôle.

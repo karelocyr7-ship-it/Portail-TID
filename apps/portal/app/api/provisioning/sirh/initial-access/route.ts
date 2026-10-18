@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import { verifySirhSignature } from "@/lib/sirh-provisioning";
-import { normalizeSageId } from "@/lib/sage-id";
+import { normalizeEmployeeId } from "@/lib/employee-id";
 import {
   initializeSirhAccess,
   InitialAccessError,
@@ -43,7 +43,10 @@ export async function POST(request: Request) {
   } catch {
     return reply({ error: "INVALID_REQUEST" }, 400);
   }
-  const sageId = normalizeSageId(parsed.sageId);
+  // Match the database employeeId constraint before any remote mutation.
+  // Otherwise Keycloak creation could succeed and the local transaction fail,
+  // leaving an account whose initial credential cannot safely be reissued.
+  const sageId = normalizeEmployeeId(parsed.sageId);
   if (!sageId) return reply({ error: "INVALID_MATRICULE" }, 400);
   let stage = "transaction";
   try {

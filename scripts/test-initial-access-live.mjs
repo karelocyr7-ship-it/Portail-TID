@@ -243,6 +243,65 @@ try {
   assert.equal(result.status, 200);
   assert.equal(initial.status, "READY");
   assert.equal((await signed(body)).status, 409);
+  step = "invalid_identity_no_remote_account";
+  const invalidIdentity = "INVALID-SYNTHETIC-000042";
+  const invalid = await signed({
+    ...body,
+    requestId: randomUUID(),
+    sageId: invalidIdentity,
+  });
+  assert.equal(invalid.status, 400);
+  assert.equal(
+    (await api(`realms/${realm}/users?username=${invalidIdentity}&exact=true`))
+      .length,
+    0,
+  );
+  console.log("invalid_identity_rejected_before_keycloak");
+
+  step = "concurrent_initialization";
+  const concurrentIdentity = {
+    ...body,
+    sageId: "TID000000043",
+    email: "initial-concurrent@example.invalid",
+  };
+  const parallel = await Promise.all(
+    [1, 2].map(async () => {
+      const response = await signed({
+        ...concurrentIdentity,
+        requestId: randomUUID(),
+      });
+      assert.equal(response.status, 200);
+      return (await response.json()).status;
+    }),
+  );
+  assert.deepEqual(parallel.sort(), ["EXISTING_CREDENTIAL_PROTECTED", "READY"]);
+  const concurrentUsers = await api(
+    `realms/${realm}/users?username=${concurrentIdentity.sageId}&exact=true`,
+  );
+  assert.equal(concurrentUsers.length, 1);
+  assert.equal(
+    (await api(`realms/${realm}/users/${concurrentUsers[0].id}/credentials`))
+      .length,
+    1,
+  );
+  console.log("concurrent_initialization_single_account_single_credential");
+
+  step = "disabled_account_protection";
+  await api(
+    `realms/${realm}/users/${concurrentUsers[0].id}`,
+    { enabled: false },
+    "PUT",
+  );
+  const disabled = await signed({
+    ...concurrentIdentity,
+    requestId: randomUUID(),
+  });
+  assert.equal((await disabled.json()).status, "DISABLED");
+  assert.equal(
+    (await api(`realms/${realm}/users/${concurrentUsers[0].id}`)).enabled,
+    false,
+  );
+  console.log("disabled_account_not_reactivated");
   step = "browser_tunnel";
   tunnel = spawn(
     "ssh",

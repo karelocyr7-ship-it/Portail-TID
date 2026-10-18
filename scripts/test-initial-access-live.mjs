@@ -59,6 +59,22 @@ async function child(command, args, options = {}) {
         try {
           const info = JSON.parse(line);
           if (
+            info.scanFailure === "log" &&
+            /^[A-Za-z0-9_.-]+$/.test(info.file)
+          ) {
+            console.log(
+              JSON.stringify({
+                scanFailure: "log",
+                file: info.file,
+                categories: info.categories.filter((value) =>
+                  ["rh", "employee", "recovery", "provider", "intern"].includes(
+                    value,
+                  ),
+                ),
+              }),
+            );
+          }
+          if (
             info.status === "failed" &&
             /^[a-z_]+$/.test(info.step) &&
             /^[A-Za-z]+$/.test(info.errorType)

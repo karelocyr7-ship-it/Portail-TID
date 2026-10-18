@@ -49,7 +49,15 @@ trap rollback EXIT
 export KEYCLOAK_IMAGE="$image"
 compose up -d --pull never --no-deps keycloak
 wait_health
-curl --fail --silent --show-error --max-time 15 \
-  https://portail.tadgroupe.com/auth/realms/tad-groupe/.well-known/openid-configuration >/dev/null
+public_ready=0
+for attempt in {1..12}; do
+  if curl --fail --silent --max-time 10 \
+      https://portail.tadgroupe.com/auth/realms/tad-groupe/.well-known/openid-configuration >/dev/null; then
+    public_ready=1
+    break
+  fi
+  sleep 5
+done
+(( public_ready == 1 ))
 trap - EXIT
 printf 'Keycloak initial-access image: %s\nRollback image: %s\n' "$image" "$previous"

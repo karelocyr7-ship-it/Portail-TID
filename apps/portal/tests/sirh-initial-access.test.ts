@@ -17,8 +17,84 @@ const answer = (value: unknown, status = 200, headers = {}) =>
     status,
     headers,
   });
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+});
 describe("SIRH initial credentials", () => {
+  const subject = "00000000-0000-4000-8000-000000000042";
+  const operation = {
+    operationId: "00000000-0000-4000-8000-000000000043",
+    generation: 2,
+    allowPendingExisting: true,
+  };
+  it("relays an explicit generation to the atomic provider without native reset fallback", async () => {
+    vi.stubEnv(
+      "KEYCLOAK_ISSUER",
+      "https://idp.example.invalid/realms/synthetic",
+    );
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(answer({ status: "READY", subject }));
+    vi.stubGlobal("fetch", fetch);
+    const password = randomBytes(24).toString("base64url");
+    expect(
+      await initializeSirhAccess(identity, password, subject, operation),
+    ).toEqual({ status: "READY", subject });
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch.mock.calls[0][0]).toBe(
+      "https://idp.example.invalid/realms/synthetic/tad-initial-access",
+    );
+    const body = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(body.operationId).toBe(operation.operationId);
+    expect(body.generation).toBe(2);
+    expect(body.expectedSubject).toBe(subject);
+    expect(body.temporaryPassword === password).toBe(true);
+  });
+  it.each([503, 404, 401])(
+    "does not fall back when the atomic provider returns %i",
+    async (status) => {
+      vi.stubEnv(
+        "KEYCLOAK_ISSUER",
+        "https://idp.example.invalid/realms/synthetic",
+      );
+      const fetch = vi
+        .fn()
+        .mockResolvedValue(answer({ status: "UNAVAILABLE" }, status));
+      vi.stubGlobal("fetch", fetch);
+      await expect(
+        initializeSirhAccess(
+          identity,
+          randomBytes(24).toString("base64url"),
+          subject,
+          operation,
+        ),
+      ).rejects.toThrow("ATOMIC_INITIAL_ACCESS_UNAVAILABLE");
+      expect(fetch).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("rejects a mismatched atomic response subject", async () => {
+    vi.stubEnv(
+      "KEYCLOAK_ISSUER",
+      "https://idp.example.invalid/realms/synthetic",
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          answer({ status: "READY", subject: operation.operationId }),
+        ),
+    );
+    await expect(
+      initializeSirhAccess(
+        identity,
+        randomBytes(24).toString("base64url"),
+        subject,
+        operation,
+      ),
+    ).rejects.toThrow("IDENTITY_CONFLICT");
+  });
   it("creates a native temporary credential atomically, without mail or role assignment", async () => {
     const password = randomBytes(24).toString("base64url");
     const fetch = vi

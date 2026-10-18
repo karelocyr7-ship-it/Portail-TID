@@ -7,7 +7,11 @@ for await (const chunk of process.stdin) input += chunk;
 const config = JSON.parse(input);
 if (
   config.base !== "http://localhost:18291" ||
-  !config.identity.email.endsWith("@example.invalid")
+  !(
+    config.identity.email.endsWith("@example.invalid") ||
+    (config.identity.email.endsWith("@sirh.invalid") &&
+      /^TIDP000\d{1,10}$/.test(config.identity.sageId))
+  )
 )
   process.exit(2);
 let step = "launch";
@@ -15,7 +19,7 @@ const browser = await chromium.launch({
   headless: true,
   executablePath:
     "/home/debian/.cache/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell",
-  args: ["--no-sandbox"],
+  args: ["--no-sandbox", "--host-resolver-rules=MAP hrms.localhost 127.0.0.1"],
 });
 async function freshLogin(password) {
   const originalStep = step;
@@ -89,6 +93,8 @@ try {
     ...config.identity,
     purpose: "initial-access-v1",
     requestId: randomUUID(),
+    operationId: randomUUID(),
+    generation: 2,
     temporaryPassword: config.temporary,
   });
   assert.equal((await repeated.json()).status, "EXISTING_CREDENTIAL_PROTECTED");
@@ -98,6 +104,98 @@ try {
     .getByRole("heading", { name: "Vos applications", exact: true })
     .waitFor();
   await last.context.close();
+  if (config.rh) {
+    step = "rh_recovery_ui";
+    assert.ok(config.rh.username.endsWith("@example.invalid"));
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    step = "rh_login_page";
+    await page.goto("http://hrms.localhost:18189/login");
+    step = "rh_login_request";
+    const loginStatus = await page.evaluate(
+      async (credentials) => {
+        const response = await fetch("/api/method/login", {
+          method: "POST",
+          body: new URLSearchParams(credentials),
+        });
+        return response.status;
+      },
+      { usr: config.rh.username, pwd: config.rh.password },
+    );
+    assert.equal(loginStatus, 200);
+    // Presentation test only: never let the clone web worker contact its configured
+    // production connector. The real relay was already exercised over isolated TLS.
+    let calls = 0;
+    await page.route(
+      "**/api/method/hrms_fr_ci.api.employees.resume_portal_access",
+      async (route) => {
+        calls++;
+        const message =
+          calls === 1
+            ? { status: "EXISTING_CREDENTIAL_PROTECTED" }
+            : {
+                status: "READY",
+                username: config.identity.sageId,
+                employee_name: "Synthetic Onboarding",
+                temporary_password: config.temporary,
+              };
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ message }),
+        });
+      },
+    );
+    page.on("dialog", (dialog) => dialog.accept());
+    step = "rh_directory";
+    await page.goto("http://hrms.localhost:18189/hr/employees");
+    step = "rh_search";
+    await page
+      .getByRole("searchbox", { name: "Rechercher un salarié" })
+      .fill(config.identity.sageId);
+    const row = page.locator("tr").filter({
+      has: page.getByText("SAGE · " + config.identity.sageId, {
+        exact: true,
+      }),
+    });
+    step = "rh_protected_click";
+    await row
+      .getByRole("button", { name: "Accès portail", exact: true })
+      .click();
+    await page
+      .getByText(
+        "Un accès existe déjà : son mot de passe est protégé et n’a pas été remplacé.",
+        { exact: true },
+      )
+      .waitFor();
+    assert.equal(
+      await page
+        .getByRole("dialog", { name: "Accès portail initialisé" })
+        .count(),
+      0,
+    );
+    step = "rh_ready_click";
+    await row
+      .getByRole("button", { name: "Accès portail", exact: true })
+      .click();
+    const modal = page.getByRole("dialog", {
+      name: "Accès portail initialisé",
+    });
+    await modal.waitFor();
+    assert.ok((await modal.textContent()).includes(config.temporary));
+    await modal
+      .getByRole("button", { name: "J’ai remis les accès, fermer" })
+      .click();
+    assert.equal(
+      await page
+        .getByRole("dialog", { name: "Accès portail initialisé" })
+        .count(),
+      0,
+    );
+    assert.equal(calls, 2);
+    await context.close();
+    console.log("rh_recovery_ui_protected_and_one_time_display_passed");
+  }
   console.log(
     JSON.stringify({
       status: "passed",
@@ -114,7 +212,12 @@ try {
   );
 } catch (error) {
   console.log(
-    JSON.stringify({ status: "failed", step, errorType: error.name }),
+    JSON.stringify({
+      status: "failed",
+      step,
+      errorType: error.name,
+      browserCode: String(error.message).match(/net::ERR_[A-Z_]+/)?.[0] ?? null,
+    }),
   );
   process.exitCode = 1;
 } finally {

@@ -140,11 +140,13 @@ services:
       options: {max-size: "20m", max-file: "5"}
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6.2
+    image: ${KEYCLOAK_IMAGE:-tad-keycloak:initial-access-26.6.2-v1}
     restart: unless-stopped
     command: [start]
     environment:
       KC_DB: postgres
+      TAD_INITIAL_ACCESS_REALM: tad-groupe
+      TAD_INITIAL_ACCESS_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-tad-portal-provisioner}
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD is required}

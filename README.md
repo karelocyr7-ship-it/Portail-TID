@@ -11,6 +11,12 @@ Portail centralisé des applications métiers de TID / TAD Groupe.
 
 ## État du projet
 
+Candidate de relais atomique autorisée le 18/10 : extension Keycloak 26.6.2,
+générations de reprise RH et protection concurrente des mots de passe personnels.
+Chaîne SIRH sans e-mail jusqu'à la reconnexion navigateur validée en isolation.
+Cette candidate n'est pas encore déployée ; procédure et limites dans
+[la documentation de l'extension](infrastructure/keycloak/initial-access/README.md).
+
 API préparatoire de première connexion SIRH : livraison portail seule,
 avec maintien du parcours d’activation existant. Le relais RH SIRH et les
 reprises restent non livrés ; voir [le rapport de livraison](docs/infrastructure/sirh-initial-credentials-20261018.md).

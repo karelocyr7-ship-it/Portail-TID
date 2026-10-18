@@ -2,6 +2,7 @@
 import { spawn, execFileSync } from "node:child_process";
 import { randomBytes, randomUUID, createHmac } from "node:crypto";
 import assert from "node:assert/strict";
+import { createServer as createHttpsServer } from "node:https";
 const root = "/srv/tad/portail-initial-credentials";
 const issuerBase = "http://localhost:18290/auth",
   realm = "synthetic-initial";
@@ -20,6 +21,9 @@ const identity = {
 const created = [];
 let portal,
   tunnel,
+  bridge,
+  tlsServer,
+  bridgePid,
   step = "start",
   captured = "";
 const docker = (args, env = {}) =>
@@ -64,6 +68,21 @@ async function child(command, args, options = {}) {
                 status: "failed",
                 step: info.step,
                 errorType: info.errorType,
+                validationHints: Array.isArray(info.validationHints)
+                  ? info.validationHints.filter((word) =>
+                      [
+                        "matricule",
+                        "date",
+                        "société",
+                        "existe",
+                        "obligatoire",
+                        "permission",
+                        "identifiant",
+                        "courriel",
+                        "e-mail",
+                      ].includes(word),
+                    )
+                  : [],
               }),
             );
         } catch {}
@@ -82,6 +101,8 @@ try {
       "tad-initial-test-db",
       "-p",
       "127.0.0.1:18292:5432",
+      "-p",
+      "127.0.0.1:18290:8080",
       "--tmpfs",
       "/var/lib/postgresql/data",
       "-e",
@@ -93,6 +114,30 @@ try {
       "postgres:16.10-alpine",
     ]),
   );
+  let databaseReady = false;
+  for (let attempt = 0; attempt < 60; attempt++) {
+    try {
+      docker(["exec", "tad-initial-test-db", "pg_isready", "-U", "portaltest"]);
+      databaseReady = true;
+      break;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  assert.ok(databaseReady, "database_ready");
+  docker([
+    "exec",
+    "tad-initial-test-db",
+    "psql",
+    "-U",
+    "portaltest",
+    "-d",
+    "portaltest",
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-c",
+    "CREATE SCHEMA keycloak",
+  ]);
   created.push(
     docker(
       [
@@ -101,16 +146,26 @@ try {
         "--rm",
         "--name",
         "tad-initial-test-keycloak",
-        "-p",
-        "127.0.0.1:18290:8080",
+        "--network",
+        "container:tad-initial-test-db",
         "--tmpfs",
         "/opt/keycloak/data:uid=1000,gid=0",
         "-e",
         "KC_BOOTSTRAP_ADMIN_USERNAME=synthetic-admin",
         "-e",
         "KC_BOOTSTRAP_ADMIN_PASSWORD",
-        "quay.io/keycloak/keycloak:26.6.2",
-        "start-dev",
+        "-e",
+        "TAD_INITIAL_ACCESS_REALM=" + realm,
+        "-e",
+        "TAD_INITIAL_ACCESS_CLIENT_ID=portal-test",
+        "tad-keycloak:initial-access-candidate",
+        "start",
+        "--optimized",
+        "--http-enabled=true",
+        "--hostname-strict=false",
+        "--db-url=jdbc:postgresql://127.0.0.1:5432/portaltest",
+        "--db-username=portaltest",
+        "--db-schema=keycloak",
         "--http-relative-path=/auth",
       ],
       { KC_BOOTSTRAP_ADMIN_PASSWORD: adminPassword },
@@ -228,6 +283,8 @@ try {
     ...identity,
     purpose: "initial-access-v1",
     requestId: randomUUID(),
+    operationId: randomUUID(),
+    generation: 1,
     temporaryPassword: temporary,
   };
   const result = await signed(body);
@@ -274,7 +331,7 @@ try {
       return (await response.json()).status;
     }),
   );
-  assert.deepEqual(parallel.sort(), ["EXISTING_CREDENTIAL_PROTECTED", "READY"]);
+  assert.deepEqual(parallel.sort(), ["READY", "READY"]);
   const concurrentUsers = await api(
     `realms/${realm}/users?username=${concurrentIdentity.sageId}&exact=true`,
   );
@@ -315,6 +372,8 @@ try {
       "127.0.0.1:18290:127.0.0.1:18290",
       "-R",
       "127.0.0.1:18291:127.0.0.1:18291",
+      "-R",
+      "127.0.0.1:18293:127.0.0.1:18293",
       "debian@152.228.138.54",
     ],
     { stdio: "ignore" },
@@ -341,6 +400,150 @@ try {
     },
   );
   console.log(output.trim());
+  if (process.env.TEST_SIRH_CHAIN === "1") {
+    step = "sirh_tls_bridge";
+    const key = execFileSync(
+      "openssl",
+      ["genpkey", "-algorithm", "RSA", "-pkeyopt", "rsa_keygen_bits:2048"],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    const certificate = execFileSync(
+      "bash",
+      [
+        "-c",
+        "cat | openssl req -new -x509 -key /dev/stdin -days 1 -subj /CN=synthetic-initial -addext subjectAltName=IP:192.168.176.1",
+      ],
+      { input: key, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+    );
+    tlsServer = createHttpsServer(
+      { key, cert: certificate },
+      async (request, response) => {
+        if (
+          request.method !== "POST" ||
+          request.url !== "/api/provisioning/sirh/initial-access"
+        ) {
+          response.writeHead(404).end();
+          return;
+        }
+        try {
+          const chunks = [];
+          let size = 0;
+          for await (const chunk of request) {
+            size += chunk.length;
+            if (size > 4096) throw Error("size");
+            chunks.push(chunk);
+          }
+          const upstream = await fetch("http://127.0.0.1:18291" + request.url, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-sirh-timestamp": request.headers["x-sirh-timestamp"],
+              "x-sirh-signature": request.headers["x-sirh-signature"],
+            },
+            body: Buffer.concat(chunks),
+          });
+          response.writeHead(upstream.status, {
+            "content-type": "application/json",
+            "cache-control": "no-store",
+          });
+          response.end(await upstream.text());
+        } catch {
+          response.writeHead(503).end();
+        }
+      },
+    );
+    await new Promise((resolve) =>
+      tlsServer.listen(18293, "127.0.0.1", resolve),
+    );
+    bridge = spawn(
+      "ssh",
+      [
+        "-i",
+        "/home/debian/.ssh/id_ed25519_tad_vm",
+        "debian@152.228.138.54",
+        "node",
+        "--input-type=module",
+      ],
+      { stdio: ["pipe", "pipe", "pipe"] },
+    );
+    bridge.stdin.end(`import net from 'node:net';
+      const server = net.createServer(socket => {
+        if (socket.remoteAddress !== '192.168.176.5') { socket.destroy(); return; }
+        const upstream = net.connect(18293, '127.0.0.1');
+        socket.pipe(upstream).pipe(socket);
+        socket.on('error', () => upstream.destroy()); upstream.on('error', () => socket.destroy());
+      }); server.listen(18294, '192.168.176.1', () => console.log(process.pid));
+      setTimeout(() => process.exit(0), 240000);
+      process.on('SIGHUP', () => process.exit(0));`);
+    await new Promise((resolve, reject) => {
+      bridge.stdout.once("data", (value) => {
+        const pid = value.toString().trim();
+        if (!/^\d+$/.test(pid)) return reject(Error("bridge_pid"));
+        bridgePid = pid;
+        resolve();
+      });
+      bridge.once("exit", () => reject(Error("bridge_failed")));
+    });
+    step = "sirh_real_creation_and_recovery";
+    const chainRaw = await child(
+      "ssh",
+      [
+        "-i",
+        "/home/debian/.ssh/id_ed25519_tad_vm",
+        "debian@152.228.138.54",
+        "sudo",
+        "-n",
+        "docker",
+        "exec",
+        "-i",
+        "-u",
+        "frappe",
+        "-w",
+        "/home/frappe/frappe-bench",
+        "-e",
+        "SIRH_CREATION_CLONE=sirh-mimefix-20261015",
+        "sirh-mimefix-20261015-backend-1",
+        "env/bin/python",
+        "/tmp/initial_access_chain.py",
+      ],
+      {
+        input: JSON.stringify({
+          url: "https://192.168.176.1:18294/api/provisioning/sirh/users",
+          hmac,
+          certificate,
+        }),
+      },
+    );
+    const chain = JSON.parse(chainRaw.trim().split("\n").at(-1));
+    assert.equal(chain.status, "passed");
+    console.log(JSON.stringify({ status: chain.status, checks: chain.checks }));
+    step = "sirh_created_account_browser";
+    const chainBrowser = await child(
+      "ssh",
+      [
+        "-i",
+        "/home/debian/.ssh/id_ed25519_tad_vm",
+        "debian@152.228.138.54",
+        "node",
+        "/tmp/test-initial-access-browser.mjs",
+      ],
+      {
+        input: JSON.stringify({
+          base: "http://localhost:18291",
+          identity: chain.identity,
+          temporary: chain.temporary,
+          personal,
+          hmac,
+          rh: chain.rh,
+        }),
+      },
+    );
+    console.log(chainBrowser.trim());
+    assert.ok(!captured.includes(chain.temporary));
+    assert.ok(
+      !docker(["logs", "tad-initial-test-keycloak"]).includes(chain.temporary),
+    );
+  }
   step = "secret_scan";
   const kcLogs = docker(["logs", "tad-initial-test-keycloak"]);
   assert.ok(
@@ -365,6 +568,24 @@ try {
 } finally {
   portal?.kill("SIGTERM");
   tunnel?.kill("SIGTERM");
+  bridge?.kill("SIGTERM");
+  if (bridgePid) {
+    try {
+      execFileSync(
+        "ssh",
+        [
+          "-i",
+          "/home/debian/.ssh/id_ed25519_tad_vm",
+          "debian@152.228.138.54",
+          "kill",
+          "-TERM",
+          bridgePid,
+        ],
+        { stdio: "ignore" },
+      );
+    } catch {}
+  }
+  tlsServer?.close();
   for (const id of created.reverse()) {
     try {
       docker(["stop", "-t", "5", id]);

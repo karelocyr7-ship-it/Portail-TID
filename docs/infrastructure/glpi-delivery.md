@@ -29,5 +29,18 @@ Caddy validate en conteneur existant ; contrôles globaux selon disponibilité.
 La recette métier et les sauvegardes GLPI sont documentées dans son dépôt.
 
 Contrôles locaux du 18/10 : syntaxe Bash/Node et validation Caddy réussies.
-make lint/typecheck/test/build non exécutables (dépendances du nouveau worktree
-absentes). Installation figée soumise à validation ; CI existante conservée.
+Après installation figée autorisée, make lint/typecheck/test/build et format
+réussis (77 tests Vitest et 12 tests Node). Build avec 10 avertissements existants
+de traçage dynamique. CI Quality, Build et Security réussies sur PR 109 fusionnée.
+
+La première livraison a révélé un bind mount Caddy obsolète (ancien inode déjà
+supprimé avant cette livraison). Le reload ne chargeait donc pas le fichier
+modifié. La fiche reste inactive. Après autorisation ciblée d'une brève coupure,
+`GLPI_CADDY_RECREATE_APPROVED=yes bash scripts/repair-glpi-proxy-mount.sh` recrée
+seulement Caddy, image identique, compare les fichiers et vérifie le portail.
+Rollback automatique vers le vhost sauvegardé si le contrôle échoue.
+
+Après certificat et recette HTTPS valides :
+`docker exec -i tad-portail-portal-1 node --input-type=module < scripts/activate-glpi.mjs`.
+Ce script refuse une réponse HTTPS non valide, active seulement GLPI et journalise
+l'opération. Les rôles restent PORTAL_ADMIN uniquement, sans profil utilisateur ajouté.

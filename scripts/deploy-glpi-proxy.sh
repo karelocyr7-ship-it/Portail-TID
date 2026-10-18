@@ -22,6 +22,7 @@ rollback() {
 trap 'rollback' ERR
 # Copy into the existing inode, preserving the running bind mount.
 cp infrastructure/caddy/Caddyfile "$live"
+[[ $(sha256sum "$live" | cut -d' ' -f1) == $(docker exec tad-portail-caddy-1 sha256sum /etc/caddy/Caddyfile | cut -d' ' -f1) ]] || { echo 'Montage obsolète : recréation Caddy requise avec autorisation ciblée'; false; }
 docker exec tad-portail-caddy-1 caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile >/dev/null 2>&1
 curl -fsS https://portail.tadgroupe.com/health >/dev/null
 docker exec -i tad-portail-portal-1 node --input-type=module < scripts/register-glpi.mjs

@@ -29,6 +29,11 @@ le clone Web de joindre le connecteur de production ; le relais serveur réel
 est testé séparément avec TLS/HMAC sous les permissions RH synthétiques.
 Le parcours navigateur Keycloak/portail, lui, n'est pas simulé.
 
+Limite indépendante de ce lot : GitHub signale sur la branche par défaut
+16 alertes de dépendances (11 hautes, 5 modérées) lors du push documentaire.
+Cette livraison ciblée ne les corrige pas et ne constitue pas un audit global
+de sécurité ; leur qualification/remédiation reste un chantier distinct.
+
 ## SIRH livré et reprise RH disponible
 
 PR SIRH #10–11, main `46b8656cd795e2b675c24ce052a4779efed0ac5c`, HRMS 0.4.129.

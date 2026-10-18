@@ -1,7 +1,10 @@
-# Première connexion SIRH → Keycloak — candidate non livrée
+# Première connexion SIRH → Keycloak — livraison portail préparatoire
 
-État au 18 octobre 2026 : développement sur branche, aucune modification de
-production, aucune fusion. Autorisation de push/PR limitée à cette correction.
+État avant livraison du 18 octobre 2026 : PR #105 limitée à l’API préparatoire
+du portail. Fusion et déploiement autorisés par l’utilisateur. Le récepteur
+historique d’identité conserve ses e-mails d’activation : aucun basculement
+SIRH n’accompagne cette livraison. Le parcours complet et la reprise TID1000
+ne sont pas annoncés livrés.
 
 ## Diagnostic et candidate
 
@@ -51,7 +54,7 @@ Le test navigateur initialise directement un compte synthétique par l'API
 portail. Il ne prouve pas encore la chaîne intégrée depuis la création d'un
 salarié SIRH ni la reprise legacy. Aucune réussite globale annoncée.
 
-## Blocages de livraison
+## Blocages du basculement SIRH (hors livraison portail préparatoire)
 
 1. Reprise après réponse perdue : la présence d'un credential protège le
    compte mais ne permet pas actuellement de remettre l'accès provisoire.
@@ -80,16 +83,30 @@ Sources amont inspectées (aucune source amont modifiée) :
 La protection fail-closed reste volontaire : une reprise ne doit jamais
 écraser un secret personnel. La recette navigateur réussie ci-dessus ne
 valide toujours pas la remise intégrée depuis le formulaire RH, ni la reprise
-après perte de réponse. Ne pas fusionner/déployer cette candidate en l'état.
+après perte de réponse. Ne pas activer le relais RH SIRH ni supprimer les
+e-mails du flux historique tant que ces contrôles ne sont pas validés.
+
+## Périmètre de la livraison portail seule
+
+- API initial-access additive, sans migration de schéma ni appel depuis le
+  SIRH actuellement déployé ; aucun compte réel initialisé lors de la livraison.
+- Le récepteur /users conserve exactement son choix d’activation antérieur.
+  Un test de non-régression vérifie l’absence de deferInitialCredentials.
+- Les reprises non sûres restent refusées ; aucun reset-password de compte
+  existant n’est exécuté par la nouvelle API.
+- Déploiement des trois services portail uniquement via scripts/deploy.sh,
+  après CI, sauvegarde et restauration de contrôle. Aucun déploiement SIRH
+  ni changement de configuration du realm Keycloak.
 
 TID1000 : contrôle en lecture seule, compte activé, actions UPDATE_PASSWORD
 et VERIFY_EMAIL présentes, liste de credentials vide au moment du contrôle.
 Pas de modification, pas de connexion de test, pas de secret réémis.
 
-## Livraison et retour arrière (préparatoire, ne pas exécuter maintenant)
+## Livraison et retour arrière
 
-Terminer les contrôles ci-dessus ; figer et tester les deux commits ; ouvrir
-les PR ; fusionner après contrôles réussis. Produire les backups cohérents
+Pour le futur basculement complet : terminer les contrôles ci-dessus ; figer
+et tester les deux commits ; ouvrir les PR ; fusionner après contrôles réussis.
+Produire les backups cohérents
 portail/Keycloak/SIRH et vérifier leur restauration. Exécuter la procédure
 documentée scripts/deploy.sh depuis un checkout propre de main et la procédure
 SIRH avec backup --with-files, Compose config --quiet et migration validée

@@ -78,7 +78,6 @@ export async function POST(request: Request) {
         email: payload.email,
         displayName: payload.displayName,
         employeeId: sageId,
-        deferInitialCredentials: true,
       })
     ).subject;
 

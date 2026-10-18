@@ -534,6 +534,7 @@ try {
           temporary: chain.temporary,
           personal,
           hmac,
+          rh: chain.rh,
         }),
       },
     );

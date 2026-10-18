@@ -78,6 +78,11 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(response.status).toBe(201);
     expect(result.applicationAccess).toBe("NOT_ASSIGNED");
     expect(transaction.portalUser.create).toHaveBeenCalledOnce();
+    // The deployed SIRH still uses identity-only provisioning. Preserve its
+    // activation emails until the new RH handoff is separately delivered.
+    expect(mocks.provisionKeycloakUser.mock.calls[0][0]).not.toHaveProperty(
+      "deferInitialCredentials",
+    );
     expect(transaction.auditLog.create).toHaveBeenCalledOnce();
     expect(mocks.syncKeycloakUsernameFromSirh).not.toHaveBeenCalled();
     expect("userApplicationProfile" in transaction).toBe(false);

@@ -18,7 +18,7 @@ function required(name: string): string {
   return value;
 }
 
-function adminBaseUrl(): string {
+export function adminBaseUrl(): string {
   const issuer = required("KEYCLOAK_ISSUER").replace(/\/+$/, "");
   const parsed = new URL(issuer);
   const match = parsed.pathname.match(/^(.*)\/realms\/([^/]+)$/);
@@ -29,7 +29,7 @@ function adminBaseUrl(): string {
   return parsed.toString().replace(/\/$/, "");
 }
 
-async function getAdminToken(): Promise<string> {
+export async function getAdminToken(): Promise<string> {
   const issuer = required("KEYCLOAK_ISSUER").replace(/\/+$/, "");
   const response = await fetch(`${issuer}/protocol/openid-connect/token`, {
     method: "POST",
@@ -63,6 +63,7 @@ export async function provisionKeycloakUser(input: {
   email: string;
   displayName: string;
   employeeId?: string | null;
+  deferInitialCredentials?: boolean;
 }): Promise<ProvisionedKeycloakUser> {
   const email = input.email.trim().toLowerCase();
   if (!email || !email.includes("@"))
@@ -84,7 +85,9 @@ export async function provisionKeycloakUser(input: {
       enabled: true,
       emailVerified: false,
       firstName: input.displayName.trim(),
-      requiredActions: ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
+      requiredActions: input.deferInitialCredentials
+        ? ["UPDATE_PASSWORD"]
+        : ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
       ...(input.employeeId
         ? {
             attributes: {
@@ -123,7 +126,7 @@ export async function provisionKeycloakUser(input: {
     const pendingActions = (details.requiredActions ?? []).filter((action) =>
       ["VERIFY_EMAIL", "UPDATE_PASSWORD"].includes(action),
     );
-    if (pendingActions.length > 0)
+    if (pendingActions.length > 0 && !input.deferInitialCredentials)
       await sendKeycloakActionsEmail(subject, pendingActions, token);
     return { subject, created: false };
   }
@@ -136,11 +139,13 @@ export async function provisionKeycloakUser(input: {
   const subject = subjectFromLocation(response.headers.get("location"));
   if (!subject)
     throw new Error("Keycloak n’a pas retourné l’identifiant du compte créé");
-  await sendKeycloakActionsEmail(
-    subject,
-    ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
-    token,
-  );
+  if (!input.deferInitialCredentials) {
+    await sendKeycloakActionsEmail(
+      subject,
+      ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
+      token,
+    );
+  }
   return { subject, created: true };
 }
 

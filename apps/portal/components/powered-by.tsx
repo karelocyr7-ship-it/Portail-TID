@@ -10,6 +10,7 @@ export function PoweredBy() {
           alt="SEPTNEX"
           width={96}
           height={60}
+          loading="eager"
           unoptimized
         />
       </a>

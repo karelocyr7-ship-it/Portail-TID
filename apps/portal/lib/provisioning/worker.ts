@@ -1,4 +1,4 @@
-import { applicationProfileAccess } from "../application-profile-priority.js";
+import { applicationAccess } from "../application-access.js";
 import { randomUUID } from "node:crypto";
 import { getPrisma } from "../prisma";
 
@@ -62,7 +62,7 @@ async function claimNextJob() {
       status: { in: ["PENDING", "RETRY", "REVOKE", "WAITING_CONFIG"] },
       nextAttemptAt: { lte: new Date() },
     },
-    include: { user: true, application: true, profile: true },
+    include: { user: true, application: true },
     orderBy: { createdAt: "asc" },
   });
   if (!job) return null;
@@ -82,7 +82,7 @@ export async function provisionApplication(
   if (!job) return;
   const connector = connectorFor(job.application.code);
   if (!connector) return "WAITING_CONFIG" as const;
-  // Re-read current assignments: the queued profile may have been replaced.
+  // Re-read current access assignments so stale queued jobs cannot restore access.
   const currentUser = await getPrisma().portalUser.findUnique({
     where: { id: job.user.id },
     include: {
@@ -93,14 +93,13 @@ export async function provisionApplication(
             application: { id: job.application.id, active: true },
           },
         },
-        select: { profile: { select: { key: true, displayOrder: true } } },
+        select: { profileId: true },
       },
     },
   });
-  const access = applicationProfileAccess(
-    job.application.code,
+  const authorized = applicationAccess(
     Boolean(currentUser?.active),
-    currentUser?.assignments.map(({ profile }) => profile) ?? [],
+    currentUser?.assignments ?? [],
   );
   const { first_name, last_name } = splitDisplayName(job.user.displayName);
   const response = await fetch(connector.url, {
@@ -114,12 +113,11 @@ export async function provisionApplication(
     },
     body: JSON.stringify({
       application: job.application.code,
-      profile: access.primaryProfile ?? job.profile.key,
       sage_id: job.user.sageEmployeeId ?? job.user.employeeId,
       email: job.user.email,
       first_name,
       last_name,
-      enabled: access.authorized,
+      enabled: authorized,
     }),
     signal: AbortSignal.timeout(20_000),
   });

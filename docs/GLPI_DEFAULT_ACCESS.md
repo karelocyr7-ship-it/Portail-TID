@@ -4,6 +4,7 @@ La case était absente car le profil ACCESS de GLPI n'était pas `isDefault`.
 Ce champ choisit le profil minimal affiché, pas une attribution automatique.
 
 La livraison prévoit :
+
 - activation du profil ACCESS comme choix minimal dans le catalogue ;
 - case précochée à la création manuelle, décochable par l'administrateur ;
 - attribution ACCESS pour les nouvelles identités actives issues des deux

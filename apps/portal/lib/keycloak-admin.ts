@@ -246,3 +246,24 @@ export async function sendKeycloakPasswordReset(
     await getAdminToken(),
   );
 }
+
+/** End every active Keycloak session for a user and notify configured OIDC clients. */
+export async function logoutKeycloakUser(subject: string): Promise<void> {
+  const normalizedSubject = subject.trim();
+  if (!normalizedSubject || normalizedSubject.length > 200) {
+    throw new Error("Identifiant Keycloak invalide");
+  }
+
+  const token = await getAdminToken();
+  const response = await fetch(
+    `${adminBaseUrl()}/users/${encodeURIComponent(normalizedSubject)}/logout`,
+    {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Déconnexion Keycloak refusée (HTTP ${response.status})`);
+  }
+}

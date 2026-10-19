@@ -74,12 +74,17 @@ export default async function RootLayout({
                       Changer de compte
                     </a>
                   )}
-                  <a
-                    className="auth-link"
-                    href={session ? "/api/auth/logout" : "/api/auth/login"}
-                  >
-                    {session ? "Se déconnecter" : "Se connecter"}
-                  </a>
+                  {session ? (
+                    <form action="/api/auth/logout" method="post">
+                      <button className="auth-link" type="submit">
+                        Se déconnecter
+                      </button>
+                    </form>
+                  ) : (
+                    <a className="auth-link" href="/api/auth/login">
+                      Se connecter
+                    </a>
+                  )}
                 </span>
               </div>
             </header>

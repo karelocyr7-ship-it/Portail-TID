@@ -10,9 +10,9 @@ live=/srv/tad/portail/infrastructure/caddy/Caddyfile
 backup=/srv/tad/backups/caddy-before-glpi-MFVq5K
 [[ $(sha256sum "$backup" | cut -d' ' -f1) == f77d1ccbd6be2a5a76e3c664df66b43c3982f64a4dae51211717da1c4feb6879 ]]
 cmp --silent "$live" infrastructure/caddy/Caddyfile
-compose=(docker compose --env-file /srv/tad/portail/.env -f "$repo/compose.yml")
+compose=(sudo -n docker compose --env-file /srv/tad/portail/.env -f "$repo/compose.yml")
 "${compose[@]}" config --quiet
-[[ $("${compose[@]}" config --images caddy) == $(docker inspect --format '{{.Config.Image}}' tad-portail-caddy-1) ]]
+[[ $("${compose[@]}" config --format json caddy | jq -r '.services.caddy.image') == $(docker inspect --format '{{.Config.Image}}' tad-portail-caddy-1) ]]
 docker cp infrastructure/caddy/Caddyfile tad-portail-caddy-1:/tmp/Caddyfile.glpi-candidate
 docker exec tad-portail-caddy-1 caddy validate --config /tmp/Caddyfile.glpi-candidate --adapter caddyfile >/dev/null 2>&1
 rollback() {

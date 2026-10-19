@@ -238,7 +238,6 @@ export default async function AdminPage({
                   id: profile.applicationId,
                   code: profile.application.code,
                   name: profile.application.name,
-                  defaultProfileName: profile.name,
                 }))}
               savePortalUser={savePortalUser}
               deletePortalUser={deletePortalUser}

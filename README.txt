@@ -2455,3 +2455,19 @@ avant de conclure que la VM est inaccessible.
       et les rôles HMDM doivent être définis explicitement avant d’activer ce
       connecteur afin d’éviter une attribution de droits ou d’appareils trop
       large.
+
+84. Rôles locaux aux applications — 19 octobre 2026
+    - Le portail ne renvoie plus de profils dans la réponse d’autorisation et
+      n’envoie plus de profil dans les messages de provisioning. Il transmet
+      uniquement l’identité et l’état d’accès à l’application.
+    - L’interface d’administration du portail présente des accès par
+      application. Chaque application attribue localement ses rôles; les
+      comptes existants conservent leur rôle pendant la synchronisation et les
+      nouveaux comptes reçoivent un rôle initial limité.
+    - Connecteurs concernés : Perf-TID, CASH-RECON, Revue-PDV, GParc, ATF,
+      HMDM, Recrutement, SIRH et Drive RH. Les connecteurs doivent être livrés
+      avant le portail pour accepter le contrat sans profils.
+    - La livraison n’est terminée qu’après fusion des PR de chaque dépôt,
+      réussite des contrôles CI, déploiement coordonné et vérification de santé
+      de chaque application. Rollback : rétablir chaque image précédente sans
+      restaurer ni supprimer de données.

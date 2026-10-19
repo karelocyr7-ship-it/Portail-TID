@@ -16,6 +16,6 @@
     "lib/provisioning/worker-entry.ts",
     "lib/provisioning/**/*.ts",
     "lib/prisma.ts",
-    "lib/application-profile-priority.js"
+    "lib/application-access.js"
   ]
 }

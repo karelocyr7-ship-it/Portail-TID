@@ -59,15 +59,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("returns the same primary profile in SSO and provisioning despite a stale revoke job", async () => {
+it("returns authorization without role data and provisions identity without a profile", async () => {
   const response = await POST(request());
   expect(response.status).toBe(200);
   const access = await response.json();
-  expect(access.profiles).toEqual(["ro", "sup_orange"]);
-  expect(access.primaryProfile).toBe("ro");
+  expect(access.authorized).toBe(true);
+  expect(access).not.toHaveProperty("profiles");
+  expect(access).not.toHaveProperty("primaryProfile");
   await provisionApplication(job);
   const payload = JSON.parse(mocks.fetch.mock.calls[0][1].body);
-  expect(payload.profile).toBe(access.primaryProfile);
+  expect(payload).not.toHaveProperty("profile");
   expect(payload.enabled).toBe(true);
   expect(mocks.findUnique.mock.calls[0][0].where).toEqual({
     id: "synthetic-user",
@@ -93,9 +94,9 @@ it.each([
     const access = await (await POST(request())).json();
     expect(access).toMatchObject({
       authorized: false,
-      primaryProfile: null,
-      profiles: [],
     });
+    expect(access).not.toHaveProperty("profiles");
+    expect(access).not.toHaveProperty("primaryProfile");
     await provisionApplication(job);
     expect(JSON.parse(mocks.fetch.mock.calls[0][1].body).enabled).toBe(false);
   },

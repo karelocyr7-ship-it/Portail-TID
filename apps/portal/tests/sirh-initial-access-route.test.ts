@@ -24,6 +24,9 @@ const payload = () => ({
   temporaryPassword,
 });
 const tx = {
+  applicationProfile: { findFirst: vi.fn() },
+  userApplicationProfile: { upsert: vi.fn() },
+  applicationProvisioningOutbox: { upsert: vi.fn() },
   $queryRaw: vi.fn(),
   auditLog: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   portalUser: { findUnique: vi.fn(), upsert: vi.fn() },
@@ -49,6 +52,8 @@ function request(body = payload(), age = 0, signed = true) {
 }
 beforeEach(() => {
   vi.resetAllMocks();
+  tx.portalUser.upsert.mockResolvedValue({ id: "synthetic-new-user" });
+  tx.applicationProfile.findFirst.mockResolvedValue(null);
   vi.stubEnv("SIRH_PROVISIONING_SECRET", signingSecret);
   vi.stubEnv("SIRH_PROVISIONING_MAX_SKEW_SECONDS", "300");
   mocks.getPrisma.mockReturnValue({
@@ -66,6 +71,25 @@ afterEach(() => {
 });
 
 describe("SIRH initial-access request boundary", () => {
+  it("grants minimal GLPI access only for a new initial identity", async () => {
+    tx.applicationProfile.findFirst.mockResolvedValue({
+      id: "synthetic-access",
+      applicationId: "synthetic-glpi",
+    });
+    expect((await POST(request())).status).toBe(200);
+    expect(tx.userApplicationProfile.upsert).toHaveBeenCalledOnce();
+    expect(tx.applicationProvisioningOutbox.upsert).toHaveBeenCalledOnce();
+  });
+  it("does not restore GLPI access for an existing identity", async () => {
+    tx.portalUser.findUnique.mockResolvedValue({
+      id: "synthetic-existing",
+      active: true,
+      keycloakSubject: "synthetic-subject",
+    });
+    expect((await POST(request())).status).toBe(200);
+    expect(tx.applicationProfile.findFirst).not.toHaveBeenCalled();
+    expect(tx.userApplicationProfile.upsert).not.toHaveBeenCalled();
+  });
   it.each(["SAGE-TEST-001", "TID42", "TIDX00042"])(
     "rejects an incompatible matricule before creating a remote account (%s)",
     async (sageId) => {

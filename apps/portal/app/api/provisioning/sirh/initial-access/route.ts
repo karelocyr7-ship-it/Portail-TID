@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assignDefaultGlpiAccess } from "@/lib/default-glpi-access";
 import { getPrisma } from "@/lib/prisma";
 import { verifySirhSignature } from "@/lib/sirh-provisioning";
 import { normalizeEmployeeId } from "@/lib/employee-id";
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
         }
         if (outcome.status === "READY" && outcome.subject) {
           stage = "portal_account";
-          await tx.portalUser.upsert({
+          const portalUser = await tx.portalUser.upsert({
             where: { sageEmployeeId: sageId },
             create: {
               sageEmployeeId: sageId,
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
             },
             update: {}, // Initial credentials never change roles, assignments or identity.
           });
+          if (!existing) await assignDefaultGlpiAccess(tx, portalUser.id, true);
         }
         stage = "audit_completion";
         await tx.auditLog.update({

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { assignDefaultGlpiAccess } from "@/lib/default-glpi-access";
 import {
   provisionKeycloakUser,
   syncKeycloakUsernameFromSirh,
@@ -83,6 +84,7 @@ export async function POST(request: Request) {
 
   if (existing) await syncKeycloakUsernameFromSirh(keycloakSubject, sageId);
 
+  let glpiAssigned = false;
   const result = await prisma.$transaction(async (transaction) => {
     const user = existing
       ? await transaction.portalUser.update({
@@ -108,6 +110,12 @@ export async function POST(request: Request) {
             active: enabled,
           },
         });
+    if (!existing)
+      glpiAssigned = await assignDefaultGlpiAccess(
+        transaction,
+        user.id,
+        enabled,
+      );
     if (existing) {
       const assignments = await transaction.userApplicationProfile.findMany({
         where: { userId: user.id },
@@ -152,7 +160,11 @@ export async function POST(request: Request) {
           email: payload.email.toLowerCase(),
           displayName: payload.displayName,
           active: enabled,
-          applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
+          applicationAccess: existing
+            ? "UNCHANGED"
+            : glpiAssigned
+              ? "GLPI_ASSIGNED"
+              : "NOT_ASSIGNED",
         },
       },
     });
@@ -164,7 +176,11 @@ export async function POST(request: Request) {
       id: result.id,
       sageId,
       keycloakSubject: result.keycloakSubject,
-      applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
+      applicationAccess: existing
+        ? "UNCHANGED"
+        : glpiAssigned
+          ? "GLPI_ASSIGNED"
+          : "NOT_ASSIGNED",
       active: enabled,
     },
     { status: existing ? 200 : 201 },

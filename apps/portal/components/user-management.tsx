@@ -396,9 +396,9 @@ function UserModal({
           <div className="modal-accesses">
             <strong>Applications autorisées</strong>
             <p className="field-help">
-              Sélectionnez les applications à ouvrir. Le portail crée le compte
-              avec le profil minimal ; les droits fonctionnels sont attribués
-              ensuite par l’administrateur de l’application.
+              Sélectionnez les applications à ouvrir. GLPI est présélectionné
+              pour les nouveaux comptes. La création du compte applicatif dépend
+              de son connecteur ; les droits restent gérés dans l’application.
             </p>
             <input type="hidden" name="applicationIds" value="" />
             <div className="modal-access-grid">
@@ -408,9 +408,11 @@ function UserModal({
                     type="checkbox"
                     name="applicationIds"
                     value={application.id}
-                    defaultChecked={existing?.applicationIds.includes(
-                      application.id,
-                    )}
+                    defaultChecked={
+                      existing
+                        ? existing.applicationIds.includes(application.id)
+                        : application.code === "GLPI"
+                    }
                   />
                   <span>
                     <b>{application.name}</b>

@@ -52,42 +52,64 @@ describe("POST /api/provisioning/sirh/users", () => {
     mocks.syncKeycloakUsernameFromSirh.mockResolvedValue(undefined);
   });
 
-  it("crée l'identité Portail sans attribuer d'accès applicatif implicite", async () => {
-    const user = {
-      id: "synthetic-portal-user",
-      keycloakSubject: "synthetic-subject",
-    };
-    const transaction = {
-      portalUser: { create: vi.fn().mockResolvedValue(user) },
-      auditLog: { create: vi.fn().mockResolvedValue(undefined) },
-    };
-    const prisma = {
-      portalUser: {
-        findUnique: vi.fn().mockResolvedValue(null),
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-      $transaction: vi.fn((callback: (tx: typeof transaction) => unknown) =>
-        callback(transaction),
-      ),
-    };
-    mocks.getPrisma.mockReturnValue(prisma);
+  it.each([false, true])(
+    "crée l'identité avec accès GLPI uniquement si configuré (%s)",
+    async (configured) => {
+      const user = {
+        id: "synthetic-portal-user",
+        keycloakSubject: "synthetic-subject",
+      };
+      const transaction = {
+        applicationProfile: {
+          findFirst: vi
+            .fn()
+            .mockResolvedValue(
+              configured
+                ? { id: "synthetic-profile", applicationId: "synthetic-glpi" }
+                : null,
+            ),
+        },
+        userApplicationProfile: { upsert: vi.fn() },
+        applicationProvisioningOutbox: { upsert: vi.fn() },
+        portalUser: { create: vi.fn().mockResolvedValue(user) },
+        auditLog: { create: vi.fn().mockResolvedValue(undefined) },
+      };
+      const prisma = {
+        portalUser: {
+          findUnique: vi.fn().mockResolvedValue(null),
+          findMany: vi.fn().mockResolvedValue([]),
+        },
+        $transaction: vi.fn((callback: (tx: typeof transaction) => unknown) =>
+          callback(transaction),
+        ),
+      };
+      mocks.getPrisma.mockReturnValue(prisma);
 
-    const response = await POST(signedRequest());
-    const result = await response.json();
+      const response = await POST(signedRequest());
+      const result = await response.json();
 
-    expect(response.status).toBe(201);
-    expect(result.applicationAccess).toBe("NOT_ASSIGNED");
-    expect(transaction.portalUser.create).toHaveBeenCalledOnce();
-    // The deployed SIRH still uses identity-only provisioning. Preserve its
-    // activation emails until the new RH handoff is separately delivered.
-    expect(mocks.provisionKeycloakUser.mock.calls[0][0]).not.toHaveProperty(
-      "deferInitialCredentials",
-    );
-    expect(transaction.auditLog.create).toHaveBeenCalledOnce();
-    expect(mocks.syncKeycloakUsernameFromSirh).not.toHaveBeenCalled();
-    expect("userApplicationProfile" in transaction).toBe(false);
-    expect("applicationProvisioningOutbox" in transaction).toBe(false);
-  });
+      expect(response.status).toBe(201);
+      expect(result.applicationAccess).toBe(
+        configured ? "GLPI_ASSIGNED" : "NOT_ASSIGNED",
+      );
+      expect(transaction.portalUser.create).toHaveBeenCalledOnce();
+      // The deployed SIRH still uses identity-only provisioning. Preserve its
+      // activation emails until the new RH handoff is separately delivered.
+      expect(mocks.provisionKeycloakUser.mock.calls[0][0]).not.toHaveProperty(
+        "deferInitialCredentials",
+      );
+      expect(transaction.auditLog.create).toHaveBeenCalledTimes(
+        configured ? 2 : 1,
+      );
+      expect(mocks.syncKeycloakUsernameFromSirh).not.toHaveBeenCalled();
+      expect(transaction.userApplicationProfile.upsert).toHaveBeenCalledTimes(
+        configured ? 1 : 0,
+      );
+      expect(
+        transaction.applicationProvisioningOutbox.upsert,
+      ).toHaveBeenCalledTimes(configured ? 1 : 0);
+    },
+  );
 
   it("laisse les accès applicatifs existants inchangés lors d'une mise à jour SIRH", async () => {
     const existing = {

@@ -11,7 +11,11 @@ const layout = readFileSync(
   "utf8",
 );
 test("footer SEPTNEX : libellé, lien HTTPS et ouverture sûre", () => {
-  assert.match(component, /Powered by SEPTNEX/);
+  assert.match(component, /Powered by/);
+  assert.match(component, /alt="SEPTNEX"/);
+  assert.match(component, /src="\/branding\/septnex-signature.png"/);
+  assert.match(component, /width=\{96\}/);
+  assert.match(component, /height=\{60\}/);
   assert.match(component, /href="https:\/\/septnex.com"/);
   assert.match(component, /rel="noopener noreferrer"/);
   assert.match(component, /<footer/);
@@ -31,6 +35,22 @@ test("mention présente dans les deux thèmes de connexion Keycloak", () => {
     );
     assert.match(template, /<#macro content>/);
     assert.match(template, /href="https:\/\/septnex.com"/);
-    assert.match(template, /Powered by SEPTNEX/);
+    assert.match(template, /Powered by/);
+    assert.match(template, /alt="SEPTNEX"/);
+    assert.match(
+      template,
+      /\$\{url.resourcesPath\}\/img\/septnex-signature.png/,
+    );
+    assert.deepEqual(
+      readFileSync(
+        new URL(
+          `../../../infrastructure/keycloak/themes/${theme}/login/resources/img/septnex-signature.png`,
+          import.meta.url,
+        ),
+      ),
+      readFileSync(
+        new URL("../public/branding/septnex-signature.png", import.meta.url),
+      ),
+    );
   }
 });

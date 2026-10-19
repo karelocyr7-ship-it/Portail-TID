@@ -150,9 +150,18 @@ nav {
   font-size: 0.75rem;
 }
 .powered-by a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.powered-by img {
+  width: 96px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 4px;
 }
 .powered-by a:focus-visible {
   outline: 2px solid currentColor;

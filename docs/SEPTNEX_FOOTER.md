@@ -3,7 +3,23 @@
 Demande du 19 octobre 2026 : afficher « Powered by SEPTNEX », lien vers
 https://septnex.com, dans toutes les applications et fenêtres.
 
-## Lot préparé, non déployé
+## Livraison du texte et évolution du logo
+
+Le lot texte a été livré le 19 octobre 2026 via la PR #113, commit
+`0293fb50f759`. Santé publique, workers et rendu HTML de connexion vérifiés.
+Sauvegarde `tad-20261019T082524Z.tar.gz` vérifiée (SHA256 et gzip).
+
+Évolution préparée sur `codex/septnex-logo`, non déployée : remplacement du
+texte SEPTNEX par le logo fourni dans `/srv/tad/portail/tmp/signature.png`.
+Affichage 96 × 60 px, proportions conservées, texte alternatif SEPTNEX,
+mention « Powered by » et lien externe conservés. Image servie localement
+par le portail et par chacun des deux thèmes Keycloak, sans appel tiers.
+Les trois copies doivent rester identiques (test automatisé).
+Une nouvelle livraison nécessite fusion, contrôles et confirmation utilisateur.
+Rollback du logo : revenir au composant, CSS et templates texte par une
+livraison Git contrôlée ; aucune migration de données.
+
+## Périmètre
 
 - Portail : composant commun dans le layout de toutes les pages authentifiées.
 - Fenêtre de création/modification d'utilisateur : même composant.

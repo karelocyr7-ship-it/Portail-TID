@@ -1,5 +1,17 @@
 # Mention SEPTNEX — lot Portail et connexion
 
+## Dernière demande : logo seul
+
+Le 19 octobre 2026, retrait demandé du texte visible « Powered by ».
+Le composant commun (page Applications et fenêtre utilisateur) et les deux
+thèmes Keycloak conservent uniquement le logo centré 96 × 60 px, son texte
+alternatif SEPTNEX et le lien HTTPS vers septnex.com. Tests de non-régression
+adaptés pour interdire le retour de la mention. Aucun changement de données,
+de droits ou de dépendances. Livraison selon la procédure habituelle après
+contrôles et fusion ; autorisation permanente limitée à ce pied de page reçue.
+Rollback : image précédente et revert des templates par livraison contrôlée.
+Les sections suivantes conservent l'historique des étapes précédentes.
+
 Demande du 19 octobre 2026 : afficher « Powered by SEPTNEX », lien vers
 https://septnex.com, dans toutes les applications et fenêtres.
 

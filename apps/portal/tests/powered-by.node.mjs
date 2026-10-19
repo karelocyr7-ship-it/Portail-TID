@@ -11,7 +11,7 @@ const layout = readFileSync(
   "utf8",
 );
 test("footer SEPTNEX : libellé, lien HTTPS et ouverture sûre", () => {
-  assert.match(component, /Powered by/);
+  assert.doesNotMatch(component, /Powered by/);
   assert.match(component, /alt="SEPTNEX"/);
   assert.match(component, /src="\/branding\/septnex-signature.png"/);
   assert.match(component, /width=\{96\}/);
@@ -21,7 +21,7 @@ test("footer SEPTNEX : libellé, lien HTTPS et ouverture sûre", () => {
   assert.match(component, /rel="noopener noreferrer"/);
   assert.match(component, /<footer/);
 });
-test("mention centrée au-dessus du logo sans rétrécissement du footer", () => {
+test("logo centré sans rétrécissement du footer", () => {
   const css = readFileSync(
     new URL("../app/globals.css", import.meta.url),
     "utf8",
@@ -31,15 +31,12 @@ test("mention centrée au-dessus du logo sans rétrécissement du footer", () =>
     /\.powered-by a\s*\{[^}]*flex-direction: column;[^}]*align-items: center;/,
   );
   assert.match(css, /\.powered-by\s*\{[^}]*flex-shrink: 0;/);
-  assert.ok(
-    component.indexOf("<span>Powered by</span>") < component.indexOf("<Image"),
-  );
 });
 test("footer présent une seule fois dans le layout partagé", () => {
   assert.equal(layout.split("<PoweredBy />").length - 1, 1);
   assert.ok(layout.indexOf("<PoweredBy />") > layout.indexOf("{children}"));
 });
-test("mention présente dans les deux thèmes de connexion Keycloak", () => {
+test("logo seul présent dans les deux thèmes de connexion Keycloak", () => {
   for (const theme of ["tad-login", "tad-login-v2"]) {
     const template = readFileSync(
       new URL(
@@ -50,7 +47,7 @@ test("mention présente dans les deux thèmes de connexion Keycloak", () => {
     );
     assert.match(template, /<#macro content>/);
     assert.match(template, /href="https:\/\/septnex.com"/);
-    assert.match(template, /Powered by/);
+    assert.doesNotMatch(template, /Powered by/);
     assert.match(template, /alt="SEPTNEX"/);
     assert.match(template, /flex-direction: column; align-items: center;/);
     assert.match(

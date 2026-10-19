@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { normalizeSageId } from "@/lib/sage-id";
+import { profilesForApplicationCheckboxes } from "@/lib/application-checkbox-profiles";
 import {
   provisionKeycloakUser,
   sendKeycloakPasswordReset,
@@ -169,36 +170,31 @@ export async function savePortalUser(formData: FormData) {
       : null;
     if (userId && !before) throw new Error("Compte portail introuvable");
 
-    const preserveAssignments = userId && !formData.has("applicationIds");
-    const profiles = preserveAssignments
-      ? await transaction.applicationProfile.findMany({
-          where: {
-            id: {
-              in: before?.assignments.map(({ profileId }) => profileId) ?? [],
-            },
-            active: true,
-            application: { active: true },
-          },
-          select: { id: true, applicationId: true },
-        })
-      : await transaction.applicationProfile.findMany({
-          where: {
-            applicationId: { in: [...new Set(requestedApplicationIds)] },
-            isDefault: true,
-            active: true,
-            application: { active: true },
-          },
-          select: { id: true, applicationId: true },
-        });
-    if (
-      !preserveAssignments &&
-      new Set(profiles.map(({ applicationId }) => applicationId)).size !==
-        new Set(requestedApplicationIds).size
-    ) {
-      throw new Error(
-        "Chaque application sélectionnée doit avoir un profil minimal actif",
-      );
-    }
+    const currentProfiles = await transaction.applicationProfile.findMany({
+      where: {
+        id: {
+          in: before?.assignments.map(({ profileId }) => profileId) ?? [],
+        },
+        active: true,
+        application: { active: true },
+      },
+      select: { id: true, applicationId: true },
+    });
+    const defaultProfiles = await transaction.applicationProfile.findMany({
+      where: {
+        isDefault: true,
+        active: true,
+        application: { active: true },
+      },
+      select: { id: true, applicationId: true },
+    });
+    const profiles = profilesForApplicationCheckboxes(
+      currentProfiles,
+      defaultProfiles,
+      userId && !formData.has("applicationIds")
+        ? null
+        : requestedApplicationIds,
+    );
     const profileIds = profiles.map(({ id }) => id);
 
     const user = userId

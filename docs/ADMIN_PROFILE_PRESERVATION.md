@@ -36,18 +36,18 @@ inchangées. Aucun rôle d'administrateur n'est attribué globalement.
 
 Contrôle des profils locaux le 19/10 :
 
-| Application | Profil effectif vérifié | Provisionnement portail |
-|---|---|---|
-| CASH-RECON | `ADMIN` | `COMPLETED` |
-| TDB | `ADMIN` | `COMPLETED` |
-| Revue-PDV | `super_admin` | `COMPLETED` |
-| GParc | `ADMIN` | `FAILED` (HTTP 404) |
-| ATF | Administrateur (`administrator=1`, lecture seule désactivée) | `FAILED` (HTTP 400) |
-| Recrutement | `RECRUT_OCI_ADMIN`, rôle de gestion accepté par l'API | `COMPLETED` |
-| SIRH / HRMS | `System Manager` | `FAILED` (HTTP 417) |
-| GLPI | `Super-Admin` local ; `ACCESS` dans le catalogue portail | aucun job |
-| Drive / GED | `System Manager` et `Drive Admin` locaux | GED inactive dans le portail |
-| MDM | `Admin` local | MDM inactive dans le portail |
+| Application | Profil effectif vérifié                                      | Provisionnement portail      |
+| ----------- | ------------------------------------------------------------ | ---------------------------- |
+| CASH-RECON  | `ADMIN`                                                      | `COMPLETED`                  |
+| TDB         | `ADMIN`                                                      | `COMPLETED`                  |
+| Revue-PDV   | `super_admin`                                                | `COMPLETED`                  |
+| GParc       | `ADMIN`                                                      | `FAILED` (HTTP 404)          |
+| ATF         | Administrateur (`administrator=1`, lecture seule désactivée) | `FAILED` (HTTP 400)          |
+| Recrutement | `RECRUT_OCI_ADMIN`, rôle de gestion accepté par l'API        | `COMPLETED`                  |
+| SIRH / HRMS | `System Manager`                                             | `FAILED` (HTTP 417)          |
+| GLPI        | `Super-Admin` local ; `ACCESS` dans le catalogue portail     | aucun job                    |
+| Drive / GED | `System Manager` et `Drive Admin` locaux                     | GED inactive dans le portail |
+| MDM         | `Admin` local                                                | MDM inactive dans le portail |
 
 Les rôles locaux sont la référence pour les droits métier. Les trois jobs en
 échec n'ont pas empêché les profils locaux ci-dessus d'être présents. Le

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PoweredBy } from "@/components/powered-by";
 
 export type UserManagementApplication = {
   id: string;
@@ -449,6 +450,7 @@ function UserModal({
             </div>
           </div>
         </form>
+        <PoweredBy />
       </section>
     </div>
   );

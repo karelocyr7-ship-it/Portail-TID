@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getRoles, getSession } from "@/lib/oidc";
 import { MainNavigation } from "@/components/main-navigation";
+import { PoweredBy } from "@/components/powered-by";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -83,6 +84,7 @@ export default async function RootLayout({
               </div>
             </header>
             {children}
+            <PoweredBy />
           </main>
         </div>
       </body>

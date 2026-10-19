@@ -43,7 +43,7 @@ export async function POST(request: Request) {
               application: { code: application, active: true },
             },
           },
-          select: { id: true },
+          select: { profileId: true },
         },
       },
     });

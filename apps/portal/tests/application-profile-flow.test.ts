@@ -39,7 +39,7 @@ const job = {
   },
   profile: { key: "sup_orange" },
   status: "REVOKE",
-} as NonNullable<Parameters<typeof provisionApplication>[0]>;
+} as unknown as NonNullable<Parameters<typeof provisionApplication>[0]>;
 
 beforeEach(() => {
   vi.resetAllMocks();

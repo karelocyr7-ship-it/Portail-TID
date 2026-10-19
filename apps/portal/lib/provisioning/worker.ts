@@ -93,7 +93,7 @@ export async function provisionApplication(
             application: { id: job.application.id, active: true },
           },
         },
-        select: { id: true },
+        select: { profileId: true },
       },
     },
   });

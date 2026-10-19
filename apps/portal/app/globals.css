@@ -144,6 +144,7 @@ nav {
   min-height: 100dvh;
 }
 .powered-by {
+  flex-shrink: 0;
   margin-top: auto;
   padding: 16px 5%;
   text-align: center;
@@ -151,8 +152,9 @@ nav {
 }
 .powered-by a {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 3px;

@@ -21,6 +21,14 @@ livraison Git contrôlée ; aucune migration de données.
 
 ## Périmètre
 
+Correction suivante (`codex/septnex-stacked`, non déployée) : mention centrée
+au-dessus du logo, espacement 4 px, footer non rétrécissable, image chargée
+immédiatement plutôt que paresseusement. Le fichier PNG en production répond
+HTTP 200 ; la cause de l'absence signalée sur la page Applications n'est pas
+reproduite dans une session authentifiée. Vérifier le rendu après rechargement
+complet et défiler jusqu'au pied de page : celui-ci reste dans le flux et ne
+masque pas les cartes. Aucun changement d'accès ni de données.
+
 - Portail : composant commun dans le layout de toutes les pages authentifiées.
 - Fenêtre de création/modification d'utilisateur : même composant.
 - Keycloak : extension native `footer.ftl` des thèmes `tad-login` et

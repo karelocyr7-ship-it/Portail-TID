@@ -16,9 +16,24 @@ test("footer SEPTNEX : libellé, lien HTTPS et ouverture sûre", () => {
   assert.match(component, /src="\/branding\/septnex-signature.png"/);
   assert.match(component, /width=\{96\}/);
   assert.match(component, /height=\{60\}/);
+  assert.match(component, /loading="eager"/);
   assert.match(component, /href="https:\/\/septnex.com"/);
   assert.match(component, /rel="noopener noreferrer"/);
   assert.match(component, /<footer/);
+});
+test("mention centrée au-dessus du logo sans rétrécissement du footer", () => {
+  const css = readFileSync(
+    new URL("../app/globals.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(
+    css,
+    /\.powered-by a\s*\{[^}]*flex-direction: column;[^}]*align-items: center;/,
+  );
+  assert.match(css, /\.powered-by\s*\{[^}]*flex-shrink: 0;/);
+  assert.ok(
+    component.indexOf("<span>Powered by</span>") < component.indexOf("<Image"),
+  );
 });
 test("footer présent une seule fois dans le layout partagé", () => {
   assert.equal(layout.split("<PoweredBy />").length - 1, 1);
@@ -37,6 +52,7 @@ test("mention présente dans les deux thèmes de connexion Keycloak", () => {
     assert.match(template, /href="https:\/\/septnex.com"/);
     assert.match(template, /Powered by/);
     assert.match(template, /alt="SEPTNEX"/);
+    assert.match(template, /flex-direction: column; align-items: center;/);
     assert.match(
       template,
       /\$\{url.resourcesPath\}\/img\/septnex-signature.png/,

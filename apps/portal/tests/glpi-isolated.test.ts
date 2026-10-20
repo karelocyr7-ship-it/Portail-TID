@@ -18,6 +18,7 @@ import { savePortalUser } from "@/app/admin/actions";
 import { getAdminUsers } from "@/lib/portal-users";
 import { getVisibleApplicationsFromDatabase } from "@/lib/catalog-db";
 import { POST } from "@/app/api/authorization/profiles/route";
+import { provisionGlpiAccount } from "@/lib/provisioning/glpi";
 import { provisionApplication } from "@/lib/provisioning/worker";
 
 const enabled = process.env.GLPI_ISOLATED_TEST === "1";
@@ -245,6 +246,41 @@ it.skipIf(!enabled)(
           (u) => u.name === employeeJob.user.email,
         )!.id;
         try {
+          const legacyEmail = `local-legacy-${process.env.GLPI_FIXTURE_RUN_ID}@example.invalid`;
+          const legacyCreate = await realFetch(`${base}/User`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              input: {
+                name: `legacy-${process.env.GLPI_FIXTURE_RUN_ID}`,
+                authtype: 4,
+                is_active: 1,
+                _useremails: { "-1": legacyEmail },
+                _default_email: -1,
+              },
+            }),
+          });
+          expect(legacyCreate.status).toBe(201);
+          const legacyId = (await legacyCreate.json()).id;
+          const beforeLegacy = await (
+            await realFetch(`${base}/User/${legacyId}`, { headers })
+          ).json();
+          apiFetch.mockClear();
+          expect(
+            await provisionGlpiAccount({
+              email: legacyEmail,
+              sageEmployeeId: "SYNTHETIC-LEGACY",
+              employeeId: null,
+              displayName: "Synthetic Legacy",
+            }),
+          ).toBe("COMPLETED");
+          expect(
+            apiFetch.mock.calls.every(([, options]) => !options?.method),
+          ).toBe(true);
+          const afterLegacy = await (
+            await realFetch(`${base}/User/${legacyId}`, { headers })
+          ).json();
+          expect(afterLegacy).toEqual(beforeLegacy);
           const update = await realFetch(`${base}/User`, {
             method: "PUT",
             headers,

@@ -16,7 +16,12 @@ try {
     const application = await tx.application.findUnique({
       where: { code: "GLPI" },
     });
-    if (!application || application.url !== "https://glpi.tadgroupe.com") {
+    const applicationUrl = application ? new URL(application.url) : null;
+    if (
+      !applicationUrl ||
+      applicationUrl.origin !== "https://glpi.tadgroupe.com" ||
+      applicationUrl.pathname !== "/"
+    ) {
       throw new Error("GLPI catalog entry not found or URL mismatch");
     }
     if (application.name === nextName) {

@@ -98,6 +98,8 @@ services:
       - /srv/tad/secrets/portal.env
       - path: /srv/tad/secrets/portal-provisioning-connectors.env
         required: false
+      - path: /srv/tad/secrets/glpi-provisioning.env
+        required: false
       - path: /srv/tad/secrets/mdm-provisioning.env
         required: false
     environment:

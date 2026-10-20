@@ -42,7 +42,7 @@ try {
         INSERT INTO "Application" (id, code, name, description, "categoryId", icon, active, "updatedAt") VALUES ('fixture-glpi', 'GLPI', 'Synthetic GLPI', 'Synthetic', 'fixture-category', 'help', true, NOW());
         INSERT INTO "PortalUser" (id, "keycloakSubject", email, "displayName", "updatedAt") VALUES ('fixture-legacy-id', 'fixture-legacy', 'legacy-${runId}@example.invalid', 'Synthetic Legacy', NOW());
         INSERT INTO "PortalUser" (id, "keycloakSubject", "sageEmployeeId", "employeeId", email, "displayName", active, "updatedAt")
-        VALUES ('fixture-inactive-id', 'fixture-inactive', 'TID999999002', 'TID999999002', 'inactive-${runId}@example.invalid', 'Synthetic Inactive', false, NOW());`);
+        VALUES ('fixture-inactive-id', 'fixture-inactive', 'TID${runId}2', 'TID${runId}2', 'inactive-${runId}@example.invalid', 'Synthetic Inactive', false, NOW());`);
     }
     await client.query(
       readFileSync(new URL(`${name}/migration.sql`, directory), "utf8"),
@@ -57,10 +57,13 @@ execFileSync("pnpm", ["exec", "vitest", "run", "tests/glpi-isolated.test.ts"], {
     ...process.env,
     DATABASE_URL: connectionString,
     GLPI_ISOLATED_TEST: "1",
+    GLPI_FIXTURE_RUN_ID: runId,
     GLPI_FIXTURE_HTTP_URL: `http://${fixtureIp("web")}`,
     GLPI_API_URL: "https://glpi.fixture.invalid/apirest.php",
     GLPI_LOGIN_ATTRIBUTE: "email",
-    GLPI_API_APP_TOKEN: "synthetic-fixture-app-token",
-    GLPI_API_USER_TOKEN: "synthetic-fixture-user-token",
+    GLPI_API_APP_TOKEN:
+      process.env.GLPI_FIXTURE_API_APP_TOKEN || "synthetic-fixture-app-token",
+    GLPI_API_USER_TOKEN:
+      process.env.GLPI_FIXTURE_API_USER_TOKEN || "synthetic-fixture-user-token",
   },
 });

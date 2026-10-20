@@ -4,7 +4,6 @@ import { getAdminApplications } from "@/lib/catalog-db";
 import { getAdminProfiles, getAdminUsers } from "@/lib/portal-users";
 import { getRoles, getSession } from "@/lib/oidc";
 import { getApplicationIconPath } from "@/lib/application-icons";
-import { defaultVisibleApplicationCodes } from "@/lib/catalog";
 import { UserManagement } from "@/components/user-management";
 import { UserDirectory } from "@/components/user-directory";
 import { redirect } from "next/navigation";
@@ -228,26 +227,25 @@ export default async function AdminPage({
                 sageEmployeeId: user.sageEmployeeId ?? user.employeeId,
                 keycloakSubject: user.keycloakSubject,
                 active: user.active,
+                glpiAccess: user.glpiAccess,
                 profileIds: user.assignments.map(({ profileId }) => profileId),
                 applicationIds: user.assignments.map(
                   ({ profile }) => profile.applicationId,
                 ),
               }))}
-              applications={profiles
-                .filter(
-                  (profile) =>
-                    profile.isDefault ||
-                    (profile.application.code === "GLPI" &&
-                      profile.key === "ACCESS"),
-                )
-                .map((profile) => ({
-                  id: profile.applicationId,
-                  code: profile.application.code,
-                  name: profile.application.name,
-                  includedByDefault: defaultVisibleApplicationCodes.some(
-                    (code) => code === profile.application.code,
-                  ),
-                }))}
+              applications={[
+                { id: "glpi-access", code: "GLPI", name: "Accès à GLPI" },
+                ...profiles
+                  .filter(
+                    (profile) =>
+                      profile.isDefault && profile.application.code !== "GLPI",
+                  )
+                  .map((profile) => ({
+                    id: profile.applicationId,
+                    code: profile.application.code,
+                    name: profile.application.name,
+                  })),
+              ]}
               savePortalUser={savePortalUser}
               deletePortalUser={deletePortalUser}
               sendPortalUserPasswordReset={sendPortalUserPasswordReset}

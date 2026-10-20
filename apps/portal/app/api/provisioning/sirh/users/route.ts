@@ -1,3 +1,4 @@
+import { queueGlpiProvisioning } from "@/lib/provisioning/glpi-access";
 import { z } from "zod";
 import {
   provisionKeycloakUser,
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
         });
       }
     }
+    await queueGlpiProvisioning(transaction, user.id);
     await transaction.auditLog.create({
       data: {
         userId: "SIRH",
@@ -152,6 +154,7 @@ export async function POST(request: Request) {
           email: payload.email.toLowerCase(),
           displayName: payload.displayName,
           active: enabled,
+          glpiAccess: user.glpiAccess,
           applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
         },
       },
@@ -164,6 +167,7 @@ export async function POST(request: Request) {
       id: result.id,
       sageId,
       keycloakSubject: result.keycloakSubject,
+      glpiAccess: result.glpiAccess,
       applicationAccess: existing ? "UNCHANGED" : "NOT_ASSIGNED",
       active: enabled,
     },

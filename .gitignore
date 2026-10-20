@@ -14,6 +14,7 @@ dist/
 coverage/
 *.log
 *.tsbuildinfo
+.worker-dist/
 
 # Docker et données locales
 data/

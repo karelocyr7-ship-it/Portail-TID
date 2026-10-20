@@ -7,7 +7,6 @@ export type UserManagementApplication = {
   id: string;
   code: string;
   name: string;
-  includedByDefault?: boolean;
 };
 
 export type UserManagementUser = {
@@ -19,6 +18,7 @@ export type UserManagementUser = {
   active: boolean;
   profileIds: string[];
   applicationIds: string[];
+  glpiAccess?: boolean | null;
 };
 
 type ServerAction = (formData: FormData) => Promise<void>;
@@ -290,7 +290,7 @@ export function UserManagement({
   );
 }
 
-function UserModal({
+export function UserModal({
   mode,
   applications,
   savePortalUser,
@@ -404,25 +404,29 @@ function UserModal({
             <div className="modal-access-grid">
               {applications.map((application) => (
                 <label className="profile-option" key={application.id}>
+                  {application.code === "GLPI" && (
+                    <input type="hidden" name="glpiAccessPresent" value="1" />
+                  )}
                   <input
                     type="checkbox"
                     name={
-                      application.includedByDefault
-                        ? undefined
+                      application.code === "GLPI"
+                        ? "glpiAccess"
                         : "applicationIds"
                     }
-                    value={application.id}
-                    disabled={application.includedByDefault}
+                    value={application.code === "GLPI" ? "on" : application.id}
                     defaultChecked={
-                      application.includedByDefault ||
-                      existing?.applicationIds.includes(application.id)
+                      application.code === "GLPI"
+                        ? (existing?.glpiAccess ?? true)
+                        : existing?.applicationIds.includes(application.id)
                     }
                   />
                   <span>
-                    <b>{application.name}</b>
-                    {application.includedByDefault && (
-                      <small>Accès inclus pour tous les comptes</small>
-                    )}
+                    <b>
+                      {application.code === "GLPI"
+                        ? "Accès à GLPI"
+                        : application.name}
+                    </b>
                   </span>
                 </label>
               ))}

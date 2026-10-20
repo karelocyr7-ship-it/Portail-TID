@@ -51,9 +51,17 @@ données personnelles des applications externes.
 Les applications externes conservent leurs propres autorisations et doivent
 continuer à valider leurs rôles côté serveur.
 
-La tuile GLPI est visible par défaut à tout compte portail connecté et actif,
-même sans affectation applicative. Cette visibilité n’ajoute aucun compte ni
-aucun droit fonctionnel dans GLPI ; les accès locaux restent gérés dans GLPI.
+La case « Accès à GLPI » est cochée par défaut pour les nouveaux comptes et
+les anciennes fiches sans valeur enregistrée. Le choix explicite, y compris
+`false`, est conservé en base lors des éditions et des synchronisations RH.
+Le décochage masque la tuile même pour un administrateur portail et retire
+l’autorisation GLPI dans l’API du portail.
+
+Le worker crée automatiquement les comptes GLPI manquants pour tous les
+matricules, ainsi que pour les comptes sans matricule dont l’accès est actif.
+Un nouveau compte avec matricule inactif ou accès décoché est créé désactivé. Il ne modifie jamais les profils des comptes existants.
+GLPI applique ses propres règles et son profil par défaut aux nouveaux comptes.
+Voir [configuration et recette isolée](GLPI-PROVISIONING.md).
 
 Chaque création ou modification de compte est inscrite dans `AuditLog`. Les
 migrations Prisma doivent être appliquées par la procédure de livraison ; ne

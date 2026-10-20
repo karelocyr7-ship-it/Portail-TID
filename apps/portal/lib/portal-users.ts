@@ -165,6 +165,7 @@ export async function getPortalUserAccess(identity: {
 
   return {
     managed: Boolean(user),
+    glpiAccess: user?.glpiAccess ?? true,
     active: user?.active ?? false,
     applicationIds:
       user?.assignments.map(({ profile }) => profile.applicationId) ?? [],

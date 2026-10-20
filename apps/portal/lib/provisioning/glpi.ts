@@ -122,9 +122,27 @@ export async function provisionGlpiAccount(user: Identity) {
         throw new Error("GLPI account is locally inactive");
       return "COMPLETED" as const;
     }
-    if (emails.length)
-      throw new Error("GLPI email already belongs to another login");
     const matricule = user.sageEmployeeId ?? user.employeeId;
+    if (emails.length) {
+      if (attribute !== "email")
+        throw new Error("GLPI email already belongs to another login");
+      // The deployed SAML plugin also resolves an existing account by unique email.
+      // Preserve legacy local logins and all their roles instead of duplicating them.
+      const existing: Row = await json(
+        await call(`User/${emails[0].users_id}`),
+      );
+      if (existing.id !== emails[0].users_id)
+        throw new Error("GLPI identity mismatch");
+      if (
+        existing.registration_number &&
+        matricule &&
+        existing.registration_number !== matricule
+      )
+        throw new Error("GLPI identity mismatch");
+      if ((enabled && !existing.is_active) || existing.is_deleted)
+        throw new Error("GLPI account is locally inactive");
+      return "COMPLETED" as const;
+    }
     if (
       matricule &&
       (await search("User", "registration_number", matricule)).some(

@@ -147,3 +147,50 @@ it("refuses a second account when an existing matricule has a changed login", as
     true,
   );
 });
+
+it("reuses a unique SAML email under a legacy local login without changing it", async () => {
+  responses([], [{ users_id: 42, email: user.email }]);
+  fetchMock
+    .mockResolvedValueOnce(
+      reply({
+        id: 42,
+        name: "legacy-admin",
+        is_active: 1,
+        is_deleted: 0,
+        registration_number: "",
+      }),
+    )
+    .mockResolvedValueOnce(reply(true));
+  expect(await provisionGlpiAccount(user)).toBe("COMPLETED");
+  expect(fetchMock.mock.calls.every(([, options]) => !options.method)).toBe(
+    true,
+  );
+});
+it.each([
+  [{ id: 42, is_active: 1, registration_number: "OTHER" }, "mismatch"],
+  [{ id: 42, is_active: 0 }, "locally inactive"],
+  [{ id: 42, is_active: 1, is_deleted: 1 }, "locally inactive"],
+])(
+  "rejects conflicting or unavailable legacy email accounts: %j",
+  async (existing, message) => {
+    responses([], [{ users_id: 42, email: user.email }]);
+    fetchMock
+      .mockResolvedValueOnce(reply(existing))
+      .mockResolvedValueOnce(reply(true));
+    await expect(provisionGlpiAccount(user)).rejects.toThrow(message as string);
+    expect(fetchMock.mock.calls.every(([, options]) => !options.method)).toBe(
+      true,
+    );
+  },
+);
+it("refuses ambiguous email matches without choosing a local account", async () => {
+  responses(
+    [],
+    [
+      { users_id: 42, email: user.email },
+      { users_id: 99, email: user.email },
+    ],
+  );
+  fetchMock.mockResolvedValueOnce(reply(true));
+  await expect(provisionGlpiAccount(user)).rejects.toThrow("ambiguous");
+});

@@ -2414,3 +2414,120 @@ body {
     margin-top: 9px;
   }
 }
+
+@media (max-width: 620px) {
+  .applications-page .application-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px 8px;
+  }
+
+  .applications-page .application-card {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .applications-page .application-card::before,
+  .applications-page .application-card-main {
+    display: none;
+  }
+
+  .applications-page .application-card-mobile {
+    display: flex;
+    min-height: 92px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    padding: 7px 4px;
+    border-radius: 10px;
+    color: var(--ink);
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .applications-page a.application-card-mobile:focus-visible {
+    outline: 2px solid var(--orange);
+    outline-offset: 2px;
+  }
+
+  .applications-page a.application-card-mobile:active {
+    background: var(--surface);
+  }
+
+  .applications-page .application-card-mobile-icon {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    place-items: center;
+    color: var(--navy);
+    font-size: 36px;
+    line-height: 1;
+  }
+
+  .applications-page .application-card-mobile-image {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+  }
+
+  .applications-page .application-card-mobile-title {
+    max-width: 100%;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .applications-page .application-card-mobile.is-disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+}
+
+.application-card-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 17px;
+}
+
+.application-card-mobile {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .applications-page .application-card-main {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  .sidebar nav {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px 7px;
+  }
+
+  .sidebar .nav-link {
+    min-width: 0;
+    min-height: 44px;
+    justify-content: flex-start;
+    gap: 9px;
+    padding: 8px 10px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .sidebar .nav-link span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

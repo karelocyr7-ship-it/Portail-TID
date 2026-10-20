@@ -65,7 +65,7 @@ const applications = [
   ],
   [
     "GLPI",
-    "GLPI",
+    "Support Informatique",
     "Gestion du parc informatique et support",
     "Support / Informatique",
     ["PORTAL_ADMIN"],

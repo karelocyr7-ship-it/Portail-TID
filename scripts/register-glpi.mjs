@@ -28,7 +28,7 @@ try {
     const app = await tx.application.create({
       data: {
         code: "GLPI",
-        name: "GLPI – Support IT & Parc Informatique",
+        name: "Support Informatique",
         description:
           "TID — Gestion des demandes informatiques, incidents, interventions et inventaire du parc.",
         categoryId: category.id,

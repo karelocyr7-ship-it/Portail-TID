@@ -17,7 +17,14 @@
 }
 
 .pf-v5-c-login__main {
+  --pf-v5-c-login__main--RowGap: 0.75rem;
   width: 100%;
+}
+
+.pf-v5-c-login__main-header,
+.pf-v5-c-login__main-body,
+.pf-v5-c-login__main-footer {
+  padding-block: 0.75rem;
 }
 
 #kc-header-wrapper {

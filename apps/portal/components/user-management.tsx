@@ -7,6 +7,7 @@ export type UserManagementApplication = {
   id: string;
   code: string;
   name: string;
+  includedByDefault?: boolean;
 };
 
 export type UserManagementUser = {
@@ -405,14 +406,23 @@ function UserModal({
                 <label className="profile-option" key={application.id}>
                   <input
                     type="checkbox"
-                    name="applicationIds"
+                    name={
+                      application.includedByDefault
+                        ? undefined
+                        : "applicationIds"
+                    }
                     value={application.id}
-                    defaultChecked={existing?.applicationIds.includes(
-                      application.id,
-                    )}
+                    disabled={application.includedByDefault}
+                    defaultChecked={
+                      application.includedByDefault ||
+                      existing?.applicationIds.includes(application.id)
+                    }
                   />
                   <span>
                     <b>{application.name}</b>
+                    {application.includedByDefault && (
+                      <small>Accès inclus pour tous les comptes</small>
+                    )}
                   </span>
                 </label>
               ))}

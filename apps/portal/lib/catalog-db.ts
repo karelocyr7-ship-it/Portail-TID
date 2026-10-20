@@ -25,6 +25,7 @@ export async function getVisibleApplicationsFromDatabase(
   const applications = await prisma.application.findMany({
     where: {
       active: true,
+      ...(portalUserAccess.glpiAccess === false ? { code: { not: "GLPI" } } : {}),
       ...(isAdmin
         ? {}
         : portalUserAccess.managed

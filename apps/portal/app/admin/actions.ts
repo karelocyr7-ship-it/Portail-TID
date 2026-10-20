@@ -1,5 +1,10 @@
 "use server";
 
+import {
+  glpiAccessFromForm,
+  queueGlpiProvisioning,
+} from "@/lib/provisioning/glpi-access";
+
 import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
@@ -170,6 +175,7 @@ export async function savePortalUser(formData: FormData) {
       : null;
     if (userId && !before) throw new Error("Compte portail introuvable");
 
+    const glpiAccess = glpiAccessFromForm(formData, before?.glpiAccess);
     const currentProfiles = await transaction.applicationProfile.findMany({
       where: {
         id: {
@@ -211,6 +217,7 @@ export async function savePortalUser(formData: FormData) {
             email: email || null,
             displayName,
             active,
+            glpiAccess,
           },
         })
       : await transaction.portalUser.create({
@@ -221,6 +228,7 @@ export async function savePortalUser(formData: FormData) {
             email: email || null,
             displayName,
             active,
+            glpiAccess,
           },
         });
 
@@ -271,6 +279,7 @@ export async function savePortalUser(formData: FormData) {
         },
       });
     }
+    await queueGlpiProvisioning(transaction, user.id);
     await transaction.auditLog.create({
       data: {
         userId: session.subject,
@@ -285,6 +294,7 @@ export async function savePortalUser(formData: FormData) {
               email: before.email,
               displayName: before.displayName,
               active: before.active,
+              glpiAccess: before.glpiAccess,
               profileIds: before.assignments.map(({ profileId }) => profileId),
             }
           : undefined,
@@ -295,6 +305,7 @@ export async function savePortalUser(formData: FormData) {
           email: email || null,
           displayName,
           active,
+          glpiAccess,
           profileIds: [...new Set(profileIds)],
         },
       },

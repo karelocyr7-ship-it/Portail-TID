@@ -47,10 +47,17 @@ export async function POST(request: Request) {
         },
       },
     });
-    const authorized = applicationAccess(
-      Boolean(user?.active),
-      user?.assignments ?? [],
-    );
+    const authorized =
+      application === "GLPI"
+        ? Boolean(
+            user?.active &&
+            (user.glpiAccess ?? true) &&
+            (await prisma.application.findFirst({
+              where: { code: "GLPI", active: true },
+              select: { id: true },
+            })),
+          )
+        : applicationAccess(Boolean(user?.active), user?.assignments ?? []);
     return NextResponse.json({
       lookup: true,
       subject: identity.subject,

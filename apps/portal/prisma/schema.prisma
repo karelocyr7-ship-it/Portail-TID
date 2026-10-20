@@ -72,6 +72,7 @@ model ApplicationProfile {
 }
 
 model PortalUser {
+  glpiAccess Boolean @default(true)
   id              String                    @id @default(cuid())
   keycloakSubject String                    @unique
   sageEmployeeId   String?                   @unique

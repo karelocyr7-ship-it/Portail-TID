@@ -1,3 +1,4 @@
+import { queueGlpiProvisioning } from "@/lib/provisioning/glpi-access";
 import { z } from "zod";
 import { getPrisma } from "@/lib/prisma";
 import { verifySirhSignature } from "@/lib/sirh-provisioning";
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
         }
         if (outcome.status === "READY" && outcome.subject) {
           stage = "portal_account";
-          await tx.portalUser.upsert({
+          const portalUser = await tx.portalUser.upsert({
             where: { sageEmployeeId: sageId },
             create: {
               sageEmployeeId: sageId,
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
             },
             update: {}, // Initial credentials never change roles, assignments or identity.
           });
+          await queueGlpiProvisioning(tx, portalUser.id);
         }
         stage = "audit_completion";
         await tx.auditLog.update({

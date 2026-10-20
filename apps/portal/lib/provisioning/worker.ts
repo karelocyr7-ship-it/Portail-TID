@@ -1,3 +1,4 @@
+import { provisionGlpiAccount } from "./glpi";
 import { applicationAccess } from "../application-access.js";
 import { randomUUID } from "node:crypto";
 import { getPrisma } from "../prisma";
@@ -81,7 +82,8 @@ export async function provisionApplication(
 ) {
   if (!job) return;
   const connector = connectorFor(job.application.code);
-  if (!connector) return "WAITING_CONFIG" as const;
+  if (!connector && job.application.code !== "GLPI")
+    return "WAITING_CONFIG" as const;
   // Re-read current access assignments so stale queued jobs cannot restore access.
   const currentUser = await getPrisma().portalUser.findUnique({
     where: { id: job.user.id },
@@ -97,6 +99,21 @@ export async function provisionApplication(
       },
     },
   });
+  if (job.application.code === "GLPI") {
+    const application = await getPrisma().application.findUnique({
+      where: { id: job.application.id },
+      select: { active: true },
+    });
+    // Removing portal access never alters existing GLPI accounts or local roles.
+    if (
+      !currentUser?.active ||
+      currentUser.glpiAccess === false ||
+      !application?.active
+    )
+      return "COMPLETED" as const;
+    return provisionGlpiAccount(currentUser);
+  }
+  if (!connector) return "WAITING_CONFIG" as const;
   const authorized = applicationAccess(
     Boolean(currentUser?.active),
     currentUser?.assignments ?? [],

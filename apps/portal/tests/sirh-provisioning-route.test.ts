@@ -52,12 +52,19 @@ describe("POST /api/provisioning/sirh/users", () => {
     mocks.syncKeycloakUsernameFromSirh.mockResolvedValue(undefined);
   });
 
-  it("crée l'identité Portail sans attribuer d'accès applicatif implicite", async () => {
+  it("crée l'identité Portail et met GLPI en file sans attribuer de rôle métier", async () => {
     const user = {
       id: "synthetic-portal-user",
       keycloakSubject: "synthetic-subject",
     };
     const transaction = {
+      application: {
+        findUnique: vi.fn().mockResolvedValue({ id: "synthetic-glpi" }),
+      },
+      applicationProfile: {
+        upsert: vi.fn().mockResolvedValue({ id: "synthetic-glpi-access" }),
+      },
+      applicationProvisioningOutbox: { upsert: vi.fn() },
       portalUser: { create: vi.fn().mockResolvedValue(user) },
       auditLog: { create: vi.fn().mockResolvedValue(undefined) },
     };
@@ -86,7 +93,13 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(transaction.auditLog.create).toHaveBeenCalledOnce();
     expect(mocks.syncKeycloakUsernameFromSirh).not.toHaveBeenCalled();
     expect("userApplicationProfile" in transaction).toBe(false);
-    expect("applicationProvisioningOutbox" in transaction).toBe(false);
+    expect(
+      transaction.applicationProvisioningOutbox.upsert,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ applicationId: "synthetic-glpi" }),
+      }),
+    );
   });
 
   it("laisse les accès applicatifs existants inchangés lors d'une mise à jour SIRH", async () => {
@@ -96,6 +109,7 @@ describe("POST /api/provisioning/sirh/users", () => {
     };
     const updated = { ...existing };
     const transaction = {
+      application: { findUnique: vi.fn().mockResolvedValue(null) },
       portalUser: { update: vi.fn().mockResolvedValue(updated) },
       userApplicationProfile: {
         findMany: vi.fn().mockResolvedValue([
@@ -127,6 +141,9 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(response.status).toBe(200);
     expect(result.applicationAccess).toBe("UNCHANGED");
     expect(transaction.portalUser.update).toHaveBeenCalledOnce();
+    expect(
+      transaction.portalUser.update.mock.calls[0][0].data,
+    ).not.toHaveProperty("glpiAccess");
     expect(mocks.provisionKeycloakUser).not.toHaveBeenCalled();
     expect(mocks.syncKeycloakUsernameFromSirh).toHaveBeenCalledWith(
       "synthetic-subject",

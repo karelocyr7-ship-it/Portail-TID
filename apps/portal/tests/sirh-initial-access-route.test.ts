@@ -25,6 +25,9 @@ const payload = () => ({
 });
 const tx = {
   $queryRaw: vi.fn(),
+  application: { findUnique: vi.fn() },
+  applicationProfile: { upsert: vi.fn() },
+  applicationProvisioningOutbox: { upsert: vi.fn() },
   auditLog: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   portalUser: { findUnique: vi.fn(), upsert: vi.fn() },
 };
@@ -49,6 +52,11 @@ function request(body = payload(), age = 0, signed = true) {
 }
 beforeEach(() => {
   vi.resetAllMocks();
+  tx.portalUser.upsert.mockResolvedValue({ id: "synthetic-user" });
+  tx.application.findUnique.mockResolvedValue({ id: "synthetic-glpi" });
+  tx.applicationProfile.upsert.mockResolvedValue({
+    id: "synthetic-glpi-access",
+  });
   vi.stubEnv("SIRH_PROVISIONING_SECRET", signingSecret);
   vi.stubEnv("SIRH_PROVISIONING_MAX_SKEW_SECONDS", "300");
   mocks.getPrisma.mockReturnValue({
@@ -89,6 +97,7 @@ describe("SIRH initial-access request boundary", () => {
       const response = await POST(request({ ...payload(), sageId }));
       expect(response.status).toBe(200);
       expect(response.headers.get("cache-control")).toBe("no-store");
+      expect(tx.applicationProvisioningOutbox.upsert).toHaveBeenCalledOnce();
       const data = tx.portalUser.upsert.mock.calls[0][0];
       expect(data.create.employeeId).toBe(sageId);
       expect(data.create.sageEmployeeId).toBe(sageId);

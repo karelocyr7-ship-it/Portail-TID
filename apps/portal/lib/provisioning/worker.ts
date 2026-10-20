@@ -105,11 +105,13 @@ export async function provisionApplication(
       select: { active: true },
     });
     // Removing portal access never alters existing GLPI accounts or local roles.
-    if (
-      !currentUser?.active ||
-      currentUser.glpiAccess === false ||
-      !application?.active
-    )
+    if (!currentUser || !application?.active) return "COMPLETED" as const;
+    const matricule = (
+      currentUser.sageEmployeeId ?? currentUser.employeeId
+    )?.trim();
+    // Every employee identity is created, including opt-outs (initially inactive).
+    // Non-employee identities are created only when portal access is enabled.
+    if (!matricule && (!currentUser.active || currentUser.glpiAccess === false))
       return "COMPLETED" as const;
     return provisionGlpiAccount(currentUser);
   }

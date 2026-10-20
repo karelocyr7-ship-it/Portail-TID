@@ -40,7 +40,9 @@ try {
     if (name === "20261020150000_persistent_glpi_access") {
       await client.query(`INSERT INTO "Category" (id, name, description) VALUES ('fixture-category', 'Synthetic', 'Synthetic fixture');
         INSERT INTO "Application" (id, code, name, description, "categoryId", icon, active, "updatedAt") VALUES ('fixture-glpi', 'GLPI', 'Synthetic GLPI', 'Synthetic', 'fixture-category', 'help', true, NOW());
-        INSERT INTO "PortalUser" (id, "keycloakSubject", email, "displayName", "updatedAt") VALUES ('fixture-legacy-id', 'fixture-legacy', 'legacy-${runId}@example.invalid', 'Synthetic Legacy', NOW());`);
+        INSERT INTO "PortalUser" (id, "keycloakSubject", email, "displayName", "updatedAt") VALUES ('fixture-legacy-id', 'fixture-legacy', 'legacy-${runId}@example.invalid', 'Synthetic Legacy', NOW());
+        INSERT INTO "PortalUser" (id, "keycloakSubject", "sageEmployeeId", "employeeId", email, "displayName", active, "updatedAt")
+        VALUES ('fixture-inactive-id', 'fixture-inactive', 'TID999999002', 'TID999999002', 'inactive-${runId}@example.invalid', 'Synthetic Inactive', false, NOW());`);
     }
     await client.query(
       readFileSync(new URL(`${name}/migration.sql`, directory), "utf8"),

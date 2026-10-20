@@ -12,7 +12,10 @@ INSERT INTO "ApplicationProvisioningOutbox"
 SELECT 'glpi-initial-' || u."id", u."id" || ':' || a."id", u."id", a."id", p."id", CURRENT_TIMESTAMP
 FROM "PortalUser" u CROSS JOIN "Application" a
 JOIN "ApplicationProfile" p ON p."applicationId" = a."id" AND p."key" = 'ACCESS'
-WHERE a."code" = 'GLPI' AND u."active" AND u."glpiAccess"
+WHERE a."code" = 'GLPI' AND (
+  u."sageEmployeeId" IS NOT NULL OR u."employeeId" IS NOT NULL
+  OR (u."active" AND u."glpiAccess")
+)
 ON CONFLICT ("userId", "applicationId") DO UPDATE
 SET "status" = 'PENDING', "attempts" = 0, "lastError" = NULL,
     "nextAttemptAt" = CURRENT_TIMESTAMP, "updatedAt" = CURRENT_TIMESTAMP;

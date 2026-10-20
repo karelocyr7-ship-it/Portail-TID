@@ -14,14 +14,21 @@ La case reste affichée indépendamment de la présence d’un profil catalogue 
 
 La sauvegarde admin, l’API d’identité SIRH et l’API de première activation SIRH
 mettent la création GLPI en file dans la même transaction. La migration met
-également en file les anciennes fiches actives. Le profil catalogue `ACCESS`
+également en file toutes les anciennes fiches portant un matricule (y compris
+les fiches inactives), ainsi que les fiches actives sans matricule. Le profil catalogue `ACCESS`
 sert seulement de référence technique à la file, sans attribution de rôle.
 Le worker relit l’accès, l’activité du compte et de l’application avant chaque
-tentative. Un accès décoché ne provoque aucun appel GLPI.
+tentative. Tous les comptes avec matricule doivent exister dans GLPI. Si le
+compte portail est inactif ou son accès GLPI décoché, l’identité manquante est
+créée désactivée. Pour les comptes sans matricule, un accès décoché ne provoque
+aucun appel GLPI. Le choix enregistré n’est jamais recoché par ce traitement.
 
 Le connecteur REST v1 recherche le login et l’e-mail avec comparaison exacte,
+enregistre le matricule dans `registration_number` à la création,
 crée uniquement les comptes absents et refuse les rapprochements ambigus,
-les e-mails déjà associés à un autre login et les comptes localement inactifs.
+les e-mails ou matricules déjà associés à un autre login. Un compte existant localement
+inactif est conservé tel quel ; si un accès actif est demandé, le connecteur
+signale cet état à traiter par un administrateur GLPI au lieu de le réactiver.
 Les nouvelles identités utilisent `Auth::EXTERNAL` sans mot de passe local.
 GLPI applique lui-même ses règles/profil par défaut. Aucun rôle GLPI n’est
 fourni ni modifié par le portail. Les comptes existants ne sont pas réactivés,
@@ -77,7 +84,8 @@ Il ne remplace pas un conteneur/réseau existant portant le même nom.
 Le runner crée une nouvelle base dédiée à chaque exécution, applique les
 migrations précédentes, insère une ancienne fiche synthétique, puis applique
 la migration GLPI. Il teste la sauvegarde réelle et le rechargement via Prisma,
-le catalogue et l’API, l’absence d’appel pour un accès décoché, puis la création
+le catalogue et l’API, l’absence d’appel pour un compte sans matricule décoché,
+la création désactivée des matricules décochés ou inactifs, puis la création
 d’un compte dans GLPI et un second passage sans duplication. Le transport est
 redirigé uniquement dans le test vers l’HTTP du conteneur isolé ; le connecteur
 livré exige HTTPS et refuse les redirections.
@@ -109,7 +117,7 @@ jamais modifiés par le connecteur et aucune restauration GLPI n’est automatiq
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `make lint`                                                     | Réussi                                                                                                                             |
 | `make typecheck`                                                | Réussi                                                                                                                             |
-| `make test`                                                     | 100 tests Vitest + 8 tests Node réussis ; recette externe exclue de cette commande                                                 |
+| `make test`                                                     | 104 tests Vitest + 8 tests Node réussis ; recette externe exclue de cette commande                                                 |
 | `pnpm format:check`                                             | Réussi                                                                                                                             |
 | `make build`                                                    | Réussi ; 10 avertissements Turbopack sur les accès fichiers des modules `agent-reports` / `agent-runtime`, non modifiés par ce lot |
 | `pnpm --filter portal run build:worker`                         | Réussi                                                                                                                             |
@@ -117,8 +125,8 @@ jamais modifiés par le connecteur et aucune restauration GLPI n’est automatiq
 | `node --check apps/portal/scripts/start-glpi-isolated.mjs`      | Réussi                                                                                                                             |
 | `git diff --check`                                              | Réussi                                                                                                                             |
 
-La recette réelle vérifie aussi la mise en file par la migration et le refus
-par le worker d’un ancien job après décochage. Aucun compte réel, rôle local,
+La recette réelle vérifie aussi la mise en file par la migration, y compris les
+matricules inactifs, et la relecture de l’accès par le worker après décochage. Aucun compte réel, rôle local,
 fichier de configuration GLPI de production ou fichier `.env` réel n’a été
 consulté ou modifié pour cette recette. Aucune livraison en production n’est
 réalisée dans ce lot. Les trois conteneurs de recette ont été arrêtés après

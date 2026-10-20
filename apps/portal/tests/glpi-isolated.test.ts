@@ -128,6 +128,7 @@ it.skipIf(!enabled)(
       });
     // A previously queued job must reread the persisted opt-out and make no API call.
     const realFetch = globalThis.fetch;
+    const observedUsers: { name: string; is_active: number }[] = [];
     const apiFetch = vi.fn(
       async (url: string | URL | Request, init?: RequestInit) => {
         const target = String(url).replace(
@@ -140,7 +141,10 @@ it.skipIf(!enabled)(
           )
         )
           throw new Error("Fixture URL required");
-        return realFetch(target, init);
+        const response = await realFetch(target, init);
+        if (target.includes("/User?"))
+          observedUsers.push(...(await response.clone().json()));
+        return response;
       },
     );
     vi.stubGlobal("fetch", apiFetch);
@@ -165,6 +169,60 @@ it.skipIf(!enabled)(
       expect(
         apiFetch.mock.calls.filter(([, options]) => options?.method === "POST"),
       ).toHaveLength(0);
+      // All matriculated identities must exist even when portal GLPI is unchecked.
+      const employeeForm = new FormData();
+      employeeForm.set("keycloakSubject", "fixture-opted-out-employee");
+      employeeForm.set("sageId", "TID999999001");
+      employeeForm.set("email", `employee-${legacy.email}`);
+      employeeForm.set("displayName", "Synthetic Employee");
+      employeeForm.set("active", "on");
+      employeeForm.set("glpiAccessPresent", "1");
+      await savePortalUser(employeeForm);
+      const employeeJob =
+        await prisma.applicationProvisioningOutbox.findFirstOrThrow({
+          where: {
+            user: { keycloakSubject: "fixture-opted-out-employee" },
+            application: { code: "GLPI" },
+          },
+          include: { user: true, application: true },
+        });
+      expect(employeeJob.user.glpiAccess).toBe(false);
+      const inactiveJob =
+        await prisma.applicationProvisioningOutbox.findFirstOrThrow({
+          where: {
+            userId: "fixture-inactive-id",
+            application: { code: "GLPI" },
+          },
+          include: { user: true, application: true },
+        });
+      expect(inactiveJob.status).toBe("PENDING");
+      apiFetch.mockClear();
+      expect(await provisionApplication(inactiveJob)).toBe("COMPLETED");
+      const inactivePost = apiFetch.mock.calls.find(
+        ([, options]) => options?.method === "POST",
+      );
+      expect(JSON.parse(String(inactivePost![1]?.body)).input.is_active).toBe(
+        0,
+      );
+      apiFetch.mockClear();
+      expect(await provisionApplication(employeeJob)).toBe("COMPLETED");
+      const post = apiFetch.mock.calls.find(
+        ([, options]) => options?.method === "POST",
+      );
+      expect(post).toBeDefined();
+      expect(JSON.parse(String(post![1]?.body)).input.is_active).toBe(0);
+      apiFetch.mockClear();
+      expect(await provisionApplication(employeeJob)).toBe("COMPLETED");
+      expect(observedUsers).toContainEqual(
+        expect.objectContaining({ name: employeeJob.user.email, is_active: 0 }),
+      );
+      expect(await provisionApplication(inactiveJob)).toBe("COMPLETED");
+      expect(observedUsers).toContainEqual(
+        expect.objectContaining({ name: inactiveJob.user.email, is_active: 0 }),
+      );
+      expect(
+        apiFetch.mock.calls.some(([, options]) => options?.method === "POST"),
+      ).toBe(false);
     } finally {
       vi.unstubAllGlobals();
     }

@@ -57,8 +57,9 @@ les anciennes fiches sans valeur enregistrée. Le choix explicite, y compris
 Le décochage masque la tuile même pour un administrateur portail et retire
 l’autorisation GLPI dans l’API du portail.
 
-Lorsque l’accès est actif, le worker crée automatiquement le compte GLPI
-manquant via son API. Il ne modifie jamais les profils des comptes existants.
+Le worker crée automatiquement les comptes GLPI manquants pour tous les
+matricules, ainsi que pour les comptes sans matricule dont l’accès est actif.
+Un nouveau compte avec matricule inactif ou accès décoché est créé désactivé. Il ne modifie jamais les profils des comptes existants.
 GLPI applique ses propres règles et son profil par défaut aux nouveaux comptes.
 Voir [configuration et recette isolée](GLPI-PROVISIONING.md).
 

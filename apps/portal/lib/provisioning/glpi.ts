@@ -3,6 +3,8 @@ type Identity = {
   sageEmployeeId: string | null;
   employeeId: string | null;
   displayName: string;
+  active?: boolean;
+  glpiAccess?: boolean;
 };
 type Row = {
   id: number;
@@ -11,6 +13,7 @@ type Row = {
   users_id?: number;
   is_active?: number;
   is_deleted?: number;
+  registration_number?: string;
 };
 
 /** GLPI REST v1: create identities only. Existing local profiles are never changed. */
@@ -38,6 +41,7 @@ export async function provisionGlpiAccount(user: Identity) {
   const login =
     attribute === "email" ? email : (user.sageEmployeeId ?? user.employeeId);
   if (!email || !login) throw new Error("GLPI identity is incomplete");
+  const enabled = user.active !== false && user.glpiAccess !== false;
   const endpoint = base.replace(/\/$/, "");
   let session: string | undefined;
   async function call(path: string, init?: RequestInit) {
@@ -114,12 +118,20 @@ export async function provisionGlpiAccount(user: Identity) {
       const existing = users[0];
       if (!emails.length || emails.some((row) => row.users_id !== existing.id))
         throw new Error("GLPI identity mismatch");
-      if (!existing.is_active || existing.is_deleted)
+      if ((enabled && !existing.is_active) || existing.is_deleted)
         throw new Error("GLPI account is locally inactive");
       return "COMPLETED" as const;
     }
     if (emails.length)
       throw new Error("GLPI email already belongs to another login");
+    const matricule = user.sageEmployeeId ?? user.employeeId;
+    if (
+      matricule &&
+      (await search("User", "registration_number", matricule)).some(
+        (row) => row.registration_number === matricule,
+      )
+    )
+      throw new Error("GLPI matricule already belongs to another login");
     const [firstname, ...last] = user.displayName.trim().split(/\s+/);
     const created = await json(
       await call("User", {
@@ -127,9 +139,10 @@ export async function provisionGlpiAccount(user: Identity) {
         body: JSON.stringify({
           input: {
             name: login,
+            ...(matricule ? { registration_number: matricule } : {}),
             firstname,
             realname: last.join(" "),
-            is_active: 1,
+            is_active: enabled ? 1 : 0,
             authtype: 4, // Auth::EXTERNAL; SSO identity, no local password.
             _useremails: { "-1": email },
             _default_email: -1,

@@ -26,6 +26,8 @@ function responses(users: unknown[], emails: unknown[]) {
     .mockResolvedValueOnce(reply({ session_token: "synthetic-session" }))
     .mockResolvedValueOnce(reply(users))
     .mockResolvedValueOnce(reply(emails));
+  if (!users.length && !emails.length)
+    fetchMock.mockResolvedValueOnce(reply([]));
 }
 it("creates an external identity without passwords or remotely assigned roles", async () => {
   responses([], []);
@@ -33,7 +35,10 @@ it("creates an external identity without passwords or remotely assigned roles", 
     .mockResolvedValueOnce(reply({ id: 42 }, 201))
     .mockResolvedValueOnce(reply(true));
   expect(await provisionGlpiAccount(user)).toBe("COMPLETED");
-  const input = JSON.parse(fetchMock.mock.calls[3][1].body).input;
+  const input = JSON.parse(
+    fetchMock.mock.calls.find(([, options]) => options.method === "POST")![1]
+      .body,
+  ).input;
   expect(input).toMatchObject({
     name: user.email,
     authtype: 4,
@@ -81,5 +86,64 @@ it("does not log upstream payloads when a response is not JSON", async () => {
   );
   await expect(provisionGlpiAccount(user)).rejects.toThrow(
     "Invalid GLPI JSON response",
+  );
+});
+
+it.each([
+  { active: false, glpiAccess: true },
+  { active: true, glpiAccess: false },
+])(
+  "creates matriculated identities inactive when access is unavailable: %j",
+  async (access) => {
+    responses([], []);
+    fetchMock
+      .mockResolvedValueOnce(reply({ id: 43 }, 201))
+      .mockResolvedValueOnce(reply(true));
+    expect(await provisionGlpiAccount({ ...user, ...access })).toBe(
+      "COMPLETED",
+    );
+    expect(
+      JSON.parse(
+        fetchMock.mock.calls.find(
+          ([, options]) => options.method === "POST",
+        )![1].body,
+      ).input.is_active,
+    ).toBe(0);
+  },
+);
+it("preserves an existing inactive account when provisioning an opted-out employee", async () => {
+  responses(
+    [{ id: 42, name: user.email, is_active: 0, is_deleted: 0 }],
+    [{ users_id: 42, email: user.email }],
+  );
+  fetchMock.mockResolvedValueOnce(reply(true));
+  expect(await provisionGlpiAccount({ ...user, glpiAccess: false })).toBe(
+    "COMPLETED",
+  );
+  expect(fetchMock.mock.calls.every(([, options]) => !options.method)).toBe(
+    true,
+  );
+});
+
+it("refuses a second account when an existing matricule has a changed login", async () => {
+  fetchMock
+    .mockResolvedValueOnce(reply({ session_token: "synthetic-session" }))
+    .mockResolvedValueOnce(reply([]))
+    .mockResolvedValueOnce(reply([]))
+    .mockResolvedValueOnce(
+      reply([
+        {
+          id: 42,
+          name: "old@example.invalid",
+          registration_number: user.sageEmployeeId,
+        },
+      ]),
+    )
+    .mockResolvedValueOnce(reply(true));
+  await expect(provisionGlpiAccount(user)).rejects.toThrow(
+    "matricule already belongs",
+  );
+  expect(fetchMock.mock.calls.every(([, options]) => !options.method)).toBe(
+    true,
   );
 });

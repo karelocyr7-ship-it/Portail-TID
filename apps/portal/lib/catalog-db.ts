@@ -1,6 +1,7 @@
 import { getPrisma } from "@/lib/prisma";
 import {
   canReadCatalog,
+  defaultVisibleApplicationCodes,
   getApplicationLaunchUrl,
   type CatalogApplication,
 } from "@/lib/catalog";
@@ -13,11 +14,13 @@ export async function getVisibleApplicationsFromDatabase(
   employeeId?: string,
   email?: string,
 ): Promise<CatalogApplication[]> {
+  if (!subject) return [];
   const prisma = getPrisma();
   const isAdmin = roles.includes("PORTAL_ADMIN");
-  const portalUserAccess = subject
-    ? await getPortalUserAccess({ subject, sageId, employeeId, email })
-    : { managed: false, active: false, applicationIds: [] };
+  const portalUserAccess = {
+    ...(await getPortalUserAccess({ subject, sageId, employeeId, email })),
+    authenticated: true,
+  };
   if (!canReadCatalog(roles, portalUserAccess)) return [];
   const applications = await prisma.application.findMany({
     where: {
@@ -25,8 +28,18 @@ export async function getVisibleApplicationsFromDatabase(
       ...(isAdmin
         ? {}
         : portalUserAccess.managed
-          ? { id: { in: portalUserAccess.applicationIds } }
-          : { roles: { some: { keycloakRole: { in: [...roles] } } } }),
+          ? {
+              OR: [
+                { id: { in: portalUserAccess.applicationIds } },
+                { code: { in: [...defaultVisibleApplicationCodes] } },
+              ],
+            }
+          : {
+              OR: [
+                { roles: { some: { keycloakRole: { in: [...roles] } } } },
+                { code: { in: [...defaultVisibleApplicationCodes] } },
+              ],
+            }),
     },
     include: { category: true, roles: true },
     orderBy: [{ category: { displayOrder: "asc" } }, { displayOrder: "asc" }],
@@ -43,6 +56,9 @@ export async function getVisibleApplicationsFromDatabase(
         ? 2
         : (application.integrationLevel as 1 | 2 | 3),
     active: application.active,
+    availableToAllUsers: defaultVisibleApplicationCodes.includes(
+      application.code as (typeof defaultVisibleApplicationCodes)[number],
+    ),
     maintenance: application.maintenance,
     maintenanceMessage: application.maintenanceMessage ?? undefined,
     url: getApplicationLaunchUrl(application.code, application.url),

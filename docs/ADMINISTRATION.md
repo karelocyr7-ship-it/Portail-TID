@@ -51,6 +51,10 @@ données personnelles des applications externes.
 Les applications externes conservent leurs propres autorisations et doivent
 continuer à valider leurs rôles côté serveur.
 
+La tuile GLPI est visible par défaut à tout compte portail connecté et actif,
+même sans affectation applicative. Cette visibilité n’ajoute aucun compte ni
+aucun droit fonctionnel dans GLPI ; les accès locaux restent gérés dans GLPI.
+
 Chaque création ou modification de compte est inscrite dans `AuditLog`. Les
 migrations Prisma doivent être appliquées par la procédure de livraison ; ne
 pas modifier directement la base de production.

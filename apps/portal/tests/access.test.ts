@@ -36,6 +36,20 @@ describe("contrôle d’accès au catalogue", () => {
     expect(hasRoleAccess(mdm!, ["RH"])).toBe(false);
   });
 
+  it("rend GLPI visible par défaut à tout utilisateur connecté", () => {
+    const glpi = catalogApplications.find(
+      (application) => application.code === "GLPI",
+    );
+    expect(glpi).toMatchObject({
+      availableToAllUsers: true,
+      url: "https://glpi.tadgroupe.com/?samlIdpId=1",
+    });
+    expect(hasRoleAccess(glpi!, [])).toBe(true);
+    expect(getVisibleApplications([]).map(({ code }) => code)).toEqual([
+      "GLPI",
+    ]);
+  });
+
   it("ouvre ATF via Keycloak et conserve ses profils métier", () => {
     const atf = catalogApplications.find(
       (application) => application.code === "ATF",
@@ -80,8 +94,37 @@ describe("contrôle d’accès au catalogue", () => {
     );
   });
 
-  it("ne renvoie jamais les applications inactives", () => {
-    expect(getVisibleApplications([])).toHaveLength(0);
+  it("permet à tout compte connecté actif de voir le catalogue même sans affectation", () => {
+    expect(
+      canReadCatalog([], {
+        managed: true,
+        active: true,
+        applicationIds: [],
+      }),
+    ).toBe(true);
+    expect(
+      canReadCatalog([], {
+        managed: true,
+        active: false,
+        applicationIds: [],
+      }),
+    ).toBe(false);
+    expect(
+      canReadCatalog([], {
+        managed: false,
+        active: false,
+        applicationIds: [],
+        authenticated: false,
+      }),
+    ).toBe(false);
+    expect(
+      canReadCatalog([], {
+        managed: false,
+        active: false,
+        applicationIds: [],
+        authenticated: true,
+      }),
+    ).toBe(true);
   });
 
   it("réserve le catalogue géré aux comptes actifs et habilités", () => {
@@ -105,7 +148,7 @@ describe("contrôle d’accès au catalogue", () => {
         active: true,
         applicationIds: [],
       }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("laisse PORTAL_ADMIN accéder au catalogue sans profil applicatif", () => {

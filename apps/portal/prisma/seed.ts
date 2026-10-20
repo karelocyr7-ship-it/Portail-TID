@@ -17,6 +17,7 @@ const categories = [
   ["Administration", "Documents et fonctions administratives", 6],
   ["Informatique", "Outils techniques et référentiels", 7],
   ["Recrutement OCI", "Recrutement Telco et OM pour OCI", 8],
+  ["Support / Informatique", "Support informatique et gestion de parc", 9],
 ] as const;
 
 const applications = [
@@ -63,6 +64,13 @@ const applications = [
     ["PORTAL_ADMIN", "INFORMATIQUE"],
   ],
   [
+    "GLPI",
+    "GLPI",
+    "Gestion du parc informatique et support",
+    "Support / Informatique",
+    ["PORTAL_ADMIN"],
+  ],
+  [
     "SIRH",
     "SIRH",
     "Système d’information RH",
@@ -99,6 +107,7 @@ const initialApplicationUrls: Record<string, string> = {
   "REVUE-PDV": "https://pdv.tadgroupe.com/api/auth/oidc/start",
   ATF: "https://atf.tadgroupe.com/rest/public/oidc",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
+  GLPI: "https://glpi.tadgroupe.com/?samlIdpId=1",
 };
 
 const profileNames: Record<string, string> = {

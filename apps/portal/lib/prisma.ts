@@ -17,8 +17,7 @@ export function getPrisma() {
     adapter: new PrismaPg({ connectionString }),
   });
 
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = prisma;
-  }
+  // Workers call this accessor for every job. Reuse one pool in production too.
+  globalForPrisma.prisma = prisma;
   return prisma;
 }

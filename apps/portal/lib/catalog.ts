@@ -22,6 +22,7 @@ export type CatalogApplication = {
   icon: string;
   integrationLevel: 1 | 2 | 3;
   active: boolean;
+  availableToAllUsers?: boolean;
   maintenance?: boolean;
   maintenanceMessage?: string;
   url?: string;
@@ -32,15 +33,18 @@ export type PortalCatalogAccess = {
   managed: boolean;
   active: boolean;
   applicationIds: string[];
+  authenticated?: boolean;
 };
+
+export const defaultVisibleApplicationCodes = ["GLPI"] as const;
 
 export function canReadCatalog(
   roles: readonly string[],
   access: PortalCatalogAccess,
 ): boolean {
   if (roles.includes("PORTAL_ADMIN")) return true;
-  if (access.managed) return access.active && access.applicationIds.length > 0;
-  return roles.length > 0;
+  if (access.managed) return access.active;
+  return access.authenticated === true || roles.length > 0;
 }
 
 export const catalogApplications: CatalogApplication[] = [
@@ -110,6 +114,18 @@ export const catalogApplications: CatalogApplication[] = [
     roles: ["PORTAL_ADMIN", "INFORMATIQUE"],
   },
   {
+    code: "GLPI",
+    name: "GLPI",
+    description: "Gestion du parc informatique et support",
+    category: "Support / Informatique",
+    icon: "▦",
+    integrationLevel: 1,
+    active: true,
+    availableToAllUsers: true,
+    url: "https://glpi.tadgroupe.com/?samlIdpId=1",
+    roles: ["PORTAL_ADMIN"],
+  },
+  {
     code: "SIRH",
     name: "SIRH",
     description: "Système d’information RH",
@@ -161,7 +177,10 @@ export function hasRoleAccess(
   roles: readonly string[],
 ): boolean {
   if (roles.includes("PORTAL_ADMIN")) return true;
-  return application.roles.some((role) => roles.includes(role));
+  return (
+    application.availableToAllUsers === true ||
+    application.roles.some((role) => roles.includes(role))
+  );
 }
 
 export function getVisibleApplications(

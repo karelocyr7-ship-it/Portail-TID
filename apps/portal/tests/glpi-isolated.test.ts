@@ -128,7 +128,7 @@ it.skipIf(!enabled)(
       });
     // A previously queued job must reread the persisted opt-out and make no API call.
     const realFetch = globalThis.fetch;
-    const observedUsers: { name: string; is_active: number }[] = [];
+    const observedUsers: { name: string; is_active: number; id: number }[] = [];
     const apiFetch = vi.fn(
       async (url: string | URL | Request, init?: RequestInit) => {
         const target = String(url).replace(
@@ -172,7 +172,7 @@ it.skipIf(!enabled)(
       // All matriculated identities must exist even when portal GLPI is unchecked.
       const employeeForm = new FormData();
       employeeForm.set("keycloakSubject", "fixture-opted-out-employee");
-      employeeForm.set("sageId", "TID999999001");
+      employeeForm.set("sageId", `TID${process.env.GLPI_FIXTURE_RUN_ID}1`);
       employeeForm.set("email", `employee-${legacy.email}`);
       employeeForm.set("displayName", "Synthetic Employee");
       employeeForm.set("active", "on");
@@ -223,6 +223,54 @@ it.skipIf(!enabled)(
       expect(
         apiFetch.mock.calls.some(([, options]) => options?.method === "POST"),
       ).toBe(false);
+      if (process.env.GLPI_ISOLATED_LEAST_PRIVILEGE === "1") {
+        const base = `${process.env.GLPI_FIXTURE_HTTP_URL}/apirest.php`;
+        const appHeaders = {
+          "App-Token": process.env.GLPI_API_APP_TOKEN!,
+          "Content-Type": "application/json",
+        };
+        const sessionResponse = await realFetch(`${base}/initSession`, {
+          headers: {
+            ...appHeaders,
+            Authorization: `user_token ${process.env.GLPI_API_USER_TOKEN}`,
+          },
+        });
+        expect(sessionResponse.status).toBe(200);
+        const session = await sessionResponse.json();
+        const headers = {
+          ...appHeaders,
+          "Session-Token": session.session_token,
+        };
+        const targetId = observedUsers.find(
+          (u) => u.name === employeeJob.user.email,
+        )!.id;
+        try {
+          const update = await realFetch(`${base}/User`, {
+            method: "PUT",
+            headers,
+            body: JSON.stringify({
+              input: { id: targetId, realname: "Forbidden synthetic update" },
+            }),
+          });
+          expect(update.status).toBe(400);
+          const updateError = await update.json();
+          expect(updateError[0]).toBe("ERROR_GLPI_UPDATE");
+          expect(updateError[1]).toContain("permission");
+          const grant = await realFetch(`${base}/Profile_User`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              input: { users_id: targetId, profiles_id: 4, entities_id: 0 },
+            }),
+          });
+          expect(grant.status).toBe(400);
+          const grantError = await grant.json();
+          expect(grantError[0]).toBe("ERROR_GLPI_ADD");
+          expect(grantError[1]).toContain("permission");
+        } finally {
+          await realFetch(`${base}/killSession`, { headers });
+        }
+      }
     } finally {
       vi.unstubAllGlobals();
     }

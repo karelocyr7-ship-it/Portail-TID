@@ -7,13 +7,15 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "target": "ES2022",
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "allowJs": true
   },
   "include": [
     "lib/email/worker-entry.ts",
     "lib/email/**/*.ts",
     "lib/provisioning/worker-entry.ts",
     "lib/provisioning/**/*.ts",
-    "lib/prisma.ts"
+    "lib/prisma.ts",
+    "lib/application-access.js"
   ]
 }

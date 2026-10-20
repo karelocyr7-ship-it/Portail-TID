@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PoweredBy } from "@/components/powered-by";
 
 export type UserManagementApplication = {
   id: string;
   code: string;
   name: string;
-  defaultProfileName: string;
 };
 
 export type UserManagementUser = {
@@ -395,9 +395,9 @@ function UserModal({
           <div className="modal-accesses">
             <strong>Applications autorisées</strong>
             <p className="field-help">
-              Sélectionnez les applications à ouvrir. Le portail crée le compte
-              avec le profil minimal ; les droits fonctionnels sont attribués
-              ensuite par l’administrateur de l’application.
+              Sélectionnez les applications auxquelles le compte peut accéder.
+              Les rôles et permissions se règlent directement dans chaque
+              application.
             </p>
             <input type="hidden" name="applicationIds" value="" />
             <div className="modal-access-grid">
@@ -413,9 +413,6 @@ function UserModal({
                   />
                   <span>
                     <b>{application.name}</b>
-                    <small>
-                      Profil initial : {application.defaultProfileName}
-                    </small>
                   </span>
                 </label>
               ))}
@@ -449,6 +446,7 @@ function UserModal({
             </div>
           </div>
         </form>
+        <PoweredBy />
       </section>
     </div>
   );

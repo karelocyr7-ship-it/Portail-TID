@@ -29,7 +29,7 @@ services:
     build:
       context: .
       dockerfile: apps/portal/Dockerfile
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     restart: unless-stopped
     env_file:
       - /srv/tad/secrets/portal.env
@@ -71,7 +71,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
 
   mail-worker:
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     command: ["node", "apps/portal/.worker-dist/email/worker-entry.js"]
     restart: unless-stopped
     env_file:
@@ -91,7 +91,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
 
   provisioning-worker:
-    image: tad-portal:0.1.0
+    image: tad-portal:${PORTAL_IMAGE_TAG:-0.1.0}
     command: ["node", "apps/portal/.worker-dist/provisioning/worker-entry.js"]
     restart: unless-stopped
     env_file:
@@ -140,11 +140,13 @@ services:
       options: {max-size: "20m", max-file: "5"}
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6.2
+    image: ${KEYCLOAK_IMAGE:-tad-keycloak:initial-access-26.6.2-v1}
     restart: unless-stopped
     command: [start]
     environment:
       KC_DB: postgres
+      TAD_INITIAL_ACCESS_REALM: tad-groupe
+      TAD_INITIAL_ACCESS_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-tad-portal-provisioner}
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: keycloak_user
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?KEYCLOAK_DB_PASSWORD is required}
@@ -164,7 +166,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: [CMD-SHELL, "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf \"GET /auth/health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3 && grep -q UP <&3'"]
+      test: [CMD-SHELL, "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf \"GET /auth/health/ready HTTP/1.0\\r\\nHost: localhost\\r\\n\\r\\n\" >&3 && grep -q \"^HTTP/1.[01] 200 \" <&3'"]
       interval: 30s
       timeout: 10s
       retries: 10

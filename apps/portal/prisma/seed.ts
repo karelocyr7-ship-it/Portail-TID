@@ -103,7 +103,7 @@ const applications = [
 export { applications, categories };
 
 const initialApplicationUrls: Record<string, string> = {
-  TDB: "https://perf-tid.tadgroupe.com",
+  TDB: "https://perf-tid.tadgroupe.com/api/auth/oidc/start",
   "REVUE-PDV": "https://pdv.tadgroupe.com/api/auth/oidc/start",
   ATF: "https://atf.tadgroupe.com/rest/public/oidc",
   MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
@@ -328,12 +328,17 @@ async function main() {
         categoryId: categoryIds.get(categoryName)!,
         active: true,
         maintenance: false,
-        ...(code === "ATF"
+        ...(code === "TDB"
           ? {
-              url: initialApplicationUrls.ATF,
+              url: initialApplicationUrls.TDB,
               integrationLevel: 2,
             }
-          : {}),
+          : code === "ATF"
+            ? {
+                url: initialApplicationUrls.ATF,
+                integrationLevel: 2,
+              }
+            : {}),
       },
       create: {
         code,
@@ -342,7 +347,7 @@ async function main() {
         categoryId: categoryIds.get(categoryName)!,
         icon: code.slice(0, 1),
         url: initialApplicationUrls[code],
-        integrationLevel: code === "ATF" ? 2 : 1,
+        integrationLevel: code === "ATF" || code === "TDB" ? 2 : 1,
         active: true,
         displayOrder: categoryIds.size,
       },

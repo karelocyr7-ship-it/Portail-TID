@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   getPrisma: vi.fn(),
   provisionKeycloakUser: vi.fn(),
+  syncKeycloakUsernameFromSirh: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ getPrisma: mocks.getPrisma }));
 vi.mock("@/lib/keycloak-admin", () => ({
   provisionKeycloakUser: mocks.provisionKeycloakUser,
+  syncKeycloakUsernameFromSirh: mocks.syncKeycloakUsernameFromSirh,
 }));
 
 import { POST } from "@/app/api/provisioning/sirh/users/route";
@@ -47,6 +49,7 @@ describe("POST /api/provisioning/sirh/users", () => {
     mocks.provisionKeycloakUser.mockResolvedValue({
       subject: "synthetic-subject",
     });
+    mocks.syncKeycloakUsernameFromSirh.mockResolvedValue(undefined);
   });
 
   it("crée l'identité Portail sans attribuer d'accès applicatif implicite", async () => {
@@ -75,7 +78,13 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(response.status).toBe(201);
     expect(result.applicationAccess).toBe("NOT_ASSIGNED");
     expect(transaction.portalUser.create).toHaveBeenCalledOnce();
+    // The deployed SIRH still uses identity-only provisioning. Preserve its
+    // activation emails until the new RH handoff is separately delivered.
+    expect(mocks.provisionKeycloakUser.mock.calls[0][0]).not.toHaveProperty(
+      "deferInitialCredentials",
+    );
     expect(transaction.auditLog.create).toHaveBeenCalledOnce();
+    expect(mocks.syncKeycloakUsernameFromSirh).not.toHaveBeenCalled();
     expect("userApplicationProfile" in transaction).toBe(false);
     expect("applicationProvisioningOutbox" in transaction).toBe(false);
   });
@@ -119,6 +128,10 @@ describe("POST /api/provisioning/sirh/users", () => {
     expect(result.applicationAccess).toBe("UNCHANGED");
     expect(transaction.portalUser.update).toHaveBeenCalledOnce();
     expect(mocks.provisionKeycloakUser).not.toHaveBeenCalled();
+    expect(mocks.syncKeycloakUsernameFromSirh).toHaveBeenCalledWith(
+      "synthetic-subject",
+      "SAGE-TEST-001",
+    );
     expect(transaction.userApplicationProfile.findMany).toHaveBeenCalledOnce();
     expect(
       transaction.applicationProvisioningOutbox.upsert,

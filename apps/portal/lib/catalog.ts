@@ -64,9 +64,9 @@ export const catalogApplications: CatalogApplication[] = [
     description: "Tableau de bord de pilotage",
     category: "Pilotage",
     icon: "▥",
-    integrationLevel: 1,
+    integrationLevel: 2,
     active: true,
-    url: "https://perf-tid.tadgroupe.com",
+    url: "https://perf-tid.tadgroupe.com/api/auth/oidc/start",
     roles: ["PORTAL_ADMIN", "DIRECTION", "SUPERVISEUR"],
   },
   {
@@ -171,6 +171,21 @@ export const catalogApplications: CatalogApplication[] = [
     ],
   },
 ];
+
+const enforcedLaunchUrls: Partial<Record<string, string>> = {
+  TDB: "https://perf-tid.tadgroupe.com/api/auth/oidc/start",
+  GPARC: "https://gparc.tadgroupe.com/api/oidc/start",
+  MDM: "https://mdm.tadgroupe.com/rest/public/auth/oidc/login",
+  "REVUE-PDV": "https://pdv.tadgroupe.com/api/auth/oidc/start",
+  RECRUTEMENT: "https://recrut-oci.tadgroupe.com/?sso=1",
+};
+
+export function getApplicationLaunchUrl(
+  code: string,
+  configuredUrl?: string | null,
+): string | undefined {
+  return enforcedLaunchUrls[code] ?? configuredUrl ?? undefined;
+}
 
 export function hasRoleAccess(
   application: CatalogApplication,

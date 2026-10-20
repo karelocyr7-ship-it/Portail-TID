@@ -1,5 +1,9 @@
 type KeycloakUser = {
   id?: string;
+  username?: string;
+  requiredActions?: string[];
+  attributes?: Record<string, unknown>;
+  [key: string]: unknown;
 };
 
 type ProvisionedKeycloakUser = {
@@ -14,7 +18,7 @@ function required(name: string): string {
   return value;
 }
 
-function adminBaseUrl(): string {
+export function adminBaseUrl(): string {
   const issuer = required("KEYCLOAK_ISSUER").replace(/\/+$/, "");
   const parsed = new URL(issuer);
   const match = parsed.pathname.match(/^(.*)\/realms\/([^/]+)$/);
@@ -25,7 +29,7 @@ function adminBaseUrl(): string {
   return parsed.toString().replace(/\/$/, "");
 }
 
-async function getAdminToken(): Promise<string> {
+export async function getAdminToken(): Promise<string> {
   const issuer = required("KEYCLOAK_ISSUER").replace(/\/+$/, "");
   const response = await fetch(`${issuer}/protocol/openid-connect/token`, {
     method: "POST",
@@ -59,6 +63,7 @@ export async function provisionKeycloakUser(input: {
   email: string;
   displayName: string;
   employeeId?: string | null;
+  deferInitialCredentials?: boolean;
 }): Promise<ProvisionedKeycloakUser> {
   const email = input.email.trim().toLowerCase();
   if (!email || !email.includes("@"))
@@ -80,7 +85,9 @@ export async function provisionKeycloakUser(input: {
       enabled: true,
       emailVerified: false,
       firstName: input.displayName.trim(),
-      requiredActions: ["UPDATE_PASSWORD"],
+      requiredActions: input.deferInitialCredentials
+        ? ["UPDATE_PASSWORD"]
+        : ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
       ...(input.employeeId
         ? {
             attributes: {
@@ -100,11 +107,27 @@ export async function provisionKeycloakUser(input: {
     );
     if (!existing.ok) throw new Error("Le compte Keycloak existe déjà");
     const users = (await existing.json()) as KeycloakUser[];
-    const subject = users.length === 1 ? users[0]?.id : undefined;
+    const user = users.length === 1 ? users[0] : undefined;
+    const subject = user?.id;
     if (!subject)
       throw new Error(
         "Le compte Keycloak existe déjà mais son identifiant est ambigu",
       );
+    const detailsResponse = await fetch(
+      `${endpoint}/${encodeURIComponent(subject)}`,
+      {
+        headers: { authorization: `Bearer ${token}` },
+        cache: "no-store",
+      },
+    );
+    if (!detailsResponse.ok)
+      throw new Error("Impossible de vérifier l’activation du compte Keycloak");
+    const details = (await detailsResponse.json()) as KeycloakUser;
+    const pendingActions = (details.requiredActions ?? []).filter((action) =>
+      ["VERIFY_EMAIL", "UPDATE_PASSWORD"].includes(action),
+    );
+    if (pendingActions.length > 0 && !input.deferInitialCredentials)
+      await sendKeycloakActionsEmail(subject, pendingActions, token);
     return { subject, created: false };
   }
 
@@ -116,7 +139,97 @@ export async function provisionKeycloakUser(input: {
   const subject = subjectFromLocation(response.headers.get("location"));
   if (!subject)
     throw new Error("Keycloak n’a pas retourné l’identifiant du compte créé");
+  if (!input.deferInitialCredentials) {
+    await sendKeycloakActionsEmail(
+      subject,
+      ["VERIFY_EMAIL", "UPDATE_PASSWORD"],
+      token,
+    );
+  }
   return { subject, created: true };
+}
+
+/** Keep an already-linked Keycloak account's login name aligned with the SIRH ID. */
+export async function syncKeycloakUsernameFromSirh(
+  subject: string,
+  employeeId: string,
+): Promise<void> {
+  const username = employeeId.trim().toUpperCase();
+  if (!username) throw new Error("Un matricule SIRH est requis");
+
+  const token = await getAdminToken();
+  const base = adminBaseUrl();
+  const headers = { authorization: `Bearer ${token}` };
+  const userUrl = `${base}/users/${encodeURIComponent(subject)}`;
+  const userResponse = await fetch(userUrl, { headers, cache: "no-store" });
+  if (!userResponse.ok)
+    throw new Error(
+      `Impossible de vérifier le compte Keycloak (HTTP ${userResponse.status})`,
+    );
+  const user = (await userResponse.json()) as KeycloakUser;
+  if (user.username === username) return;
+
+  const collisionUrl = new URL(`${base}/users`);
+  collisionUrl.searchParams.set("username", username);
+  collisionUrl.searchParams.set("exact", "true");
+  const collisionResponse = await fetch(collisionUrl, {
+    headers,
+    cache: "no-store",
+  });
+  if (!collisionResponse.ok)
+    throw new Error(
+      `Impossible de vérifier la disponibilité du matricule Keycloak (HTTP ${collisionResponse.status})`,
+    );
+  const collisions = (await collisionResponse.json()) as KeycloakUser[];
+  if (collisions.some((candidate) => candidate.id !== subject))
+    throw new Error("Le matricule SIRH est déjà utilisé par un autre compte");
+
+  const attributes =
+    user.attributes && typeof user.attributes === "object"
+      ? user.attributes
+      : {};
+  const updateResponse = await fetch(userUrl, {
+    method: "PUT",
+    headers: { ...headers, "content-type": "application/json" },
+    body: JSON.stringify({
+      ...user,
+      username,
+      attributes: {
+        ...attributes,
+        sageId: [username],
+        employeeId: [username],
+      },
+    }),
+    cache: "no-store",
+  });
+  if (!updateResponse.ok)
+    throw new Error(
+      `Mise à jour de l’identifiant Keycloak refusée (HTTP ${updateResponse.status})`,
+    );
+}
+
+async function sendKeycloakActionsEmail(
+  subject: string,
+  actions: string[],
+  token: string,
+): Promise<void> {
+  const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(subject)}/execute-actions-email`;
+  const url = new URL(endpoint);
+  url.searchParams.set("lifespan", "1800");
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(actions),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Envoi du lien d’activation Keycloak refusé (HTTP ${response.status})`,
+    );
+  }
 }
 
 export async function sendKeycloakPasswordReset(
@@ -127,24 +240,9 @@ export async function sendKeycloakPasswordReset(
     throw new Error("Identifiant Keycloak invalide");
   }
 
-  const token = await getAdminToken();
-  const endpoint = `${adminBaseUrl()}/users/${encodeURIComponent(normalizedSubject)}/execute-actions-email`;
-  const redirectUri = `${required("PORTAL_PUBLIC_URL").replace(/\/+$/, "")}/api/auth/callback`;
-  const response = await fetch(
-    `${endpoint}?lifespan=1800&client_id=${encodeURIComponent(required("KEYCLOAK_CLIENT_ID"))}&redirect_uri=${encodeURIComponent(redirectUri)}`,
-    {
-      method: "PUT",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify(["UPDATE_PASSWORD"]),
-      cache: "no-store",
-    },
+  await sendKeycloakActionsEmail(
+    normalizedSubject,
+    ["UPDATE_PASSWORD"],
+    await getAdminToken(),
   );
-  if (!response.ok) {
-    throw new Error(
-      `Envoi du lien de réinitialisation refusé (HTTP ${response.status})`,
-    );
-  }
 }

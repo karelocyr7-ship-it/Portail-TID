@@ -3,6 +3,13 @@ set -euo pipefail
 
 repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 backup_dir="${BACKUP_DIR:-/srv/tad/backups}"
+compose() {
+  if [[ -n "${PORTAL_COMPOSE_ENV_FILE:-}" ]]; then
+    docker compose --env-file "$PORTAL_COMPOSE_ENV_FILE" -f "$repo_dir/compose.yml" "$@"
+  else
+    docker compose -f "$repo_dir/compose.yml" "$@"
+  fi
+}
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/tad-backup.XXXXXX")"
 archive_dir="$work_dir/tad-$timestamp"
@@ -13,16 +20,20 @@ trap cleanup EXIT
 
 umask 077
 mkdir -p "$backup_dir" "$archive_dir/postgres" "$archive_dir/data"
+if [[ -n "${PORTAL_COMPOSE_ENV_FILE:-}" && ! -r "$PORTAL_COMPOSE_ENV_FILE" ]]; then
+  printf 'ERREUR: le fichier d’environnement Compose indiqué est illisible.\n' >&2
+  exit 1
+fi
 
 for database in portal keycloak n8n; do
-  docker compose -f "$repo_dir/compose.yml" exec -T postgres sh -c \
+  compose exec -T postgres sh -c \
     "PGPASSWORD=\"\$POSTGRES_PASSWORD\" pg_dump -U \"\$POSTGRES_USER\" -d '$database' --format=custom --no-owner --no-acl" \
     > "$archive_dir/postgres/$database.dump"
 done
 
-docker compose -f "$repo_dir/compose.yml" exec -T n8n \
+compose exec -T n8n \
   tar -C /home/node/.n8n -czf - . > "$archive_dir/data/n8n-data.tar.gz"
-docker compose -f "$repo_dir/compose.yml" exec -T uptime-kuma \
+compose exec -T uptime-kuma \
   tar -C /app/data -czf - . > "$archive_dir/data/uptime-data.tar.gz"
 
 tar -C "$repo_dir" -czf "$archive_dir/configuration.tar.gz" \

@@ -11,6 +11,14 @@ Portail centralisé des applications métiers de TID / TAD Groupe.
 
 ## État du projet
 
+Relais atomique de première connexion : portail et extension Keycloak 26.6.2
+déployés le 18/10 après PR #106–107, contrôles et restauration vérifiée.
+Le provisoire SIRH impose le choix d'un mot de passe personnel sans e-mail ;
+les mots de passe personnels sont protégés contre les reprises concurrentes.
+Chaîne synthétique réelle validée jusqu'à la reconnexion navigateur.
+État SIRH, reprise RH, preuves et retour :
+[rapport de livraison](docs/infrastructure/sirh-atomic-delivery-20261018.md).
+
 Le socle V1 est opérationnel : monolithe modulaire Next.js/TypeScript avec
 PostgreSQL, Prisma, Keycloak, Caddy et Docker Compose. Le flux OIDC du portail
 utilise les rôles realm Keycloak pour filtrer le catalogue côté serveur.

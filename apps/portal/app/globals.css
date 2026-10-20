@@ -139,6 +139,35 @@ nav {
 .main-content {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.powered-by {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding: 16px 5%;
+  text-align: center;
+  font-size: 0.75rem;
+}
+.powered-by a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.powered-by img {
+  width: 96px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.powered-by a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
 }
 .topbar {
   height: 88px;

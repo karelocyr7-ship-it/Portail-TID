@@ -67,7 +67,7 @@ test("logo seul présent dans les deux thèmes de connexion Keycloak", () => {
     );
   }
 });
-test("titre de connexion traduit dans les deux thèmes Keycloak", () => {
+test("titre et champs de connexion traduits dans les deux thèmes Keycloak", () => {
   for (const theme of ["tad-login", "tad-login-v2"]) {
     const messages = readFileSync(
       new URL(
@@ -77,17 +77,7 @@ test("titre de connexion traduit dans les deux thèmes Keycloak", () => {
       "utf8",
     );
     assert.match(messages, /^loginAccountTitle=Connexion$/m);
-  }
-});
-test("titre de connexion traduit dans les deux thèmes Keycloak", () => {
-  for (const theme of ["tad-login", "tad-login-v2"]) {
-    const messages = readFileSync(
-      new URL(
-        `../../../infrastructure/keycloak/themes/${theme}/login/messages/messages_en.properties`,
-        import.meta.url,
-      ),
-      "utf8",
-    );
-    assert.match(messages, /^loginAccountTitle=Connexion$/m);
+    assert.match(messages, /^usernameOrEmail=Matricule$/m);
+    assert.match(messages, /^password=Mot de passe$/m);
   }
 });

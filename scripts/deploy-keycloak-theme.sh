@@ -46,6 +46,8 @@ verify_login_page() {
   local html css_href css_url css
   html="$(curl --fail --silent --show-error --location --max-redirs 8 --max-time 30 "$login_url")" || return 1
   [[ "$html" == *"Connexion"* && "$html" != *"Sign in to your account"* ]] || return 1
+  [[ "$html" == *"Matricule"* && "$html" == *"Mot de passe"* ]] || return 1
+  [[ "$html" != *"Username or email"* && "$html" != *">Password<"* ]] || return 1
   css_href="$(printf '%s' "$html" | grep -oE 'href="[^"]*login\.css[^"]*"' | head -n 1 | cut -d '"' -f 2)"
   [[ -n "$css_href" ]] || return 1
   case "$css_href" in
@@ -91,6 +93,8 @@ main_ref="$(git -C "$repo_dir" rev-parse origin/main 2>/dev/null)" || fail 'orig
 [[ -n "${PORTAL_COMPOSE_ENV_FILE:-}" && -r "$PORTAL_COMPOSE_ENV_FILE" ]] || fail 'indiquer un fichier Compose lisible via PORTAL_COMPOSE_ENV_FILE.'
 for rel in "${theme_message_files[@]}"; do
   grep -qx 'loginAccountTitle=Connexion' "$repo_dir/$rel" || fail "traduction loginAccountTitle absente: $rel"
+  grep -qx 'usernameOrEmail=Matricule' "$repo_dir/$rel" || fail "traduction usernameOrEmail absente: $rel"
+  grep -qx 'password=Mot de passe' "$repo_dir/$rel" || fail "traduction password absente: $rel"
 done
 compose config --quiet
 running="$(compose ps -q keycloak)"

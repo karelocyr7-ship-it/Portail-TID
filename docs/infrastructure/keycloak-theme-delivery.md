@@ -13,9 +13,10 @@ sudo env PORTAL_COMPOSE_ENV_FILE=/srv/tad/portail/.env bash scripts/deploy-keycl
 
 Le script vérifie la branche et le commit, sauvegarde les bases et fichiers
 opérationnels, recrée Keycloak, attend son healthcheck et son endpoint OpenID,
-puis vérifie que `/api/auth/login` affiche `Connexion` sans l’ancien libellé.
-En cas d’échec, il restaure les deux fichiers de messages du commit parent et
-recrée Keycloak ; le checkout est laissé modifié pour rendre ce rollback visible.
+puis vérifie que `/api/auth/login` affiche `Connexion` et sert la feuille de
+style du panneau compact. En cas d’échec, il restaure les fichiers de messages
+et les deux feuilles CSS du commit parent puis recrée Keycloak ; le checkout est
+laissé modifié pour rendre ce rollback visible.
 
 Les deux variantes du thème doivent définir `loginAccountTitle`. `loginTitle`
 seul ne change pas l’intitulé affiché dans l’en-tête du formulaire de connexion.

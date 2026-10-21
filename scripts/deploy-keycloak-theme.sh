@@ -5,9 +5,14 @@ repo_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 state_dir="${PORTAL_RELEASE_STATE_DIR:-/srv/tad/backups}"
 oidc_url="https://portail.tadgroupe.com/auth/realms/tad-groupe/.well-known/openid-configuration"
 login_url="https://portail.tadgroupe.com/api/auth/login"
-theme_files=(
+theme_message_files=(
   infrastructure/keycloak/themes/tad-login/login/messages/messages_en.properties
   infrastructure/keycloak/themes/tad-login-v2/login/messages/messages_en.properties
+)
+theme_files=(
+  "${theme_message_files[@]}"
+  infrastructure/keycloak/themes/tad-login/login/resources/css/login.css
+  infrastructure/keycloak/themes/tad-login-v2/login/resources/css/login.css
 )
 deployment_started=0
 previous_dir=""
@@ -35,23 +40,33 @@ wait_for_health() {
   curl --fail --silent --show-error --max-time 10 "$oidc_url" >/dev/null || return 1
 }
 
-verify_login_title() {
-  local html
+verify_login_page() {
+  local html css_href css_url css
   html="$(curl --fail --silent --show-error --location --max-redirs 8 --max-time 30 "$login_url")" || return 1
   [[ "$html" == *"Connexion"* && "$html" != *"Sign in to your account"* ]]
+  css_href="$(printf '%s' "$html" | grep -oE 'href="[^"]*login\.css[^"]*"' | head -n 1 | cut -d '"' -f 2)"
+  [[ -n "$css_href" ]] || return 1
+  case "$css_href" in
+    https://*|http://*) css_url="$css_href" ;;
+    /*) css_url="https://portail.tadgroupe.com$css_href" ;;
+    *) css_url="https://portail.tadgroupe.com/$css_href" ;;
+  esac
+  css="$(curl --fail --silent --show-error --max-time 10 "$css_url")" || return 1
+  [[ "$css" == *"--pf-v5-c-login__main-header--PaddingTop: 0.75rem"* ]] || return 1
+  [[ "$css" == *"font-size: 1.5rem"* && "$css" == *"margin-block-end: 0.75rem"* ]]
 }
 
 rollback_on_exit() {
   local status=$?
   trap - EXIT
   if (( status != 0 && deployment_started )); then
-    printf 'Échec du contrôle Keycloak; restauration des messages précédents.\n' >&2
+    printf 'Échec du contrôle Keycloak; restauration des fichiers du thème précédents.\n' >&2
     local rel
     for rel in "${theme_files[@]}"; do
       cp "$previous_dir/$rel" "$repo_dir/$rel"
     done
     if compose up -d --no-deps --force-recreate keycloak && wait_for_health; then
-      printf 'Keycloak est revenu sain avec les anciens messages. Le checkout est laissé modifié pour faciliter la revue du rollback.\n' >&2
+      printf 'Keycloak est revenu sain avec les anciens fichiers du thème. Le checkout est laissé modifié pour faciliter la revue du rollback.\n' >&2
     else
       printf 'ERREUR: retour arrière non confirmé; intervention opérateur requise.\n' >&2
     fi
@@ -69,7 +84,7 @@ head="$(git -C "$repo_dir" rev-parse HEAD)"
 main_ref="$(git -C "$repo_dir" rev-parse origin/main 2>/dev/null)" || fail 'origin/main absent; mettre à jour les références Git.'
 [[ "$head" == "$main_ref" ]] || fail 'HEAD doit être identique à origin/main après git pull --ff-only.'
 [[ -n "${PORTAL_COMPOSE_ENV_FILE:-}" && -r "$PORTAL_COMPOSE_ENV_FILE" ]] || fail 'indiquer un fichier Compose lisible via PORTAL_COMPOSE_ENV_FILE.'
-for rel in "${theme_files[@]}"; do
+for rel in "${theme_message_files[@]}"; do
   grep -qx 'loginAccountTitle=Connexion' "$repo_dir/$rel" || fail "traduction loginAccountTitle absente: $rel"
 done
 compose config --quiet
@@ -90,9 +105,9 @@ done
 deployment_started=1
 compose up -d --no-deps --force-recreate keycloak
 wait_for_health || fail 'le healthcheck Keycloak ou OpenID public a échoué.'
-verify_login_title || fail 'la page de connexion n’affiche pas Connexion.'
+verify_login_page || fail 'la page de connexion ou son panneau compact ne sont pas servis correctement.'
 
 deployment_started=0
 trap - EXIT INT TERM
-printf 'Thème Keycloak livré: loginAccountTitle=Connexion dans les deux thèmes; santé et page de connexion vérifiées.\n'
-printf 'Retour arrière des messages disponible dans: %s\n' "$previous_dir"
+printf 'Thème Keycloak livré: titre et panneau compact vérifiés sur la page de connexion.\n'
+printf 'Thème précédent sauvegardé dans: %s\n' "$previous_dir"

@@ -17,14 +17,25 @@
 }
 
 .pf-v5-c-login__main {
-  --pf-v5-c-login__main--RowGap: 0.75rem;
+  --pf-v5-c-login__main--RowGap: 0.5rem;
+  --pf-v5-c-login__main-header--PaddingTop: 0.75rem;
+  --pf-v5-c-login__main-header--PaddingBottom: 0.5rem;
+  --pf-v5-c-login__main-body--PaddingBottom: 0.75rem;
+  --pf-v5-c-login__main-footer--PaddingBottom: 0.5rem;
   width: 100%;
 }
 
-.pf-v5-c-login__main-header,
-.pf-v5-c-login__main-body,
-.pf-v5-c-login__main-footer {
-  padding-block: 0.75rem;
+.pf-v5-c-login__main-header .pf-v5-c-title {
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+#kc-form .pf-v5-c-form__group {
+  margin-block-end: 0.75rem;
+}
+
+#kc-form .pf-v5-c-form__actions {
+  padding-block-start: 0.5rem;
 }
 
 #kc-header-wrapper {

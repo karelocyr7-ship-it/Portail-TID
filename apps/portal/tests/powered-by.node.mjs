@@ -80,5 +80,6 @@ test("titre et champs de connexion traduits dans les deux thèmes Keycloak", () 
     assert.match(messages, /^usernameOrEmail=Matricule$/m);
     assert.match(messages, /^password=Mot de passe$/m);
     assert.match(messages, /^doForgotPassword=Mot de passe oublié \?$/m);
+    assert.match(messages, /^doLogIn=Se connecter$/m);
   }
 });

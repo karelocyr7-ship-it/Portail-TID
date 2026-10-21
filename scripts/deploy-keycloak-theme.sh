@@ -48,6 +48,7 @@ verify_login_page() {
   [[ "$html" == *"Connexion"* && "$html" != *"Sign in to your account"* ]] || return 1
   [[ "$html" == *"Matricule"* && "$html" == *"Mot de passe"* ]] || return 1
   [[ "$html" == *"Mot de passe oublié ?"* && "$html" != *"Forgot Password?"* ]] || return 1
+  [[ "$html" == *"Se connecter"* && "$html" != *">Sign in<"* && "$html" != *">Sign In<"* ]] || return 1
   [[ "$html" != *"Username or email"* && "$html" != *">Password<"* ]] || return 1
   css_href="$(printf '%s' "$html" | grep -oE 'href="[^"]*login\.css[^"]*"' | head -n 1 | cut -d '"' -f 2)"
   [[ -n "$css_href" ]] || return 1
@@ -97,6 +98,7 @@ for rel in "${theme_message_files[@]}"; do
   grep -qx 'usernameOrEmail=Matricule' "$repo_dir/$rel" || fail "traduction usernameOrEmail absente: $rel"
   grep -qx 'password=Mot de passe' "$repo_dir/$rel" || fail "traduction password absente: $rel"
   grep -qx 'doForgotPassword=Mot de passe oublié ?' "$repo_dir/$rel" || fail "traduction doForgotPassword absente: $rel"
+  grep -qx 'doLogIn=Se connecter' "$repo_dir/$rel" || fail "traduction doLogIn absente: $rel"
 done
 compose config --quiet
 running="$(compose ps -q keycloak)"

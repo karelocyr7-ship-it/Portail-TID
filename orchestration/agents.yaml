@@ -19,6 +19,11 @@ agents:
     application: portal
     scope: [portal]
     can_execute_production: false
+  - id: monitoring-agent
+    type: application
+    application: monitoring
+    scope: [monitoring]
+    can_execute_production: false
   - id: glpi-agent
     type: application
     application: glpi

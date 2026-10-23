@@ -24,6 +24,7 @@ git -C "$repository_source" rev-parse --show-toplevel >/dev/null
 
 case "$agent_id" in
   portal-agent) service_user=tadportal ;;
+  monitoring-agent) service_user=tadmonitor ;;
   glpi-agent) service_user=tadglpi ;;
   sirh-agent) service_user=tadsirh ;;
   tdb-agent) service_user=tadtdb ;;

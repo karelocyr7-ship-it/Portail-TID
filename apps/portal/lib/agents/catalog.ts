@@ -1,9 +1,5 @@
 export const agentCatalog = {
   "portal-agent": { applicationId: "portal", name: "Portail" },
-  "supervision-agent": {
-    applicationId: "supervision",
-    name: "Supervision / SEPTNEX",
-  },
   "glpi-agent": { applicationId: "glpi", name: "GLPI" },
   "sirh-agent": { applicationId: "sirh", name: "SIRH / GED" },
   "tdb-agent": { applicationId: "tdb", name: "TDB / Perf-TID" },

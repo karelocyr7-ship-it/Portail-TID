@@ -6,7 +6,6 @@ import { getPrisma } from "@/lib/prisma";
 const stateRoot = process.env.AGENT_STATE_DIR ?? "/var/lib/tad-agent-state";
 const vmByAgent: Record<string, string> = {
   "portal-agent": "Portail · 54.37.11.202",
-  "supervision-agent": "Supervision · 51.210.10.207",
   "glpi-agent": "Portail · 54.37.11.202",
   "sirh-agent": "SIRH/GED · 152.228.138.54",
   "tdb-agent": "TDB/Perf-TID · 135.125.132.51",

@@ -50,8 +50,9 @@ Les commandes d’installation pour les dépôts connus sont :
 - VM 51 : `gparc-agent` sur `/home/debian/gparc-prod`.
 - VM 91 : `recrutement-om-telco-agent` sur `/home/debian/RECRUT_OM`.
 - VM Portail : `portal-agent` sur `/srv/tad/portail`.
-- VM Supervision (`51.210.10.207`) : `supervision-agent` ; dépôt Git SEPTNEX
-  ou dépôt d’exploitation à confirmer avant installation.
+- VM Supervision (`51.210.10.207`) : SEPTNEX et la pile de monitoring sont hors
+  du périmètre des runners pilotés par le Portail ; aucun runner local n’y est
+  à installer.
 
 La source Git locale de GLPI, SIRH/GED, ATF et MDM reste à identifier ou
 confirmer ; aucun runner ne doit être installé pour ces agents avant de

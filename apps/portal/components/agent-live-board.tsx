@@ -7,17 +7,19 @@ type Runtime = {
   applicationId: string;
   vm: string;
   environment: string;
-  status: "EXECUTING" | "QUEUED" | "COMPLETED" | "IDLE";
+  status: "EXECUTING" | "QUEUED" | "IDLE" | "OFFLINE" | "UNREGISTERED";
   task: string | null;
   startedAt: string | null;
   finishedAt: string | null;
+  lastSeenAt: string | null;
 };
 
 const labels: Record<Runtime["status"], string> = {
   EXECUTING: "En cours",
   QUEUED: "En file",
-  COMPLETED: "Dernière tâche terminée",
   IDLE: "Disponible",
+  OFFLINE: "Hors ligne",
+  UNREGISTERED: "Non configuré",
 };
 
 export function AgentLiveBoard() {
@@ -63,8 +65,9 @@ export function AgentLiveBoard() {
       </div>
       {paused ? (
         <p className="agent-runtime-notice">
-          Exécution suspendue jusqu’à 19:30. Les actions validées restent en
-          file et seront traitées automatiquement pendant la prochaine fenêtre.
+          Le traitement des anciennes actions de rapport est suspendu. Les
+          runners locaux de la nouvelle file continuent à récupérer leurs
+          tâches.
         </p>
       ) : null}
       <div className="agent-live-grid">
@@ -98,6 +101,14 @@ export function AgentLiveBoard() {
                   {agent.startedAt
                     ? new Date(agent.startedAt).toLocaleString("fr-FR")
                     : "—"}
+                </dd>
+              </div>
+              <div>
+                <dt>Dernier contact</dt>
+                <dd>
+                  {agent.lastSeenAt
+                    ? new Date(agent.lastSeenAt).toLocaleString("fr-FR")
+                    : "Jamais"}
                 </dd>
               </div>
             </dl>

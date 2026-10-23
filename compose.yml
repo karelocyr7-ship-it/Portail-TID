@@ -1,6 +1,20 @@
 name: tad-portail
 
 services:
+  portal-migrate:
+    build:
+      context: .
+      dockerfile: apps/portal/Dockerfile
+      target: migrator
+    image: tad-portal-migrator:${PORTAL_IMAGE_TAG:-0.1.0}
+    profiles: [release]
+    restart: "no"
+    env_file:
+      - /srv/tad/secrets/portal.env
+    networks: [tad-data]
+    mem_limit: 512m
+    cpus: 0.50
+
   caddy:
     image: caddy:2.11.3
     restart: unless-stopped

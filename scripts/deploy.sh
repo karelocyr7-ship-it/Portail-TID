@@ -85,7 +85,8 @@ printf '%s\n' "$previous_tag" > "$state_file"
 chmod 600 "$state_file"
 deployment_started=1
 
-PORTAL_IMAGE_TAG="$release_tag" compose build portal
+PORTAL_IMAGE_TAG="$release_tag" compose build portal portal-migrate
+PORTAL_IMAGE_TAG="$release_tag" compose run --rm --no-deps portal-migrate
 PORTAL_IMAGE_TAG="$release_tag" compose up -d --no-deps "${services[@]}"
 wait_for_health || fail 'le healthcheck local ou l’URL publique a échoué.'
 

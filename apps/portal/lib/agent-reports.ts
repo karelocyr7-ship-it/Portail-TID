@@ -10,6 +10,7 @@ import path from "node:path";
 import { getPrisma } from "./prisma";
 
 const applicationByAgent: Record<string, string> = {
+  "monitoring-agent": "monitoring",
   "tdb-agent": "tdb",
   "cash-recon-agent": "cash-recon",
   "revue-pdv-agent": "revue-pdv",

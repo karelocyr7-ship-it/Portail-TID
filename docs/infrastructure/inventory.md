@@ -55,11 +55,18 @@ alias `Revue-PDV` (VM 135) et `mdm-tad` (VM 91). L’authentification SSH a ét�
 refusée sur les IP des VMs SIRH/GED, ATF et GParc. L’alias historique `gparc`
 ne résout pas et l’alias `SIRH-GED` pointe vers un nom non résolu.
 
+Pour GParc, le responsable a confirmé depuis la VM `gparc` l’adresse publique
+`51.91.102.44` et la présence de Codex CLI (`/usr/local/bin/codex`). Le
+répertoire `/srv/tad/agents` et les unités `tad-agent-*` y sont absents. Cette
+vérification locale ne change pas l’échec d’authentification SSH depuis le
+Portail.
+
 ## État des agents locaux — 23 octobre 2026
 
 Le Portail a un worker de dispatch et des timers locaux. Sur les VMs 135 et 91,
 Codex CLI est présent, mais `/srv/tad/agents` et les unités systemd
 `tad-agent-*` sont absents. La file actuelle est locale à la VM Portail et le
-runner interdit les connexions distantes et le déploiement. Les VMs SIRH/GED,
-ATF et GParc n’ont pas pu être inspectées par SSH. Aucun déploiement d’agent
-local n’a été effectué pendant cet audit.
+runner interdit les connexions distantes et le déploiement. Les VMs SIRH/GED
+et ATF n’ont pas pu être inspectées par SSH ; pour GParc, le diagnostic fourni
+par le responsable confirme Codex présent mais aucun runner local. Aucun
+déploiement d’agent local n’a été effectué pendant cet audit.

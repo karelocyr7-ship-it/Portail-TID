@@ -55,20 +55,30 @@ install -d -o "$service_user" -g "$service_user" -m 0750 "$repository" "/srv/tad
 chown -R "$service_user:$service_user" "$repository" "/srv/tad/agents/workspaces/$agent_id"
 
 install -o root -g root -m 0644 "$(dirname "$0")/portal-local-agent.mjs" /srv/tad/agents/portal-local-agent.mjs
-token="$(openssl rand -hex 32)"
-token_hash="$(printf '%s' "$token" | sha256sum | cut -d ' ' -f 1)"
-config_tmp="$(mktemp /etc/tad-agents/.${agent_id}.XXXXXX)"
-trap 'rm -f "$config_tmp"' EXIT
-umask 077
-cat >"$config_tmp" <<EOF
+config_file="/etc/tad-agents/$agent_id.env"
+credential_preserved=0
+if [[ -e "$config_file" ]]; then
+  [[ -f "$config_file" && "$(stat -c '%U:%G:%a' "$config_file")" == "root:root:600" ]] || {
+    echo "Fichier d’identifiants existant invalide ; arrêt sans modification." >&2
+    exit 1
+  }
+  credential_preserved=1
+else
+  token="$(openssl rand -hex 32)"
+  token_hash="$(printf '%s' "$token" | sha256sum | cut -d ' ' -f 1)"
+  config_tmp="$(mktemp /etc/tad-agents/.${agent_id}.XXXXXX)"
+  trap 'rm -f "$config_tmp"' EXIT
+  umask 077
+  cat >"$config_tmp" <<EOF
 PORTAL_AGENT_ID=$agent_id
 PORTAL_AGENT_URL=$portal_url/api/agent-runtime
 PORTAL_AGENT_REPOSITORY=$repository
 PORTAL_AGENT_WORK_ROOT=/srv/tad/agents/workspaces
 PORTAL_AGENT_TOKEN=$token
 EOF
-install -o root -g root -m 0600 "$config_tmp" "/etc/tad-agents/$agent_id.env"
-unset token
+  install -o root -g root -m 0600 "$config_tmp" "$config_file"
+  unset token
+fi
 
 install -o root -g root -m 0644 "$(dirname "$0")/../infrastructure/systemd/tad-portal-agent@.service" /etc/systemd/system/tad-portal-agent@.service
 dropin="/etc/systemd/system/tad-portal-agent@$agent_id.service.d"
@@ -78,6 +88,10 @@ printf '[Service]\nUser=%s\nGroup=%s\nEnvironment=HOME=/var/lib/%s\nReadWritePat
 chmod 0644 "$dropin/identity.conf"
 systemctl daemon-reload
 printf 'Installation préparée pour %s. Jeton conservé dans /etc/tad-agents/%s.env.\n' "$agent_id" "$agent_id"
-printf 'Empreinte SHA-256 à enregistrer dans l’administration du Portail : %s\n' "$token_hash"
+if (( credential_preserved )); then
+  echo 'Identifiants existants préservés ; aucune empreinte n’a changé.'
+else
+  printf 'Empreinte SHA-256 à enregistrer dans l’administration du Portail : %s\n' "$token_hash"
+fi
 printf 'Authentifier Codex : sudo -u %s -H codex login\n' "$service_user"
 printf 'Après enregistrement de l’empreinte, démarrer : sudo systemctl enable --now tad-portal-agent@%s.service\n' "$agent_id"

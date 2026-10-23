@@ -8,7 +8,7 @@ Type=simple
 EnvironmentFile=/etc/tad-agents/%i.env
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
 WorkingDirectory=/srv/tad/agents
-ExecStart=/usr/bin/node /srv/tad/agents/portal-local-agent.mjs
+ExecStart=/usr/bin/env node /srv/tad/agents/portal-local-agent.mjs
 Restart=on-failure
 RestartSec=10s
 NoNewPrivileges=true

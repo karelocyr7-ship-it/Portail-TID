@@ -11,12 +11,13 @@ fin de document.
 
 ## VM et accès SSH détectés lors de l’audit initial
 
-| VM               | Alias / utilisateur    | Système                      | Applications rattachées     |
-| ---------------- | ---------------------- | ---------------------------- | --------------------------- |
-| `54.37.11.202`   | Portail / à confirmer  | à confirmer dans cette passe | Portail                     |
-| `135.125.132.51` | `Revue-PDV` / `debian` | Debian 12                    | TDB, CASH-RECON, Revue-PDV  |
-| `51.91.102.44`   | `gparc` / `debian`     | Debian 12                    | GParc                       |
-| `91.134.255.77`  | `mdm-tad` / `debian`   | Debian 13.6                  | MDM, Recrutement OM & Telco |
+| VM               | Alias / utilisateur    | Système                      | Applications rattachées                   |
+| ---------------- | ---------------------- | ---------------------------- | ----------------------------------------- |
+| `54.37.11.202`   | Portail / à confirmer  | à confirmer dans cette passe | Portail                                   |
+| `135.125.132.51` | `Revue-PDV` / `debian` | Debian 12                    | TDB, CASH-RECON, Revue-PDV                |
+| `51.91.102.44`   | `gparc` / `debian`     | Debian 12                    | GParc                                     |
+| `91.134.255.77`  | `mdm-tad` / `debian`   | Debian 13.6                  | MDM, Recrutement OM & Telco               |
+| `51.210.10.207`  | `Supervision`          | Debian 13                    | SEPTNEX, Grafana, Prometheus, Uptime Kuma |
 
 ATF n’a pas pu être rattachée à une VM, un dépôt ou un service avec une
 preuve suffisante ; elle reste `to_confirm`.
@@ -68,6 +69,12 @@ unités `tad-agent-*` y sont absents. L’authentification SSH depuis le Portail
 reste refusée sur ces deux VMs.
 
 ## État des agents locaux — 23 octobre 2026
+
+La VM Supervision `51.210.10.207` (Debian 13) a Codex CLI 0.162.1, Node.js
+20.19.2 et Git 2.47.3. Elle héberge les conteneurs SEPTNEX, Grafana,
+Prometheus, Uptime Kuma, node-exporter et cAdvisor. Aucun runner Codex n’est
+installé. Le chemin du dépôt SEPTNEX reste à confirmer avant l’installation du
+runner `supervision-agent`.
 
 Le Portail a un worker de dispatch et des timers locaux. Sur les VMs 135 et 91,
 Codex CLI est présent, mais `/srv/tad/agents` et les unités systemd

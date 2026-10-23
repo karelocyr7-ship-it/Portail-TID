@@ -72,9 +72,9 @@ reste refusée sur ces deux VMs.
 
 La VM Supervision `51.210.10.207` (Debian 13) a Codex CLI 0.162.1, Node.js
 20.19.2 et Git 2.47.3. Elle héberge les conteneurs SEPTNEX, Grafana,
-Prometheus, Uptime Kuma, node-exporter et cAdvisor. Aucun runner Codex n’est
-installé. Le chemin du dépôt SEPTNEX reste à confirmer avant l’installation du
-runner `supervision-agent`.
+Prometheus, Uptime Kuma, node-exporter et cAdvisor. SEPTNEX et cette pile de
+monitoring sont hors du périmètre des runners applicatifs pilotés par le
+Portail ; aucun runner local n’y est prévu.
 
 Le Portail a un worker de dispatch et des timers locaux. Sur les VMs 135 et 91,
 Codex CLI est présent, mais `/srv/tad/agents` et les unités systemd

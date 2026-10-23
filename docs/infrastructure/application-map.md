@@ -3,7 +3,6 @@
 | ID officiel          | VM (regroupement confirmé le 23/10/2026)  | Dépôt / chemin observé            | Branche observée                | État / limite d’audit                                                     |
 | -------------------- | ----------------------------------------- | --------------------------------- | ------------------------------- | ------------------------------------------------------------------------- |
 | portal, glpi         | Portail + GLPI                            | dépôt portail ; installation GLPI | voir dépôts dédiés              | DNS commun ; runner portail uniquement                                    |
-| supervision          | Supervision / SEPTNEX, VM `51.210.10.207` | dépôt Git à confirmer             | à confirmer                     | Grafana, Prometheus, Uptime Kuma et SEPTNEX observés ; runner à installer |
 | sirh                 | SIRH + GED                                | source SIRH à confirmer           | à confirmer                     | Codex présent, runner absent ; SSH inaccessible depuis le Portail         |
 | tdb                  | TDB / Perf-TID, VM 135                    | `/home/debian/TDB-TID`            | `codex/modernize-dashboard-kpi` | état Git observé en juillet                                               |
 | cash-recon           | CASH-RECON, VM 135                        | `/home/debian/CASH-RECON`         | `codex/domain-aware-login-cash` | état Git observé en juillet                                               |

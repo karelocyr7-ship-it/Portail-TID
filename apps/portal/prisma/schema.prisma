@@ -209,6 +209,36 @@ model AgentAction {
   @@index([reportId, requestedAt])
 }
 
+model AgentCredential {
+  agentId    String   @id
+  tokenHash  String
+  active     Boolean  @default(true)
+  lastSeenAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AgentTask {
+  id            String    @id @default(cuid())
+  applicationId String
+  agentId       String
+  task          String    @db.Text
+  status        String    @default("QUEUED")
+  requestedBy   String
+  requestedAt   DateTime  @default(now())
+  startedAt     DateTime?
+  leaseExpiresAt DateTime?
+  finishedAt    DateTime?
+  summary       String?
+  report         String?  @db.Text
+  workspacePath String?
+  error          String?
+
+  @@index([status, requestedAt])
+  @@index([applicationId, requestedAt])
+  @@index([agentId, status, requestedAt])
+}
+
 model EmailOutbox {
   id                String    @id @default(cuid())
   idempotencyKey    String    @unique

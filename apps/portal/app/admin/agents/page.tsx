@@ -1,12 +1,19 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getRoles, getSession } from "@/lib/oidc";
+import { getPrisma } from "@/lib/prisma";
 import { getAgentReports } from "@/lib/agent-reports";
-import { reviewAgentReport } from "./actions";
+import {
+  queueAgentTask,
+  registerAgentCredential,
+  reviewAgentReport,
+} from "./actions";
 import { AgentLiveBoard } from "@/components/agent-live-board";
+import { agentCatalog } from "@/lib/agents/catalog";
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
+  QUEUED: "En file",
   APPROVED: "Approuvée — en file",
   REJECTED: "Refusée",
   EXECUTING: "En cours",
@@ -26,6 +33,10 @@ export default async function AgentReportsPage() {
   const session = await getSession();
   if (!getRoles(session).includes("PORTAL_ADMIN")) redirect("/");
   const reports = await getAgentReports();
+  const [tasks, credentials] = await Promise.all([
+    getAgentTasks(),
+    getAgentCredentials(),
+  ]);
   const pending = reports.filter(
     (report) => report.status === "PENDING",
   ).length;
@@ -48,6 +59,122 @@ export default async function AgentReportsPage() {
         <div className="agent-queue-summary" aria-label="État de la file">
           <strong>{queued}</strong>
           <span>actions en file</span>
+        </div>
+      </section>
+
+      <section className="agent-action-ledger" aria-label="Tâches locales">
+        <div className="section-header admin-section-heading">
+          <div>
+            <p className="eyebrow">Dispatch local sécurisé</p>
+            <h2>Demander une modification à un agent d’application</h2>
+          </div>
+        </div>
+        <p>
+          La VM applicative récupère la tâche par HTTPS, travaille dans un
+          espace isolé et renvoie son rapport au Portail. Aucune publication
+          n’est déclenchée par cette action.
+        </p>
+        <form action={queueAgentTask} className="agent-report-actions">
+          <label>
+            Application
+            <select name="agentId" required>
+              {Object.entries(agentCatalog).map(([agentId, agent]) => (
+                <option key={agentId} value={agentId}>
+                  {agent.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Modification demandée
+            <textarea name="task" minLength={10} maxLength={8000} required />
+          </label>
+          <button className="button primary" type="submit">
+            Envoyer à l’agent local
+          </button>
+        </form>
+        <details>
+          <summary>Runners enregistrés</summary>
+          <ul>
+            {Object.entries(agentCatalog).map(([agentId, agent]) => {
+              const credential = credentials.find(
+                (entry) => entry.agentId === agentId,
+              );
+              return (
+                <li key={agentId}>
+                  {agent.name} · {credential?.active ? "actif" : "à configurer"}
+                  {credential?.lastSeenAt
+                    ? ` · vu ${new Intl.DateTimeFormat("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(credential.lastSeenAt)}`
+                    : ""}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+        <details>
+          <summary>Enregistrer un runner</summary>
+          <p>
+            Le runner garde son jeton sur sa VM. Enregistre ici uniquement
+            l’empreinte SHA-256 fournie par le script d’installation ; ne colle
+            jamais le jeton lui-même.
+          </p>
+          <form
+            action={registerAgentCredential}
+            className="agent-report-actions"
+          >
+            <label>
+              Agent
+              <select name="agentId" required>
+                {Object.entries(agentCatalog).map(([agentId, agent]) => (
+                  <option key={agentId} value={agentId}>
+                    {agent.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Empreinte SHA-256
+              <input
+                name="tokenHash"
+                pattern="[A-Fa-f0-9]{64}"
+                minLength={64}
+                maxLength={64}
+                required
+              />
+            </label>
+            <button className="button secondary" type="submit">
+              Enregistrer l’empreinte
+            </button>
+          </form>
+        </details>
+        <div className="agent-action-list">
+          {tasks.map((task) => (
+            <article className="agent-action-row" key={task.id}>
+              <div>
+                <strong>
+                  {task.applicationId} · {task.agentId}
+                </strong>
+                <p>{task.summary ?? task.task}</p>
+                {task.workspacePath ? (
+                  <small>Workspace local : {task.workspacePath}</small>
+                ) : null}
+                {task.report ? (
+                  <details>
+                    <summary>Rapport de l’agent</summary>
+                    <pre className="agent-report-body">{task.report}</pre>
+                  </details>
+                ) : null}
+              </div>
+              <span
+                className={`status-pill agent-status-${task.status.toLowerCase()}`}
+              >
+                {statusLabels[task.status] ?? task.status}
+              </span>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -210,4 +337,17 @@ export default async function AgentReportsPage() {
       </div>
     </div>
   );
+}
+
+async function getAgentTasks() {
+  return getPrisma().agentTask.findMany({
+    orderBy: { requestedAt: "desc" },
+    take: 30,
+  });
+}
+
+async function getAgentCredentials() {
+  return getPrisma().agentCredential.findMany({
+    select: { agentId: true, active: true, lastSeenAt: true },
+  });
 }

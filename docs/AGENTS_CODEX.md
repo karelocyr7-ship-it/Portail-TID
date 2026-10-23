@@ -1,53 +1,72 @@
-# Agents Codex nocturnes
+# Agents Codex locaux pilotés par le Portail
 
-L’architecture limite à un agent simultané, sans sudo, sans secrets de
-production, sans accès aux bases de production et sans socket Docker. Le
-répertoire de travail est `/srv/tad/agents/`, avec `queue`, `repositories`,
-`workspaces`, `results`, `logs` et `state`.
+Chaque application dispose d’un runner local, sans sudo, accès aux bases,
+socket Docker ni secrets applicatifs. Le runner récupère les tâches par HTTPS
+avec un jeton propre à l’agent, travaille sur un clone superficiel isolé et
+remonte son rapport vers le Portail. Les tâches, rapports, états et derniers
+contacts sont conservés dans la base du Portail. Un agent ne peut réclamer ou
+terminer que les tâches de son identifiant.
 
-## Commandes préparées
+Les demandes se créent dans Administration → Rapports des agents. Chaque
+instance systemd tourne sous un compte Linux dédié à un seul agent. Les jetons
+bruts restent dans `/etc/tad-agents/<agent>.env`, lisible uniquement par root ;
+la base du Portail conserve leur empreinte SHA-256. Le jeton n’est pas transmis
+au processus Codex.
 
-Les scripts du dépôt sont idempotents :
+## Installer un runner sur une VM
 
-```sh
-/srv/tad/portail/scripts/agents-start.sh
-/srv/tad/portail/scripts/agents-enable-new-tasks.sh
-/srv/tad/portail/scripts/agents-stop-new-tasks.sh
-/srv/tad/portail/scripts/agents-stop.sh
-/srv/tad/portail/scripts/daily-report.sh
-```
-
-L’exécution est désactivée par défaut. Elle ne peut être activée qu’avec
-`AGENT_ALLOW_RUN=true`, après revue de la tâche et validation de l’installation
-systemd. Un exemple de lancement contrôlé est :
+Prérequis sur la VM : Codex CLI, Git, Node.js et une connexion sortante HTTPS
+vers `portail.tadgroupe.com`. Depuis la racine d’un dépôt Git local de
+l’application, exécuter :
 
 ```sh
-AGENT_ALLOW_RUN=true codex exec --sandbox workspace-write --cd /srv/tad/agents/workspaces/tache \
-  "Décris précisément la tâche et limite les modifications au dépôt."
+sudo bash scripts/install-portal-agent.sh <agent-id> <chemin-depot> https://portail.tadgroupe.com
 ```
 
-Les unités et timers `infrastructure/systemd/tad-agent-*` prévoient la fenêtre
-19 h 30–6 h 00 : le timer de démarrage déclenche l'unité de réactivation à
-19 h 30, puis la suspension intervient à 5 h 30, l’arrêt propre à 5 h 45,
-l’arrêt forcé à 6 h et le rapport à 6 h 05, fuseau `Africa/Abidjan`. Ils ne doivent pas être
-copiés dans `/etc/systemd/system` ni activés sans validation administrateur.
+Le script crée un compte Linux isolé, clone uniquement le commit courant sans
+historique, refuse les chemins `.env` et de clés suivis par Git, crée le fichier
+de configuration à permissions root, et installe l’unité
+`tad-portal-agent@.service`. Il affiche uniquement l’empreinte SHA-256 du jeton.
+Enregistrer cette empreinte dans Administration → Rapports des agents ; ne
+jamais copier le jeton brut dans le Portail.
 
-Les prérequis système `bubblewrap` et `ripgrep` sont installés sur la VM du
-Portail. Le service systemd autorise `AF_NETLINK`, requis par bubblewrap, sans
-accorder d’accès SSH, Docker ou base de données aux agents.
+```sh
+sudo -u <compte-agent-affiché-par-le-script> -H codex login
+sudo systemctl enable --now tad-portal-agent@<agent-id>.service
+```
 
-## Synchronisation de la file
+Le runner commence alors à interroger le Portail toutes les 15 secondes. Il
+crée une branche et un workspace local par tâche, puis publie seulement le
+résumé et le rapport synthétique dans le journal du Portail. Le workspace reste
+sur sa VM pour inspection.
 
-Le service Compose `agent-dispatch-worker` synchronise toutes les 15 secondes
-les rapports déposés par les runtimes, les actions approuvées en base et les
-fichiers `.task` de la file technique. Cette synchronisation ne dépend pas de
-l’ouverture de la page « Rapports des agents ».
+## État des VMs et limites de livraison
 
-Le worker accède uniquement à PostgreSQL, aux résultats en lecture seule et à
-la file en écriture. Il ne possède ni socket Docker, ni clé SSH, ni accès aux
-secrets des applications métiers. Le traitement effectif des tâches demeure
-assuré par `tad-agent-start.service`, un agent à la fois, pendant la fenêtre
-19 h 30–5 h 30.
+Les commandes d’installation pour les dépôts connus sont :
+
+- VM 135 : `tdb-agent` sur `/home/debian/TDB-TID`, `cash-recon-agent` sur
+  `/home/debian/CASH-RECON`, `revue-pdv-agent` sur
+  `/home/debian/Revue-PDV-PROD`.
+- VM 51 : `gparc-agent` sur `/home/debian/gparc-prod`.
+- VM 91 : `recrutement-om-telco-agent` sur `/home/debian/RECRUT_OM`.
+- VM Portail : `portal-agent` sur `/srv/tad/portail`.
+
+La source Git locale de GLPI, SIRH/GED, ATF et MDM reste à identifier ou
+confirmer ; aucun runner ne doit être installé pour ces agents avant de
+confirmer le dépôt source. Les VMs 51 (GParc), 152 (SIRH/GED) et 51.178 (ATF)
+ne sont pas accessibles en SSH depuis le Portail ; les commandes doivent y
+être exécutées localement.
+
+Ce déploiement donne aux agents le droit de modifier une copie locale isolée
+et de rapporter leur travail. Il ne leur donne pas de jeton GitHub, droit de
+fusion, accès SSH distant ou permission de publier en production. La création
+de PR, la fusion après CI et le déploiement doivent être ajoutés par dépôt avec
+des identités GitHub limitées et une procédure de rollback validée. Ils ne sont
+pas activés par cette unité.
+
+Les anciens scripts `tad-agent-start.service` et `agent-dispatch-worker`
+restent dédiés à la file historique d’actions de rapports. Ils ne sont pas le
+canal de dispatch des nouvelles tâches locales.
 
 ## n8n local
 

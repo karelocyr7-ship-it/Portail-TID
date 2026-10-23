@@ -1,10 +1,10 @@
-version: 1
-mode: proposal_only
+version: 2
+mode: local_pull_agents_pending_installation
 production_deployment_requires_human_approval: true
 queue_policy:
-  approval_creates: QUEUED
-  execution_owner: portal-orchestrator
-  max_concurrent_actions: 1
+  portal_task_creates: QUEUED
+  execution_owner: application_local_agent
+  max_concurrent_tasks_per_agent: 1
   destructive_actions: forbidden_by_default
   secrets_available_to_agents: false
   docker_socket_available_to_agents: false
@@ -13,6 +13,16 @@ agents:
   - id: portal-orchestrator
     type: orchestrator
     scope: [portal, orchestration]
+    can_execute_production: false
+  - id: portal-agent
+    type: application
+    application: portal
+    scope: [portal]
+    can_execute_production: false
+  - id: glpi-agent
+    type: application
+    application: glpi
+    scope: [glpi]
     can_execute_production: false
   - id: tdb-agent
     type: application

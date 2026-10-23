@@ -5,6 +5,7 @@ import { getPrisma } from "@/lib/prisma";
 import { getRoles, getSession } from "@/lib/oidc";
 import { hashAgentToken } from "@/lib/agents/auth";
 import { agentCatalog, isPortalAgentId } from "@/lib/agents/catalog";
+import { supportsProductionOperation } from "@/lib/agents/production-operations";
 
 const decisions = ["APPROVE", "REJECT"] as const;
 type Decision = (typeof decisions)[number];
@@ -69,27 +70,44 @@ export async function queueAgentTask(formData: FormData) {
   const session = await requireAdmin();
   const agentId = String(formData.get("agentId") ?? "").trim();
   const task = String(formData.get("task") ?? "").trim();
+  const productionOperation = String(
+    formData.get("productionOperation") ?? "NONE",
+  ).trim();
   if (!isPortalAgentId(agentId) || task.length < 10 || task.length > 8000)
     throw new Error("Tâche ou agent invalide");
+  if (!supportsProductionOperation(agentId, productionOperation))
+    throw new Error(
+      "Cette opération de production n’est pas autorisée pour cet agent",
+    );
 
   const agent = agentCatalog[agentId];
   const prisma = getPrisma();
-  const created = await prisma.agentTask.create({
-    data: {
-      agentId,
-      applicationId: agent.applicationId,
-      task,
-      requestedBy: session.subject,
-    },
-  });
-  await prisma.auditLog.create({
-    data: {
-      userId: session.subject,
-      eventType: "AGENT_TASK_QUEUED",
-      entityType: "AgentTask",
-      entityId: created.id,
-      afterData: { agentId, applicationId: agent.applicationId },
-    },
+  await prisma.$transaction(async (transaction) => {
+    const created = await transaction.agentTask.create({
+      data: {
+        agentId,
+        applicationId: agent.applicationId,
+        task,
+        productionOperation,
+        requestedBy: session.subject,
+      },
+    });
+    await transaction.auditLog.create({
+      data: {
+        userId: session.subject,
+        eventType:
+          productionOperation === "NONE"
+            ? "AGENT_TASK_QUEUED"
+            : "AGENT_PRODUCTION_OPERATION_QUEUED",
+        entityType: "AgentTask",
+        entityId: created.id,
+        afterData: {
+          agentId,
+          applicationId: agent.applicationId,
+          productionOperation,
+        },
+      },
+    });
   });
   revalidatePath("/admin/agents");
 }

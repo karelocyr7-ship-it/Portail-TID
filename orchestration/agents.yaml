@@ -18,11 +18,13 @@ agents:
     type: application
     application: portal
     scope: [portal]
+    production_operations: [STATUS_APP, RESTART_APP]
     can_execute_production: false
   - id: monitoring-agent
     type: application
     application: monitoring
     scope: [monitoring]
+    production_operations: [STATUS_APP, RESTART_APP]
     can_execute_production: false
   - id: glpi-agent
     type: application
@@ -33,11 +35,13 @@ agents:
     type: application
     application: tdb
     scope: [tdb]
+    production_operations: [STATUS_APP, RESTART_APP]
     can_execute_production: false
   - id: cash-recon-agent
     type: application
     application: cash-recon
     scope: [cash-recon]
+    production_operations: [STATUS_APP, RESTART_APP]
     can_execute_production: false
   - id: atf-agent
     type: application
@@ -48,6 +52,7 @@ agents:
     type: application
     application: revue-pdv
     scope: [revue-pdv]
+    production_operations: [STATUS_APP, RESTART_APP]
     can_execute_production: false
   - id: gparc-agent
     type: application

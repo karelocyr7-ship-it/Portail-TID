@@ -17,6 +17,7 @@ const task = {
   applicationId: "tdb",
   agentId: "tdb-agent",
   task: "Modifier la page de synthèse et exécuter les tests.",
+  productionOperation: "RESTART_APP",
 };
 const findFirst = vi.fn();
 const updateMany = vi.fn();
@@ -41,7 +42,12 @@ it("claims only a queued task for the authenticated agent", async () => {
   );
   expect(response.status).toBe(200);
   await expect(response.json()).resolves.toMatchObject({
-    task: { id: task.id, applicationId: "tdb", task: task.task },
+    task: {
+      id: task.id,
+      applicationId: "tdb",
+      task: task.task,
+      productionOperation: "RESTART_APP",
+    },
   });
   expect(updateMany).toHaveBeenLastCalledWith(
     expect.objectContaining({

@@ -1,17 +1,32 @@
 # Agents Codex locaux pilotés par le Portail
 
-Chaque application dispose d’un runner local, sans sudo, accès aux bases,
-socket Docker ni secrets applicatifs. Le runner récupère les tâches par HTTPS
-avec un jeton propre à l’agent, travaille sur un clone superficiel isolé et
-remonte son rapport vers le Portail. Les tâches, rapports, états et derniers
-contacts sont conservés dans la base du Portail. Un agent ne peut réclamer ou
-terminer que les tâches de son identifiant.
+Chaque application dispose d’un runner local sans accès aux bases, au socket
+Docker ni aux secrets applicatifs. Le runner récupère les tâches par HTTPS avec
+un jeton propre à l’agent, travaille sur un clone superficiel isolé et remonte
+son rapport au Portail. Les tâches, rapports, états et derniers contacts sont
+conservés dans la base du Portail. Un agent ne peut réclamer ou terminer que
+les tâches de son identifiant.
+
+Des opérations production limitées peuvent être habilitées par application.
+Le portail transmet uniquement `STATUS_APP` et `RESTART_APP` ; l’administrateur
+les choisit explicitement à la création de la tâche. Le runner passe par
+sudoers pour appeler un helper root qui ne connaît que les conteneurs
+applicatifs autorisés, avec une limite d’un redémarrage par application toutes
+les deux minutes. Aucun shell root, chemin ou argument Docker libre n’est
+exposé.
 
 Les demandes se créent dans Administration → Rapports des agents. Chaque
 instance systemd tourne sous un compte Linux dédié à un seul agent. Les jetons
 bruts restent dans `/etc/tad-agents/<agent>.env`, lisible uniquement par root ;
 la base du Portail conserve leur empreinte SHA-256. Le jeton n’est pas transmis
 au processus Codex.
+
+`can_execute_production: false` dans `orchestration/agents.yaml` signifie que
+l’agent ne peut pas publier de code ou de configuration. Les opérations de
+service listées séparément n’autorisent que l’état et le redémarrage des
+conteneurs prévus pour cette application ; elles ne permettent pas de changer
+leur configuration. Les demandes de changement restent isolées jusqu’à une
+livraison effectuée par la procédure documentée de l’application.
 
 ## Installer un runner sur une VM
 
@@ -40,6 +55,17 @@ crée une branche et un workspace local par tâche, puis publie seulement le
 résumé et le rapport synthétique dans le journal du Portail. Le workspace reste
 sur sa VM pour inspection.
 
+Pour les agents dotés d’une politique d’opérations, installer le helper local
+depuis ce même dépôt :
+
+```sh
+sudo bash scripts/install-agent-production-ops.sh <agent-id>
+```
+
+L’installateur vérifie la présence des conteneurs autorisés et valide la règle
+sudoers avec `visudo`. Il n’accorde que les appels exacts `STATUS_APP` et
+`RESTART_APP` pour le compte de service correspondant.
+
 ## État des VMs et limites de livraison
 
 Les commandes d’installation pour les dépôts connus sont :
@@ -61,12 +87,11 @@ confirmer le dépôt source. Les VMs 51 (GParc), 152 (SIRH/GED) et 51.178 (ATF)
 ne sont pas accessibles en SSH depuis le Portail ; les commandes doivent y
 être exécutées localement.
 
-Ce déploiement donne aux agents le droit de modifier une copie locale isolée
-et de rapporter leur travail. Il ne leur donne pas de jeton GitHub, droit de
-fusion, accès SSH distant ou permission de publier en production. La création
-de PR, la fusion après CI et le déploiement doivent être ajoutés par dépôt avec
-des identités GitHub limitées et une procédure de rollback validée. Ils ne sont
-pas activés par cette unité.
+Les modifications de code restent dans le workspace isolé et sont rapportées
+au Portail. Les opérations de service activées ne publient pas de code ni de
+configuration. La création de PR, la fusion après CI et le déploiement d’une
+version applicative nécessitent une procédure propre à chaque dépôt avec un
+rollback validé ; le helper ne les déclenche pas.
 
 Les anciens scripts `tad-agent-start.service` et `agent-dispatch-worker`
 restent dédiés à la file historique d’actions de rapports. Ils ne sont pas le

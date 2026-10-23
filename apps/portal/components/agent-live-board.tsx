@@ -70,50 +70,54 @@ export function AgentLiveBoard() {
           tâches.
         </p>
       ) : null}
-      <div className="agent-live-grid">
-        {agents.map((agent) => (
-          <article className="agent-live-card" key={agent.agentId}>
-            <div className="agent-live-card-heading">
-              <strong>{agent.applicationId}</strong>
-              <span
-                className={`status-pill agent-status-${agent.status.toLowerCase()}`}
-              >
-                {labels[agent.status]}
-              </span>
-            </div>
-            <p className="muted">{agent.agentId}</p>
-            <dl>
-              <div>
-                <dt>VM</dt>
-                <dd>{agent.vm}</dd>
-              </div>
-              <div>
-                <dt>Environnement</dt>
-                <dd>{agent.environment}</dd>
-              </div>
-              <div>
-                <dt>Tâche</dt>
-                <dd>{agent.task ?? "Aucune"}</dd>
-              </div>
-              <div>
-                <dt>Début</dt>
-                <dd>
+      <div className="agent-report-table-wrap">
+        <table className="agent-report-table agent-live-table">
+          <thead>
+            <tr>
+              <th scope="col">Application</th>
+              <th scope="col">Agent</th>
+              <th scope="col">VM</th>
+              <th scope="col">Environnement</th>
+              <th scope="col">Tâche</th>
+              <th scope="col">Début</th>
+              <th scope="col">Dernier contact</th>
+              <th scope="col">État</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agents.map((agent) => (
+              <tr key={agent.agentId}>
+                <td>{agent.applicationId}</td>
+                <td>{agent.agentId}</td>
+                <td>{agent.vm}</td>
+                <td>{agent.environment}</td>
+                <td>{agent.task ?? "Aucune"}</td>
+                <td>
                   {agent.startedAt
                     ? new Date(agent.startedAt).toLocaleString("fr-FR")
                     : "—"}
-                </dd>
-              </div>
-              <div>
-                <dt>Dernier contact</dt>
-                <dd>
+                </td>
+                <td>
                   {agent.lastSeenAt
                     ? new Date(agent.lastSeenAt).toLocaleString("fr-FR")
                     : "Jamais"}
-                </dd>
-              </div>
-            </dl>
-          </article>
-        ))}
+                </td>
+                <td>
+                  <span
+                    className={`status-pill agent-status-${agent.status.toLowerCase()}`}
+                  >
+                    {labels[agent.status]}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {agents.length === 0 ? (
+              <tr>
+                <td colSpan={8}>Aucun agent enregistré.</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
       </div>
     </section>
   );

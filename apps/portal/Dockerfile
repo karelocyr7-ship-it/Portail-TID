@@ -9,6 +9,16 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/portal/package.json apps/portal/package.json
 RUN pnpm install --frozen-lockfile
 
+FROM base AS migrator
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/portal/node_modules ./apps/portal/node_modules
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/portal/package.json apps/portal/package.json
+COPY apps/portal/prisma apps/portal/prisma
+COPY apps/portal/prisma.config.ts apps/portal/prisma.config.ts
+WORKDIR /app/apps/portal
+CMD ["pnpm", "exec", "prisma", "migrate", "deploy"]
+
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/portal/node_modules ./apps/portal/node_modules

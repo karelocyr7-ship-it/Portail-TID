@@ -61,12 +61,19 @@ répertoire `/srv/tad/agents` et les unités `tad-agent-*` y sont absents. Cette
 vérification locale ne change pas l’échec d’authentification SSH depuis le
 Portail.
 
+Le responsable a également confirmé depuis les VMs `SIRH-GED` et `atf-tid`
+les adresses publiques `152.228.138.54` et `51.178.142.237`. Codex CLI est
+présent (`/usr/local/bin/codex`) sur les deux ; `/srv/tad/agents` et les
+unités `tad-agent-*` y sont absents. L’authentification SSH depuis le Portail
+reste refusée sur ces deux VMs.
+
 ## État des agents locaux — 23 octobre 2026
 
 Le Portail a un worker de dispatch et des timers locaux. Sur les VMs 135 et 91,
 Codex CLI est présent, mais `/srv/tad/agents` et les unités systemd
 `tad-agent-*` sont absents. La file actuelle est locale à la VM Portail et le
-runner interdit les connexions distantes et le déploiement. Les VMs SIRH/GED
-et ATF n’ont pas pu être inspectées par SSH ; pour GParc, le diagnostic fourni
-par le responsable confirme Codex présent mais aucun runner local. Aucun
-déploiement d’agent local n’a été effectué pendant cet audit.
+runner interdit les connexions distantes et le déploiement. Les diagnostics
+locaux fournis par le responsable confirment Codex présent mais aucun runner
+sur les VMs SIRH/GED, ATF et GParc ; SSH depuis le Portail n’est pas autorisé
+sur ces trois VMs. Aucun déploiement d’agent local n’a été effectué pendant
+cet audit.

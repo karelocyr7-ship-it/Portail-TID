@@ -10,6 +10,7 @@ import {
 } from "./actions";
 import { AgentLiveBoard } from "@/components/agent-live-board";
 import { AgentTaskForm } from "@/components/agent-task-form";
+import { AgentReportTable } from "@/components/agent-report-table";
 import { agentCatalog } from "@/lib/agents/catalog";
 import { productionOperations } from "@/lib/agents/production-operations";
 
@@ -142,37 +143,69 @@ export default async function AgentReportsPage() {
             </button>
           </form>
         </details>
-        <div className="agent-action-list">
-          {tasks.map((task) => (
-            <article className="agent-action-row" key={task.id}>
-              <div>
-                <strong>
-                  {task.applicationId} · {task.agentId}
-                </strong>
-                <p>{task.summary ?? task.task}</p>
-                {task.productionOperation !== "NONE" ? (
-                  <small>
-                    Opération production : {task.productionOperation}
-                  </small>
-                ) : null}
-                {task.workspacePath ? (
-                  <small>Workspace local : {task.workspacePath}</small>
-                ) : null}
-                {task.report ? (
-                  <details>
-                    <summary>Rapport de l’agent</summary>
-                    <pre className="agent-report-body">{task.report}</pre>
-                  </details>
-                ) : null}
-              </div>
-              <span
-                className={`status-pill agent-status-${task.status.toLowerCase()}`}
-              >
-                {statusLabels[task.status] ?? task.status}
-              </span>
-            </article>
-          ))}
-        </div>
+        <details className="agent-task-history">
+          <summary>Historique des 30 dernières tâches ({tasks.length})</summary>
+          {tasks.length === 0 ? (
+            <p className="empty-state compact-empty">Aucune tâche envoyée.</p>
+          ) : (
+            <div className="agent-report-table-wrap">
+              <table className="agent-report-table agent-action-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Application · agent</th>
+                    <th scope="col">Demande / résultat</th>
+                    <th scope="col">Opération</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col">Demandée le</th>
+                    <th scope="col">Détails</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((task) => (
+                    <tr key={task.id}>
+                      <td>
+                        {task.applicationId} · {task.agentId}
+                      </td>
+                      <td>{task.summary ?? task.task}</td>
+                      <td>
+                        {task.productionOperation === "NONE"
+                          ? "—"
+                          : task.productionOperation}
+                      </td>
+                      <td>
+                        <span
+                          className={`status-pill agent-status-${task.status.toLowerCase()}`}
+                        >
+                          {statusLabels[task.status] ?? task.status}
+                        </span>
+                      </td>
+                      <td>
+                        {new Intl.DateTimeFormat("fr-FR", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        }).format(task.requestedAt)}
+                      </td>
+                      <td>
+                        {task.report ? (
+                          <details className="agent-report-row-details">
+                            <summary>Voir le rapport</summary>
+                            <pre className="agent-report-body">
+                              {task.report}
+                            </pre>
+                          </details>
+                        ) : task.workspacePath ? (
+                          task.workspacePath
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </details>
       </section>
 
       <section className="agent-action-ledger" aria-label="Journal des actions">
@@ -188,62 +221,64 @@ export default async function AgentReportsPage() {
             Aucune action enregistrée.
           </p>
         ) : (
-          <div className="agent-action-list">
-            {actions.map((action) => (
-              <article className="agent-action-row" key={action.id}>
-                <div>
-                  <strong>
-                    {action.report.applicationId} · {action.report.agentId}
-                  </strong>
-                  <p className="muted">
-                    {action.report.title} · décision {action.action}
-                  </p>
-                </div>
-                <div className="agent-action-meta">
-                  <span
-                    className={`status-pill agent-status-${action.status.toLowerCase()}`}
-                  >
-                    {actionStatusLabels[action.status] ?? action.status}
-                  </span>
-                  <small>
-                    {new Intl.DateTimeFormat("fr-FR", {
-                      dateStyle: "medium",
-                      timeStyle: "short",
-                    }).format(action.requestedAt)}
-                  </small>
-                  {action.error ? (
-                    <small className="error-text">{action.error}</small>
-                  ) : null}
-                </div>
-              </article>
-            ))}
+          <div className="agent-report-table-wrap">
+            <table className="agent-report-table agent-action-table">
+              <thead>
+                <tr>
+                  <th scope="col">Application · agent</th>
+                  <th scope="col">Rapport</th>
+                  <th scope="col">Décision</th>
+                  <th scope="col">Statut</th>
+                  <th scope="col">Demandée le</th>
+                  <th scope="col">Erreur</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actions.map((action) => (
+                  <tr key={action.id}>
+                    <td>
+                      {action.report.applicationId} · {action.report.agentId}
+                    </td>
+                    <td>{action.report.title}</td>
+                    <td>
+                      {action.action === "APPROVE" ? "Approuver" : "Refuser"}
+                    </td>
+                    <td>
+                      <span
+                        className={`status-pill agent-status-${action.status.toLowerCase()}`}
+                      >
+                        {actionStatusLabels[action.status] ?? action.status}
+                      </span>
+                    </td>
+                    <td>
+                      {new Intl.DateTimeFormat("fr-FR", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      }).format(action.requestedAt)}
+                    </td>
+                    <td className="error-text">{action.error ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
 
       <AgentLiveBoard />
 
-      <section
-        className="agent-report-toolbar"
-        aria-label="Résumé des rapports"
-      >
-        <div>
-          <strong>{reports.length}</strong>
-          <span>rapports reçus</span>
-        </div>
-        <div>
-          <strong>{pending}</strong>
-          <span>à valider</span>
-        </div>
-        <div>
-          <strong>1</strong>
-          <span>action simultanée maximale</span>
-        </div>
-        <p>
-          Une validation ne déclenche pas une commande distante : elle crée
-          uniquement une action <code>QUEUED</code> traitée par l’orchestrateur.
-        </p>
-      </section>
+      <div className="agent-report-toolbar" aria-label="Résumé des rapports">
+        <span>
+          <strong>{reports.length}</strong> rapports reçus
+        </span>
+        <span>
+          <strong>{pending}</strong> à valider
+        </span>
+        <span>
+          <strong>{queued}</strong> actions en file · une exécution simultanée
+          maximale
+        </span>
+      </div>
 
       {reports.length === 0 ? (
         <section className="empty-state agent-empty-state">
@@ -254,70 +289,15 @@ export default async function AgentReportsPage() {
           </p>
         </section>
       ) : (
-        <section className="agent-report-list" aria-label="Rapports agents">
-          {reports.map((report) => (
-            <article className="agent-report-card" key={report.id}>
-              <div className="agent-report-heading">
-                <div>
-                  <p className="eyebrow">
-                    {report.applicationId} · {report.agentId}
-                  </p>
-                  <h2>{report.title}</h2>
-                  <p className="muted">
-                    Tâche {report.taskId} · Risque niveau {report.riskLevel}
-                  </p>
-                </div>
-                <span
-                  className={`status-pill agent-status-${report.status.toLowerCase()}`}
-                >
-                  {statusLabels[report.status] ?? report.status}
-                </span>
-              </div>
-              <p>{report.summary}</p>
-              <details>
-                <summary>Afficher le rapport et les preuves</summary>
-                <pre className="agent-report-body">{report.reportBody}</pre>
-                {report.evidence ? (
-                  <pre className="agent-report-evidence">
-                    {JSON.stringify(report.evidence, null, 2)}
-                  </pre>
-                ) : null}
-              </details>
-              {report.proposal ? (
-                <details>
-                  <summary>Proposition d’action</summary>
-                  <pre className="agent-report-evidence">
-                    {JSON.stringify(report.proposal, null, 2)}
-                  </pre>
-                </details>
-              ) : null}
-              {report.status === "PENDING" ? (
-                <div className="agent-report-actions">
-                  <form action={reviewAgentReport}>
-                    <input type="hidden" name="reportId" value={report.id} />
-                    <input type="hidden" name="decision" value="APPROVE" />
-                    <button className="button primary" type="submit">
-                      Valider et mettre en file
-                    </button>
-                  </form>
-                  <form action={reviewAgentReport}>
-                    <input type="hidden" name="reportId" value={report.id} />
-                    <input type="hidden" name="decision" value="REJECT" />
-                    <button className="button secondary" type="submit">
-                      Refuser la proposition
-                    </button>
-                  </form>
-                </div>
-              ) : null}
-              {report.actions.length > 0 ? (
-                <p className="agent-report-history">
-                  Dernière décision : {report.actions[0].action} ·{" "}
-                  {report.actions[0].status}
-                </p>
-              ) : null}
-            </article>
-          ))}
-        </section>
+        <AgentReportTable
+          actionStatusLabels={actionStatusLabels}
+          reports={reports.map((report) => ({
+            ...report,
+            createdAt: report.createdAt.toISOString(),
+          }))}
+          reviewAction={reviewAgentReport}
+          statusLabels={statusLabels}
+        />
       )}
 
       <div className="admin-tool-strip">

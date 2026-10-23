@@ -11,6 +11,8 @@ services:
     restart: "no"
     env_file:
       - /srv/tad/secrets/portal.env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
     networks: [tad-data]
     mem_limit: 512m
     cpus: 0.50

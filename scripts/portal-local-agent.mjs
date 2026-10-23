@@ -168,9 +168,16 @@ while (!stopping) {
       );
       await handleTask(result.task);
     }
-  } catch {
+  } catch (error) {
+    const failure =
+      error instanceof Error &&
+      /^Portal API returned \d{3}$/.test(error.message)
+        ? error.message.replace("Portal API returned ", "http_")
+        : error instanceof TypeError
+          ? "network_or_url_error"
+          : "runner_error";
     console.error(
-      JSON.stringify({ event: "local_agent_poll_failed", agentId }),
+      JSON.stringify({ event: "local_agent_poll_failed", agentId, failure }),
     );
   }
   if (!stopping) await delay(pollMs);

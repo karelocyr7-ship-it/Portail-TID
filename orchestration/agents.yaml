@@ -19,6 +19,11 @@ agents:
     application: portal
     scope: [portal]
     can_execute_production: false
+  - id: supervision-agent
+    type: application
+    application: supervision
+    scope: [supervision]
+    can_execute_production: false
   - id: glpi-agent
     type: application
     application: glpi

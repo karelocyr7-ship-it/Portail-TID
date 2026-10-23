@@ -9,7 +9,9 @@ import {
   reviewAgentReport,
 } from "./actions";
 import { AgentLiveBoard } from "@/components/agent-live-board";
+import { AgentTaskForm } from "@/components/agent-task-form";
 import { agentCatalog } from "@/lib/agents/catalog";
+import { productionOperations } from "@/lib/agents/production-operations";
 
 const statusLabels: Record<string, string> = {
   PENDING: "En attente",
@@ -71,28 +73,18 @@ export default async function AgentReportsPage() {
         </div>
         <p>
           La VM applicative récupère la tâche par HTTPS, travaille dans un
-          espace isolé et renvoie son rapport au Portail. Aucune publication
-          n’est déclenchée par cette action.
+          espace isolé et renvoie son rapport au Portail. Les opérations de
+          production sont limitées aux commandes explicitement habilitées pour
+          chaque runner et sont journalisées.
         </p>
-        <form action={queueAgentTask} className="agent-report-actions">
-          <label>
-            Application
-            <select name="agentId" required>
-              {Object.entries(agentCatalog).map(([agentId, agent]) => (
-                <option key={agentId} value={agentId}>
-                  {agent.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Modification demandée
-            <textarea name="task" minLength={10} maxLength={8000} required />
-          </label>
-          <button className="button primary" type="submit">
-            Envoyer à l’agent local
-          </button>
-        </form>
+        <AgentTaskForm
+          action={queueAgentTask}
+          agents={Object.entries(agentCatalog).map(([id, agent]) => ({
+            id,
+            name: agent.name,
+          }))}
+          operationsByAgent={productionOperations}
+        />
         <details>
           <summary>Runners enregistrés</summary>
           <ul>
@@ -158,6 +150,11 @@ export default async function AgentReportsPage() {
                   {task.applicationId} · {task.agentId}
                 </strong>
                 <p>{task.summary ?? task.task}</p>
+                {task.productionOperation !== "NONE" ? (
+                  <small>
+                    Opération production : {task.productionOperation}
+                  </small>
+                ) : null}
                 {task.workspacePath ? (
                   <small>Workspace local : {task.workspacePath}</small>
                 ) : null}

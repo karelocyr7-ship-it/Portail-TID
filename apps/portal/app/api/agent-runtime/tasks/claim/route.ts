@@ -45,6 +45,7 @@ export async function POST(request: Request) {
       id: candidate.id,
       applicationId: candidate.applicationId,
       task: candidate.task,
+      productionOperation: candidate.productionOperation,
     },
   });
 }

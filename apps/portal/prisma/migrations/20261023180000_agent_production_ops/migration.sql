@@ -1,0 +1,2 @@
+ALTER TABLE "AgentTask"
+ADD COLUMN "productionOperation" TEXT NOT NULL DEFAULT 'NONE';

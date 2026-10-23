@@ -223,6 +223,7 @@ model AgentTask {
   applicationId String
   agentId       String
   task          String    @db.Text
+  productionOperation String @default("NONE")
   status        String    @default("QUEUED")
   requestedBy   String
   requestedAt   DateTime  @default(now())

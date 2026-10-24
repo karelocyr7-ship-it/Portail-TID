@@ -20,6 +20,7 @@ fi
 command -v codex >/dev/null 2>&1 || { echo "Codex CLI doit être installé." >&2; exit 1; }
 command -v node >/dev/null 2>&1 || { echo "Node.js doit être installé." >&2; exit 1; }
 command -v git >/dev/null 2>&1 || { echo "Git doit être installé." >&2; exit 1; }
+command -v setfacl >/dev/null 2>&1 || { echo "setfacl (paquet acl) doit être installé." >&2; exit 1; }
 git -C "$repository_source" rev-parse --show-toplevel >/dev/null
 
 case "$agent_id" in
@@ -41,6 +42,12 @@ if ! getent passwd "$service_user" >/dev/null; then
 fi
 install -d -o root -g root -m 0755 /srv/tad/agents
 install -d -o root -g root -m 0711 /srv/tad/agents/repositories /srv/tad/agents/workspaces
+# Codex doit pouvoir rechercher et lister le parent pour ouvrir son workspace
+# dans le bac à sable. L’ACL est limitée au compte runner concerné.
+setfacl -m "u:${service_user}:r-x" /srv/tad/agents/workspaces
+if getent passwd tad-agents >/dev/null; then
+  setfacl -m u:tad-agents:r-x /srv/tad/agents/workspaces
+fi
 install -d -o root -g root -m 0700 /etc/tad-agents
 
 repository="/srv/tad/agents/repositories/$agent_id"

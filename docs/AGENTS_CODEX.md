@@ -30,9 +30,12 @@ livraison effectuée par la procédure documentée de l’application.
 
 ## Installer un runner sur une VM
 
-Prérequis sur la VM : Codex CLI, Git, Node.js et une connexion sortante HTTPS
-vers `portail.tadgroupe.com`. Depuis la racine d’un dépôt Git local de
-l’application, exécuter :
+Prérequis sur la VM : Codex CLI, Git, Node.js, `setfacl` (paquet `acl`) et une
+connexion sortante HTTPS vers `portail.tadgroupe.com`. L’installateur donne au
+compte runner une ACL de recherche/lecture sur le répertoire parent des
+workspaces afin que le bac à sable Codex puisse résoudre son dossier de
+travail; les workspaces restent détenus et protégés par compte. Depuis la
+racine d’un dépôt Git local de l’application, exécuter :
 
 ```sh
 sudo bash scripts/install-portal-agent.sh <agent-id> <chemin-depot> https://portail.tadgroupe.com

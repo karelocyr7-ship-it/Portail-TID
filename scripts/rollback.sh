@@ -5,7 +5,7 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 state_dir="${PORTAL_RELEASE_STATE_DIR:-/srv/tad/backups}"
 state_file="$state_dir/portal-release-rollback.tag"
 health_url="${PORTAL_HEALTH_URL:-https://portail.tadgroupe.com/health}"
-services=(portal mail-worker provisioning-worker)
+services=(portal mail-worker provisioning-worker agent-dispatch-worker)
 
 fail() { printf 'ERREUR: %s\n' "$*" >&2; exit 1; }
 compose() {
@@ -28,7 +28,7 @@ wait_for_health() {
   done
   [[ "${status:-}" == healthy ]] || return 1
   curl --fail --silent --show-error --max-time 10 "$health_url" >/dev/null
-  for service in mail-worker provisioning-worker; do
+  for service in mail-worker provisioning-worker agent-dispatch-worker; do
     local worker_id worker_status
     worker_id="$(compose ps -q "$service")"
     [[ -n "$worker_id" ]] || return 1

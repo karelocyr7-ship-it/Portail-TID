@@ -15,6 +15,9 @@
     "lib/email/**/*.ts",
     "lib/provisioning/worker-entry.ts",
     "lib/provisioning/**/*.ts",
+    "lib/agents/worker-entry.ts",
+    "lib/agents/**/*.ts",
+    "lib/agent-reports.ts",
     "lib/prisma.ts",
     "lib/application-access.js"
   ]

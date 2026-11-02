@@ -51,6 +51,19 @@ journaux.
 Le portail crée le compte avec l’action requise `UPDATE_PASSWORD`; aucun mot de
 passe n’est généré ni stocké par le portail.
 
+## E-mails de modification du mot de passe
+
+Le portail déclenche l’action Keycloak `UPDATE_PASSWORD`. Son e-mail est rendu
+par le thème e-mail du realm, indépendamment du thème de connexion. Le thème
+`tad-email-fr` fournit les sujets et corps français pour les e-mails
+`execute-actions` et `passwordReset`.
+
+Après déploiement des fichiers du thème, sélectionner `tad-email-fr` dans
+**Administration Keycloak > Realm settings > Themes > Email theme** du realm
+`tad-groupe`. Les messages des locales `fr` et `en` sont volontairement en
+français afin que les comptes existants configurés en anglais reçoivent aussi
+un e-mail français. Aucun flux SSO ni action de réinitialisation n’est modifié.
+
 ## Identité Sage et onboarding SIRH
 
 Le claim OIDC `sage_id` (alias acceptés : `sageId`, `employee_id`,

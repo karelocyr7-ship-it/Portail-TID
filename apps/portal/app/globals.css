@@ -667,6 +667,36 @@ p {
   font-weight: 800;
   text-transform: uppercase;
 }
+
+.agent-status-pending,
+.agent-status-queued {
+  background: #fff4d6;
+  color: #815600;
+}
+
+.agent-status-failed,
+.agent-status-offline,
+.agent-status-unregistered {
+  background: #feeceb;
+  color: #a62b26;
+}
+
+.agent-status-executing,
+.agent-status-approved {
+  background: #e8f0ff;
+  color: #244b80;
+}
+
+.agent-status-rejected,
+.agent-status-idle {
+  background: #edf0f5;
+  color: #536176;
+}
+
+.agent-status-completed {
+  background: #e8f8ef;
+  color: #187044;
+}
 .admin-app-card .eyebrow {
   margin-bottom: 5px;
   font-size: 9px;

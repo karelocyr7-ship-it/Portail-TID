@@ -7,21 +7,20 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
+import { agentCatalog } from "./agents/catalog";
 import { getPrisma } from "./prisma";
 
-const applicationByAgent: Record<string, string> = {
-  "monitoring-agent": "monitoring",
-  "tdb-agent": "tdb",
-  "cash-recon-agent": "cash-recon",
-  "revue-pdv-agent": "revue-pdv",
-  "gparc-agent": "gparc",
-  "mdm-agent": "mdm",
-  "recrutement-om-telco-agent": "recrutement-om-telco",
-};
+const applicationByAgent = Object.fromEntries(
+  Object.entries(agentCatalog).map(([agentId, agent]) => [
+    agentId,
+    agent.applicationId,
+  ]),
+) as Record<string, string>;
 
 const resultsRoot =
   process.env.AGENT_RESULTS_DIR ?? "/var/lib/tad-agent-results";
 const queueRoot = process.env.AGENT_QUEUE_DIR ?? "/var/lib/tad-agent-queue";
+const stateRoot = process.env.AGENT_STATE_DIR ?? "/var/lib/tad-agent-state";
 const maxExecutionAgeMs = 12 * 60 * 60 * 1000;
 
 function extractTaskId(body: string, fileName: string) {
@@ -40,6 +39,13 @@ function extractSummary(body: string) {
       .map((line) => line.replace(/^[-#\s]+/, "").trim())
       .find((line) => line.length > 20) ??
     "Rapport reçu depuis le runtime des agents."
+  );
+}
+
+function isFailedReport(body: string) {
+  const state = body.match(/^- \*\*État\s*:\*\*\s*(.+)$/im)?.[1]?.trim();
+  return Boolean(
+    state && /échec|failed|absent|bloqué|interrompu|non exécuté/i.test(state),
   );
 }
 
@@ -67,6 +73,19 @@ export async function syncAgentReports() {
       const reportPath = path.join(agentDirectory, fileName);
       const reportBody = await readFile(reportPath, "utf8");
       const taskId = extractTaskId(reportBody, fileName);
+      const failed = isFailedReport(reportBody);
+      if (failed) {
+        const existing = await prisma.agentReport.findUnique({
+          where: { taskId },
+          select: { id: true, status: true },
+        });
+        if (existing?.status === "PENDING") {
+          await prisma.agentReport.update({
+            where: { id: existing.id },
+            data: { status: "FAILED" },
+          });
+        }
+      }
       const title = `Rapport runtime — ${agentId}`;
       const summary = extractSummary(reportBody);
       await prisma.agentReport.upsert({
@@ -78,6 +97,7 @@ export async function syncAgentReports() {
           title,
           summary,
           reportBody,
+          status: failed ? "FAILED" : "PENDING",
           evidence: { source: "agent-runtime", fileName },
         },
         update: {
@@ -105,6 +125,10 @@ async function pathExists(filePath: string) {
 }
 
 export async function dispatchQueuedAgentActions() {
+  // Preserve queued approvals while runners are paused; don't create task
+  // files that the runner cannot claim and the worker later marks as timed out.
+  if (await pathExists(path.join(stateRoot, "stop-new-tasks"))) return 0;
+
   const actions = await getPrisma().agentAction.findMany({
     where: { status: "QUEUED" },
     include: { report: true },

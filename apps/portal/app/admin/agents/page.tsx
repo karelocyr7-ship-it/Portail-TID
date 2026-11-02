@@ -43,6 +43,7 @@ export default async function AgentReportsPage() {
   const pending = reports.filter(
     (report) => report.status === "PENDING",
   ).length;
+  const failed = reports.filter((report) => report.status === "FAILED").length;
   const actions = reports.flatMap((report) =>
     report.actions.map((action) => ({ ...action, report })),
   );
@@ -273,6 +274,9 @@ export default async function AgentReportsPage() {
         </span>
         <span>
           <strong>{pending}</strong> à valider
+        </span>
+        <span>
+          <strong>{failed}</strong> rapports en échec
         </span>
         <span>
           <strong>{queued}</strong> actions en file · une exécution simultanée

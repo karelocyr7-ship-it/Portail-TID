@@ -147,6 +147,8 @@ services:
         required: false
       - path: /srv/tad/secrets/mdm-provisioning.env
         required: false
+      - path: /srv/tad/secrets/atf-provisioning.env
+        required: false
     environment:
       NODE_ENV: production
       TZ: ${TZ:-Africa/Abidjan}

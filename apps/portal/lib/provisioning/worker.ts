@@ -95,7 +95,10 @@ export async function provisionApplication(
             application: { id: job.application.id, active: true },
           },
         },
-        select: { profileId: true },
+        select: {
+          profileId: true,
+          profile: { select: { key: true } },
+        },
       },
     },
   });
@@ -120,6 +123,10 @@ export async function provisionApplication(
     Boolean(currentUser?.active),
     currentUser?.assignments ?? [],
   );
+  const profileKeys =
+    currentUser?.assignments.map(({ profile }) => profile.key) ?? [];
+  if (job.application.code === "ATF" && authorized && profileKeys.length !== 1)
+    throw new Error("ATF provisioning requires exactly one active profile");
   const { first_name, last_name } = splitDisplayName(job.user.displayName);
   const response = await fetch(connector.url, {
     method: "POST",
@@ -137,6 +144,7 @@ export async function provisionApplication(
       first_name,
       last_name,
       enabled: authorized,
+      ...(profileKeys.length === 1 ? { profile: profileKeys[0] } : {}),
     }),
     signal: AbortSignal.timeout(20_000),
   });

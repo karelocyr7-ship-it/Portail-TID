@@ -31,6 +31,11 @@ retourner un statut `2xx` en cas de succès et ne jamais retourner de mot de
 passe. Le secret doit être stocké uniquement dans le gestionnaire de secrets
 de l’application.
 
+ATF reçoit `profile` avec le code du profil actif attribué dans le Portail.
+L’adaptateur ATF accepte uniquement `ADMIN`, `USER`, `OBSERVER` et
+`OBSERVER_LIMITED`; une requête autorisée avec plusieurs profils actifs est
+refusée au lieu de choisir arbitrairement un niveau de droits.
+
 ## Variables du portail
 
 Les variables suivent le nom du code applicatif, avec les tirets remplacés par
@@ -45,6 +50,18 @@ GED conserve ses variables historiques `DRIVE_PROVISIONING_URL` et
 Une application non configurée reste dans l’état `WAITING_CONFIG`; son job
 n’est pas supprimé et sera repris après ajout de l’URL et du secret. Les flux
 OIDC et locaux existants restent inchangés.
+
+Le connecteur ATF utilise le fichier protégé
+`/srv/tad/secrets/atf-provisioning.env` avec `ATF_PROVISIONING_URL` et
+`ATF_PROVISIONING_TOKEN`. L’URL publiée doit être
+`https://atf.tadgroupe.com/api/provisioning/users`.
+
+L’adaptateur Java est versionné dans `integrations/atf-provisioning`. Il ajoute
+la route au JAR de l’image ATF courante en conservant le reste de l’image.
+Sur la VM ATF, construire l’image avec ce répertoire comme contexte et définir
+`ATF_BASE_IMAGE` sur le tag actuellement déployé. La configuration Compose ATF
+charge `atf-provisioning.env` dans le conteneur Traccar; ce fichier contient
+uniquement `ATF_PROVISIONING_TOKEN` et reste hors Git en mode `0600`.
 
 ## Connecteurs SIRH et GED livrés — 15/10/2026
 
